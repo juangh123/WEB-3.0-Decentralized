@@ -1,4 +1,4 @@
-# ZK-CID 🛡️
+﻿# ZK-CID 🛡️
 **Zero-Knowledge Compliance Identity & Decentralized Workflow Orchestration**
 
 > **一句话定位**: "ZK-CID 用 ZK 零知识证明保护 Web3 用户验证端隐私，用 Chainlink CRE 消除颁发端信任——合规数据由去中心化预言机网络自动编排，用户隐私由数学密码学守护。"
@@ -11,6 +11,8 @@
 
 ---
 
+## 🌐 Live Demo
+- **URL**: [https://web-3-0-decentralized.vercel.app](https://web-3-0-decentralized.vercel.app) (Requires MetaMask connected to Sepolia Testnet or local fork)
 ## 💡 问题陈述与解决方案
 
 当前的 Web3 合规面临着**“双重信任困境”**：

@@ -50,5 +50,6 @@
 ## Slide 8: Thank You
 - **Team**: Solo Developer
 - **Github**: https://github.com/juangh123/WEB-3.0-Decentralized
-- **Try it out**: TODO: [Link to Live Demo]
+- **Try it out**: https://web-3-0-decentralized.vercel.app
 - **Q&A**
+
