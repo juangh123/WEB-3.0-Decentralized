@@ -1,0 +1,36 @@
+# dependencies
+node_modules
+
+# yarn
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+# eslint
+.eslintcache
+
+# misc
+.DS_Store
+
+# IDE
+.vscode
+.idea
+
+# cli
+dist
+
+# build artifacts
+typechain-types/
+coverage/
+
+# agent/tooling local state
+.workbuddy/
+.opencode/
+.cursor/
+.mcp.json
+opencode.json
+
+hardhat-chain.log*

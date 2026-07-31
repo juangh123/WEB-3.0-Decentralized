@@ -1,0 +1,8 @@
+# LEGACY(陈旧清单,保留仅为兼容旧资料,请勿删除):
+# 当前以同目录 workflow.yaml 为准——entrypoint、触发器与链配置均在 workflow.yaml 中声明。
+workflows:
+  - name: compliance-lifecycle
+    version: 1.0.0
+    description: Automates credential revocation based on Mock Sanctions API
+    runtime: typescript
+    main: main.ts

@@ -1,0 +1,12 @@
+0 verbose cli C:\Users\Administrator\nodejs\node.exe C:\Users\Administrator\nodejs\node_modules\npm\bin\npm-cli.js
+1 info using npm@10.9.4
+2 info using node@v22.22.1
+3 silly config load:file:C:\Users\Administrator\nodejs\node_modules\npm\npmrc
+4 info config found workspace root at E:\AI WORK\WEB 3.0 Decentralized\zk-cid
+5 silly config load:file:E:\AI WORK\WEB 3.0 Decentralized\zk-cid\.npmrc
+6 silly config load:file:C:\Users\Administrator\.npmrc
+7 silly config load:file:C:\Users\Administrator\nodejs\etc\npmrc
+8 verbose title npm exec hardhat test
+9 verbose argv "exec" "--" "hardhat" "test"
+10 verbose logfile logs-max:10 dir:E:\AI WORK\WEB 3.0 Decentralized\tmp_new\npm-cache\_logs\2026-07-30T19_06_35_203Z-
+11 verbose logfile E:\AI WORK\WEB 3.0 Decentralized\tmp_new\npm-cache\_logs\2026-07-30T19_06_35_203Z-debug-0.log

@@ -1,0 +1,32 @@
+# CRE 工作流清单:compliance-lifecycle
+# 供 CRE CLI(cre workflow deploy / cre simulate)读取的触发器与链配置。
+# 说明:本文件为声明式配置,触发器 schedule 同时由 config.json 注入运行时,
+# 两者需保持一致。
+
+name: compliance-lifecycle
+version: 1.0.0
+description: >
+  Cron 定时拉取 Mock 制裁名单 API,与链上 ComplianceGate.getMembers()
+  求交集,对命中者自动调用 revokeCredential 完成链上撤销。
+
+entrypoint: main.ts
+config: config.json
+
+triggers:
+  - type: cron
+    capability: cron-trigger@1.0.0
+    schedule: "*/5 * * * *"
+
+capabilities:
+  http:
+    id: http-actions@1.0.0-alpha
+  evm:
+    id: evm@1.0.0
+    chains:
+      - chainSelectorName: ethereum-testnet-sepolia
+        # 部署到本地模拟时改为 anvil/hardhat 节点;CRE simulate 通过
+        # 其本地链环境提供 EVM 读写能力
+        rpc: ${SEPOLIA_RPC_URL}
+        contracts:
+          - name: ComplianceGate
+            address: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512"

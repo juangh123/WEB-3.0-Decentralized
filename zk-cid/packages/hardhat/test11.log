@@ -1,0 +1,27 @@
+An unexpected error occurred:
+
+FileSystemAccessError: EPERM: operation not permitted, mkdir 'C:\Users\Administrator\AppData\Roaming\hardhat-nodejs\Config'
+    at mkdir (E:\AI WORK\WEB 3.0 Decentralized\zk-cid\packages\hardhat\node_modules\@nomicfoundation\hardhat-utils\src\fs.ts:741:11)
+    at async getConfigDir (E:\AI WORK\WEB 3.0 Decentralized\zk-cid\packages\hardhat\node_modules\@nomicfoundation\hardhat-utils\src\global-dir.ts:37:3)
+    ... 6 lines matching cause stack trace ...
+    at async next (E:\AI WORK\WEB 3.0 Decentralized\zk-cid\packages\hardhat\node_modules\hardhat\src\internal\core\hook-manager.ts:207:13)
+    at async Array.resolveUserConfig (E:\AI WORK\WEB 3.0 Decentralized\zk-cid\packages\hardhat\node_modules\hardhat-deploy\src\hook-handlers\config.ts:58:27) {
+  [cause]: Error: EPERM: operation not permitted, mkdir 'C:\Users\Administrator\AppData\Roaming\hardhat-nodejs\Config'
+      at async Object.mkdir (node:internal/fs/promises:855:10)
+      at async mkdir (E:\AI WORK\WEB 3.0 Decentralized\zk-cid\packages\hardhat\node_modules\@nomicfoundation\hardhat-utils\src\fs.ts:738:5)
+      at async getConfigDir (E:\AI WORK\WEB 3.0 Decentralized\zk-cid\packages\hardhat\node_modules\@nomicfoundation\hardhat-utils\src\global-dir.ts:37:3)
+      at async getKeystoreFilePath (E:\AI WORK\WEB 3.0 Decentralized\zk-cid\packages\hardhat\node_modules\@nomicfoundation\hardhat-keystore\src\internal\utils\get-keystore-file-path.ts:9:25)
+      at async Array.resolveUserConfig (E:\AI WORK\WEB 3.0 Decentralized\zk-cid\packages\hardhat\node_modules\@nomicfoundation\hardhat-keystore\src\internal\hook-handlers\config.ts:25:39)
+      at async next (E:\AI WORK\WEB 3.0 Decentralized\zk-cid\packages\hardhat\node_modules\hardhat\src\internal\core\hook-manager.ts:207:13)
+      at async Array.resolveUserConfig (E:\AI WORK\WEB 3.0 Decentralized\zk-cid\packages\hardhat\node_modules\@nomicfoundation\hardhat-mocha\src\hookHandlers\config.ts:104:30)
+      at async next (E:\AI WORK\WEB 3.0 Decentralized\zk-cid\packages\hardhat\node_modules\hardhat\src\internal\core\hook-manager.ts:207:13)
+      at async Array.resolveUserConfig (E:\AI WORK\WEB 3.0 Decentralized\zk-cid\packages\hardhat\node_modules\@nomicfoundation\hardhat-typechain\src\internal\hook-handlers\config.ts:14:30)
+      at async next (E:\AI WORK\WEB 3.0 Decentralized\zk-cid\packages\hardhat\node_modules\hardhat\src\internal\core\hook-manager.ts:207:13) {
+    errno: -4048,
+    code: 'EPERM',
+    syscall: 'mkdir',
+    path: 'C:\\Users\\Administrator\\AppData\\Roaming\\hardhat-nodejs\\Config'
+  }
+}
+
+If you think this is a bug in Hardhat, please report it here: https://hardhat.org/report-bug

@@ -1,0 +1,20 @@
+{
+  "name": "zk-cid-mock-sanctions-api",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node index.js",
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 0"
+  },
+  "dependencies": {
+    "@vercel/node": "^3.0.0",
+    "cors": "^2.8.6",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21"
+  }
+}

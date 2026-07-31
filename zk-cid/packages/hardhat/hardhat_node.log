@@ -1,0 +1,22 @@
+node:os:306
+    throw new ERR_SYSTEM_ERROR(ctx);
+          ^
+
+SystemError [ERR_SYSTEM_ERROR]: A system error occurred: uv_os_get_passwd returned ENOMEM (not enough memory)
+    at Object.userInfo (node:os:306:11)
+    at file:///E:/AI%20WORK/WEB%203.0%20Decentralized/zk-cid/packages/hardhat/node_modules/tsx/dist/temporary-directory-BDDVQOvU.mjs:1:84
+    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:665:26)
+    at async file:///E:/AI%20WORK/WEB%203.0%20Decentralized/zk-cid/packages/hardhat/node_modules/hardhat/dist/src/cli.js:11:18 {
+  code: 'ERR_SYSTEM_ERROR',
+  info: {
+    errno: -4057,
+    code: 'ENOMEM',
+    message: 'not enough memory',
+    syscall: 'uv_os_get_passwd'
+  },
+  errno: [Getter/Setter],
+  syscall: [Getter/Setter]
+}
+
+Node.js v22.22.1

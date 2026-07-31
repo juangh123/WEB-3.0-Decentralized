@@ -1,0 +1,21 @@
+{
+  "name": "compliance-lifecycle",
+  "version": "1.0.0",
+  "description": "Chainlink CRE framework implementation for compliance lifecycle",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "compile": "tsc"
+  },
+  "dependencies": {
+    "@chainlink/cre-sdk": "^1.16.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.11",
+    "@types/node": "^22.0.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.0.0"
+  }
+}

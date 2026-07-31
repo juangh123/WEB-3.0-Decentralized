@@ -1,0 +1,23 @@
+0000000000000000000000000000000000000000 ca1de5b4b31b0df6774ceaf7d52bec0ccd3de3ad juangh123 <jasoncn-eshop@163.com> 1782651500 +0800	clone: from https://github.com/scaffold-eth/scaffold-eth-2.git
+ca1de5b4b31b0df6774ceaf7d52bec0ccd3de3ad 4bbbf11e36b4cd4aea4b9fa890beb51b81c33e96 juangh123 <jasoncn-eshop@163.com> 1784120420 +0800	commit: docs: clean up assets and polish README for final hackathon submission
+4bbbf11e36b4cd4aea4b9fa890beb51b81c33e96 0ebe6b557554e27b916d16ff82f7de72556128d7 juangh123 <jasoncn-eshop@163.com> 1784175321 +0800	commit: fix(script): handle already revoked credentials gracefully in m3 demo
+0ebe6b557554e27b916d16ff82f7de72556128d7 44e298e1a0428398fa9e6df401a4bc059472daef juangh123 <jasoncn-eshop@163.com> 1784389143 +0800	commit: chore: import full ZK-CID codebase (contracts, frontend, CRE workflow, mock-api, docs)
+44e298e1a0428398fa9e6df401a4bc059472daef a261fcd2de9f434ad2cf9aa748f1579185181e44 juangh123 <jasoncn-eshop@163.com> 1784391813 +0800	commit: fix(contracts): enforce ZK verification, revocation and access control + real tests
+a261fcd2de9f434ad2cf9aa748f1579185181e44 e9c0af0f004d9cf41b0b56db15ed72e36cae7dc0 juangh123 <jasoncn-eshop@163.com> 1784392857 +0800	commit: fix(mock-api): unify response schema, add admin auth, externalize config
+e9c0af0f004d9cf41b0b56db15ed72e36cae7dc0 574f8762a8162f7e267c0f0b186cdffc656f438d juangh123 <jasoncn-eshop@163.com> 1784392995 +0800	commit: feat(workflows): rewrite CRE workflow against real cre-sdk API
+574f8762a8162f7e267c0f0b186cdffc656f438d daa438fb16ce2dbe4a624020b66f7e682ee9ea06 juangh123 <jasoncn-eshop@163.com> 1784393906 +0800	commit: fix(nextjs): restore ABIs, fix build, align pages with contracts
+daa438fb16ce2dbe4a624020b66f7e682ee9ea06 daa438fb16ce2dbe4a624020b66f7e682ee9ea06 juangh123 <jasoncn-eshop@163.com> 1784394812 +0800	reset: moving to HEAD
+daa438fb16ce2dbe4a624020b66f7e682ee9ea06 31ed5c7f73760e6dee7ddbba0848043f96c100da juangh123 <jasoncn-eshop@163.com> 1784394833 +0800	commit: docs: align docs with fixed codebase, add quickstart and known limitations
+31ed5c7f73760e6dee7ddbba0848043f96c100da 31ed5c7f73760e6dee7ddbba0848043f96c100da juangh123 <jasoncn-eshop@163.com> 1784395493 +0800	reset: moving to HEAD
+31ed5c7f73760e6dee7ddbba0848043f96c100da 1cf74251f29e71b6e95089b7be72cfa943247a76 juangh123 <jasoncn-eshop@163.com> 1784395836 +0800	commit: chore: final verification fixes and audit closure
+1cf74251f29e71b6e95089b7be72cfa943247a76 9e6ee89ff8a0884f5c7c15abb90cedebaaa0fc50 juangh123 <jasoncn-eshop@163.com> 1784436066 +0800	commit: chore: redeploy local chain and refresh on-chain evidence
+9e6ee89ff8a0884f5c7c15abb90cedebaaa0fc50 356aee84ad0750e43a8e877c8d90ee717ad09159 juangh123 <jasoncn-eshop@163.com> 1784650392 +0800	commit: fix(deploy): include ABI in deployDirect script and regenerate frontend contracts
+356aee84ad0750e43a8e877c8d90ee717ad09159 56b0a05faf64c246e355f8ba614b954359fc5cd8 juangh123 <jasoncn-eshop@163.com> 1784650411 +0800	commit: chore: ignore local hardhat log files
+56b0a05faf64c246e355f8ba614b954359fc5cd8 c02e1931cb7e7e6d5b1038ee2b0dfdb7aa46eaa5 juangh123 <jasoncn-eshop@163.com> 1784650421 +0800	commit (amend): chore: ignore local hardhat log files
+c02e1931cb7e7e6d5b1038ee2b0dfdb7aa46eaa5 ba0d214ed79862d42c1f7598500d9821f6c8e67c juangh123 <jasoncn-eshop@163.com> 1784650452 +0800	commit (amend): chore: ignore local hardhat log files
+ba0d214ed79862d42c1f7598500d9821f6c8e67c aca451ceda661f9b97513946d7c16ab30ad27f12 juangh123 <jasoncn-eshop@163.com> 1784650468 +0800	commit (amend): chore: ignore local hardhat log files
+aca451ceda661f9b97513946d7c16ab30ad27f12 93bc72175e6dd4096d02a3f357f7ee033c98b11a juangh123 <jasoncn-eshop@163.com> 1784731906 +0800	commit: feat: add mock-api backend endpoints and local store
+93bc72175e6dd4096d02a3f357f7ee033c98b11a 4c6b4d09157720e918a37b09d64c7b0f52f0bd24 juangh123 <jasoncn-eshop@163.com> 1785065133 +0800	commit: fix(chore): resolve TS errors, format code and apply final linter fixes
+4c6b4d09157720e918a37b09d64c7b0f52f0bd24 4c6b4d09157720e918a37b09d64c7b0f52f0bd24 juangh123 <jasoncn-eshop@163.com> 1785406499 +0800	reset: moving to HEAD
+4c6b4d09157720e918a37b09d64c7b0f52f0bd24 4c6b4d09157720e918a37b09d64c7b0f52f0bd24 juangh123 <jasoncn-eshop@163.com> 1785406500 +0800	reset: moving to HEAD
+4c6b4d09157720e918a37b09d64c7b0f52f0bd24 90db1370849a87cd4d4a6620e937f89f259daae2 juangh123 <jasoncn-eshop@163.com> 1785406520 +0800	commit: refactor(core): health dashboard refactor and optimisations
