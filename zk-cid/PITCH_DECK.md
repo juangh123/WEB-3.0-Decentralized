@@ -1,4 +1,4 @@
-# ZK-CID: Zero-Knowledge Compliant Identity
+﻿# ZK-CID: Zero-Knowledge Compliant Identity
 
 ## Slide 1: Title Slide
 - **Project Name**: ZK-CID (Zero-Knowledge Compliant Identity)
@@ -49,6 +49,6 @@
 
 ## Slide 8: Thank You
 - **Team**: Solo Developer
-- **Github**: TODO: [Link to Repo]
+- **Github**: https://github.com/juangh123/WEB-3.0-Decentralized
 - **Try it out**: TODO: [Link to Live Demo]
 - **Q&A**
