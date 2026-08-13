@@ -1,15 +1,16 @@
-# ZK-CID: Zero-Knowledge Compliant Identity
+ï»¿# ZK-CID: Zero-Knowledge Compliant Identity
 
 ## Slide 1: Title Slide
 - **Project Name**: ZK-CID (Zero-Knowledge Compliant Identity)
 - **Tagline**: Prove you're compliant, protect who you are.
 - **Track**: Law / Finance / Compliance
+- **Bounty**: Chainlink CRE (Compute-to-Rule Engine) Workflow
 - **Visual**: A lock symbol morphing into a green checkmark.
 
 ## Slide 2: The Problem
 - **The Paradox**: Web3 faces a critical contradiction.
-- **Traditional KYC**: Forces users to expose full identity (name, ID, address) ¡ú High risk of data breaches & privacy loss.
-- **Fully Anonymous DeFi**: Violates AML/KYC regulations ¡ú High legal risk & institutional barrier.
+- **Traditional KYC**: Forces users to expose full identity (name, ID, address) ï¿½ï¿½ High risk of data breaches & privacy loss.
+- **Fully Anonymous DeFi**: Violates AML/KYC regulations ï¿½ï¿½ High legal risk & institutional barrier.
 - **The Result**: You currently have to choose between privacy and compliance.
 
 ## Slide 3: The Solution
@@ -24,11 +25,12 @@
 - **Track Focus**: Legal Tech for DeFi Compliance
 - **Smart Contracts**: Solidity, deployed on a local Anvil testnet (Sepolia-ready).
 - **ZKP Protocol**: Semaphore v4 (industry standard for anonymous signaling).
+- **Automation**: Chainlink CRE Workflow for automated credential revocation.
 - **Frontend**: Next.js, Scaffold-ETH 2, wagmi, viem.
-- **Flow**: Local Identity ¡ú Issuer Adds to Group ¡ú Browser ZK Proof ¡ú On-Chain Verification ¡ú AccessNFT Minted.
+- **Flow**: Local Identity ï¿½ï¿½ Issuer Adds to Group ï¿½ï¿½ Browser ZK Proof ï¿½ï¿½ On-Chain Verification ï¿½ï¿½ AccessNFT Minted.
 
-## Slide 5: The Demo`n- **Demo Video**: [Watch Demo on YouTube](https://youtu.be/dummy-video-link)
-- **Screenshots**£¨È¡×Ô `docs/assets/`£©: `demo-00-landing.png`£¨ÂäµØÒ³£©¡¢`demo-02-identity.png`£¨Éí·ÝÉú³É£©¡¢`demo-03-issued-success.png`£¨·¢Ö¤³É¹¦£©
+## Slide 5: The Demo`n- **Demo Video**: [Watch ZK & CRE Demo on YouTube (Placeholder)](https://youtu.be/dummy-video-link)
+- **Screenshots**ï¿½ï¿½È¡ï¿½ï¿½ `docs/assets/`ï¿½ï¿½: `demo-00-landing.png`ï¿½ï¿½ï¿½ï¿½ï¿½Ò³ï¿½ï¿½ï¿½ï¿½`demo-02-identity.png`ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É£ï¿½ï¿½ï¿½`demo-03-issued-success.png`ï¿½ï¿½ï¿½ï¿½Ö¤ï¿½É¹ï¿½ï¿½ï¿½
 - **Step 1**: User generates a local Semaphore identity.
 - **Step 2**: Issuer adds the user's public commitment to the smart contract group.
 - **Step 3**: User generates a ZK proof locally (no math leaves the device).
@@ -53,5 +55,6 @@
 - **Github**: https://github.com/juangh123/WEB-3.0-Decentralized
 - **Try it out**: https://web-3-0-decentralized.vercel.app
 - **Q&A**
+
 
 
