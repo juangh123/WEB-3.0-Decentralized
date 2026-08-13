@@ -19,7 +19,7 @@ ZK-CID solves this with a **Dual-Trust Engine**:
 
 ## Architecture
 
-`mermaid
+```mermaid
 graph TD
     A[User] -->|Real-world ID| B(Trusted KYC Issuer)
     B -->|Issues Commitment| C[ComplianceGate Smart Contract<br>Semaphore Group]
@@ -29,7 +29,7 @@ graph TD
     E -->|Invalid/Revoked| G[Revert Transaction]
     H((Mock Sanction API)) -->|Chainlink CRE Workflow<br>Checks Sanctions| I(Oracle Node Consensus)
     I -.->|If Flagged: Auto-Revokes| C
-`
+```
 
 ## Repository Structure
 
