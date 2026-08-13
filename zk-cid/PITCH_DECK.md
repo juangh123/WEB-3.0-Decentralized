@@ -27,7 +27,7 @@
 - **Frontend**: Next.js, Scaffold-ETH 2, wagmi, viem.
 - **Flow**: Local Identity → Issuer Adds to Group → Browser ZK Proof → On-Chain Verification → AccessNFT Minted.
 
-## Slide 5: The Demo
+## Slide 5: The Demo`n- **Demo Video**: [Watch Demo on YouTube](https://youtu.be/dummy-video-link)
 - **Screenshots**（取自 `docs/assets/`）: `demo-00-landing.png`（落地页）、`demo-02-identity.png`（身份生成）、`demo-03-issued-success.png`（发证成功）
 - **Step 1**: User generates a local Semaphore identity.
 - **Step 2**: Issuer adds the user's public commitment to the smart contract group.
