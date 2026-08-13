@@ -1,4 +1,4 @@
-ï»¿# ZK-CID: Zero-Knowledge Compliant Identity
+# ZK-CID: Zero-Knowledge Compliant Identity
 
 ## Slide 1: Title Slide
 - **Project Name**: ZK-CID (Zero-Knowledge Compliant Identity)
@@ -8,8 +8,8 @@
 
 ## Slide 2: The Problem
 - **The Paradox**: Web3 faces a critical contradiction.
-- **Traditional KYC**: Forces users to expose full identity (name, ID, address) â†’ High risk of data breaches & privacy loss.
-- **Fully Anonymous DeFi**: Violates AML/KYC regulations â†’ High legal risk & institutional barrier.
+- **Traditional KYC**: Forces users to expose full identity (name, ID, address) ¡ú High risk of data breaches & privacy loss.
+- **Fully Anonymous DeFi**: Violates AML/KYC regulations ¡ú High legal risk & institutional barrier.
 - **The Result**: You currently have to choose between privacy and compliance.
 
 ## Slide 3: The Solution
@@ -21,13 +21,14 @@
 - **The Outcome**: You prove "I am compliant" without revealing "I am Alice".
 
 ## Slide 4: Architecture & Tech Stack
+- **Track Focus**: Legal Tech for DeFi Compliance
 - **Smart Contracts**: Solidity, deployed on a local Anvil testnet (Sepolia-ready).
 - **ZKP Protocol**: Semaphore v4 (industry standard for anonymous signaling).
 - **Frontend**: Next.js, Scaffold-ETH 2, wagmi, viem.
-- **Flow**: Local Identity â†’ Issuer Adds to Group â†’ Browser ZK Proof â†’ On-Chain Verification â†’ AccessNFT Minted.
+- **Flow**: Local Identity ¡ú Issuer Adds to Group ¡ú Browser ZK Proof ¡ú On-Chain Verification ¡ú AccessNFT Minted.
 
 ## Slide 5: The Demo
-- **Screenshots**ï¼ˆå–è‡ª `docs/assets/`ï¼‰: `demo-00-landing.png`ï¼ˆè½åœ°é¡µï¼‰ã€`demo-02-identity.png`ï¼ˆèº«ä»½ç”Ÿæˆï¼‰ã€`demo-03-issued-success.png`ï¼ˆå‘è¯æˆåŠŸï¼‰
+- **Screenshots**£¨È¡×Ô `docs/assets/`£©: `demo-00-landing.png`£¨ÂäµØÒ³£©¡¢`demo-02-identity.png`£¨Éí·İÉú³É£©¡¢`demo-03-issued-success.png`£¨·¢Ö¤³É¹¦£©
 - **Step 1**: User generates a local Semaphore identity.
 - **Step 2**: Issuer adds the user's public commitment to the smart contract group.
 - **Step 3**: User generates a ZK proof locally (no math leaves the device).
@@ -52,4 +53,5 @@
 - **Github**: https://github.com/juangh123/WEB-3.0-Decentralized
 - **Try it out**: https://web-3-0-decentralized.vercel.app
 - **Q&A**
+
 

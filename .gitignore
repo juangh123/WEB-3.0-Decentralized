@@ -1,0 +1,5 @@
+
+.vercel/
+*.pid
+tmp/
+.git_backup/
