@@ -3,3 +3,5 @@
 *.pid
 tmp/
 .git_backup/
+
+tmp_new/
