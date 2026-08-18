@@ -132,12 +132,41 @@ Set `ADMIN_TOKEN` in that project and seed the smoke-test commitment:
 SEED_SANCTIONED=123456789012345678901234567890123456789
 ```
 
+The Vercel serverless admin route is served at `/api/admin` (not
+`/api/admin/sanction`). Verify it in the deployed environment:
+
+```powershell
+$headers = @{ 'x-admin-token' = '<ADMIN_TOKEN>' }
+Invoke-RestMethod -Uri 'https://mock-api-topaz-zeta.vercel.app/api/admin' `
+  -Method Post -Headers $headers -ContentType 'application/json' `
+  -Body '{"action":"status"}'
+```
+
 Then update the CRE workflow:
 
 ```powershell
 $env:SANCTIONS_API_URL = "https://mock-api-topaz-zeta.vercel.app/api/sanctions-list"
 $env:COMPLIANCE_GATE_ADDRESS = "0xB393C4Aace43162b170d4f6A84a60fA1AF9D1Ef3"
 ```
+
+### CRE Workflow Compilation Evidence
+
+The workflow TypeScript compiles under `tsc`, and the real CRE SDK compiler
+has been executed with `npx bun` to produce `dist/compliance-lifecycle.wasm`:
+
+```powershell
+cd "F:\AI WORK\WEB 3.0 Decentralized\zk-cid\workflows\compliance-lifecycle"
+npx -y bun@1.1.42 node_modules\@chainlink\cre-sdk\bin\cre-compile.ts main.ts dist\compliance-lifecycle.wasm --skip-type-checks
+```
+
+Or from the `zk-cid` workspace root:
+
+```powershell
+yarn workspace compliance-lifecycle compile:cre
+```
+
+Full `cre workflow simulate` has not been run because the complete CRE CLI is
+not installed on this development machine; no simulated output is fabricated.
 
 ## Known Production Gaps
 

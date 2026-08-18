@@ -9,8 +9,8 @@
 
 ## Slide 2: The Problem
 - **The Paradox**: Web3 faces a critical contradiction.
-- **Traditional KYC**: Forces users to expose full identity (name, ID, address) �� High risk of data breaches & privacy loss.
-- **Fully Anonymous DeFi**: Violates AML/KYC regulations �� High legal risk & institutional barrier.
+- **Traditional KYC**: Forces users to expose full identity (name, ID, address) → High risk of data breaches & privacy loss.
+- **Fully Anonymous DeFi**: Violates AML/KYC regulations → High legal risk & institutional barrier.
 - **The Result**: You currently have to choose between privacy and compliance.
 
 ## Slide 3: The Solution

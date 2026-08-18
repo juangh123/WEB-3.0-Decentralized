@@ -17,9 +17,35 @@
 `main.ts` 已通过 `tsc -p workflows/compliance-lifecycle/tsconfig.json`
 类型检查并产出 `dist/main.js`(零错误)。
 
+### 已完成的真实 CRE 编译证据
+
+已在 Windows/PowerShell 开发机使用 `npx -y bun@1.1.42` 调用本机安装的
+`@chainlink/cre-sdk/bin/cre-compile.ts` 成功生成 WASM:
+
+```powershell
+cd workflows/compliance-lifecycle
+npx -y bun@1.1.42 node_modules\@chainlink\cre-sdk\bin\cre-compile.ts main.ts dist\compliance-lifecycle.wasm --skip-type-checks
+```
+
+From the `zk-cid` workspace root, the same step is available as:
+
+```powershell
+yarn workspace compliance-lifecycle compile:cre
+```
+
+产物:
+
+- `dist/compliance-lifecycle.js`(约 810 KB)
+- `dist/compliance-lifecycle.wasm`(约 2.7 MB)
+- Javy 编译器安装至 `C:\Users\Administrator\.cache\javy\v8.1.0\win32-x64\javy.exe`
+
+`--skip-type-checks` 只跳过 CRE 编译器内部的 TS 检查;独立的
+`tsc -p workflows/compliance-lifecycle/tsconfig.json` 已零错误通过,
+两者共同覆盖“类型有效”和“可编译为 CRE Workflow WASM”。
+
 ## 未实测项
 
-本机 **没有安装 CRE CLI**(`cre` 命令不存在),因此
+本机仍 **没有安装完整 CRE CLI**(`cre` 命令不存在),因此
 `cre workflow simulate` 端到端模拟 **尚未执行**,此目录下不放任何
 伪造的模拟输出或截图。
 

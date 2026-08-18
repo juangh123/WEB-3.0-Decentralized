@@ -6,7 +6,8 @@
   "scripts": {
     "build": "tsc",
     "test": "jest",
-    "compile": "tsc"
+    "compile": "tsc",
+    "compile:cre": "npx -y bun@1.1.42 node_modules/@chainlink/cre-sdk/bin/cre-compile.ts main.ts dist/compliance-lifecycle.wasm --skip-type-checks"
   },
   "dependencies": {
     "@chainlink/cre-sdk": "^1.16.0"

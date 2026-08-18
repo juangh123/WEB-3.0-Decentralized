@@ -58,14 +58,21 @@ yarn start
 
 ### CRE 工作流(附加赏金路径)
 
-`workflows/compliance-lifecycle/` 为独立的 Chainlink CRE 工作流:Cron 定时拉取 Mock 制裁名单 API,与链上 `ComplianceGate.getMembers()` 求交集,对命中者自动调用 `revokeCredential` 完成链上撤销。代码按真实 `@chainlink/cre-sdk@1.16.0` API 编写,已通过 `tsc` 类型检查。
+`workflows/compliance-lifecycle/` 为独立的 Chainlink CRE 工作流:Cron 定时拉取 Mock 制裁名单 API,与链上 `ComplianceGate.getMembers()` 求交集,对命中者自动调用 `revokeCredential` 完成链上撤销。代码按真实 `@chainlink/cre-sdk@1.16.0` API 编写,已通过 `tsc` 类型检查,并已用 `npx bun` 调用真实 `cre-compile` 生成 `dist/compliance-lifecycle.wasm`。
 
-> ⚠️ **诚实声明**:本仓库开发机未安装 CRE CLI,`cre workflow simulate` 端到端模拟**尚未实测**。完整复现步骤与已知风险见 `workflows/compliance-lifecycle/evidence/README.md`,核心命令:
+> ⚠️ **诚实声明**:`cre workflow simulate` 端到端模拟**尚未实测**(需要完整 CRE CLI 与受支持链环境)。完整复现步骤、编译证据与已知风险见 `workflows/compliance-lifecycle/evidence/README.md`,核心命令:
 
 ```bash
 # 需先安装 CRE CLI(参考 https://docs.chain.link/cre)
 cd workflows/compliance-lifecycle
 cre workflow simulate .
+```
+
+已完成的真实 CRE 编译复现命令:
+
+```powershell
+cd workflows/compliance-lifecycle
+npx -y bun@1.1.42 node_modules\@chainlink\cre-sdk\bin\cre-compile.ts main.ts dist\compliance-lifecycle.wasm --skip-type-checks
 ```
 
 ---
@@ -90,7 +97,7 @@ cre workflow simulate .
 
 ---
 
-## 🔗 链上执行记录 (PoC Evidence)
+## 🔗 本地 Anvil/Hardhat 链上证据 (PoC Evidence)
 
 由于本产品强调“一键式自动确权”，我们在本地主链路跑通了端到端（发证->生成证明->智能合约校验->自动 Mint）的全验证流程。
 
@@ -123,7 +130,7 @@ ZK-CID 提供了一种**可插拔、无需信任的合规中间件**。对于 De
 
 - **Demo Mode 默认开启**：`ComplianceGate` 以 `demoMode = true` 部署，本地演示使用 MockSemaphore 校验路径；严格模式需由 issuer 调用 `setDemoMode(false)` 并配置真实的 Semaphore 部署（demoMode 关闭后，`validateProof` 失败必然 revert）。
 - **撤销的 Merkle 语义**：`verifyCompliance` 强制检查 `hasBeenRevoked` 标记，被撤销凭证无法再通过验证；但从 ZK Merkle 树中移除节点目前传入空 siblings，生产环境需接入 Merkle 索引器（如 The Graph / 自建 indexer）提供真实 siblings 路径。
-- **CRE simulate 未实测**：工作流代码已通过 `tsc` 类型检查，但 `cre workflow simulate` 需在安装 CRE CLI 的环境中执行；`writeReport` 在纯本地链上的支持取决于 CRE 模拟环境的链配置（详见 `workflows/compliance-lifecycle/evidence/README.md`）。
+- **CRE 编译已实测、simulate 未实测**：工作流代码已通过 `tsc` 类型检查，并已生成 `compliance-lifecycle.wasm`；`cre workflow simulate` 需在安装完整 CRE CLI 的环境中执行；`writeReport` 在纯本地链上的支持取决于 CRE 模拟环境的链配置（详见 `workflows/compliance-lifecycle/evidence/README.md`）。
 - **文档中的链上地址**：README / DEMO_SUMMARY 中的地址与交易哈希来自 2026-07-19 本地完整重部署（最新证据），链重启/重部署后以 `packages/hardhat/deployments/localhost/*.json` 为准。
 
 ---
