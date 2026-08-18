@@ -30,7 +30,7 @@
 - **Flow**: Local Identity -> Issuer Adds to Group -> Browser ZK Proof -> On-Chain Verification -> AccessNFT Minted.
 
 ## Slide 5: The Demo
-- **Demo Video**: [Watch ZK & CRE Demo on YouTube](https://youtu.be/REPLACE_WITH_UPLOADED_VIDEO_ID)
+- **Demo Video**: [Watch ZK & CRE Demo](https://web-3-0-decentralized.vercel.app/demo/zk-cid-pitch-video-en.mp4)
 - **Screenshots**: See `docs/assets/`: `demo-00-landing.png` (privacy comparison), `demo-02-identity.png` (identity generation), `demo-03-issued-success.png` (credential issued).
 - **Step 1**: User generates a local Semaphore identity.
 - **Step 2**: Issuer adds the user's public commitment to the smart contract group.

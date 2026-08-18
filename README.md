@@ -7,7 +7,7 @@
 
 🌐 **Live Demo**: [https://web-3-0-decentralized.vercel.app](https://web-3-0-decentralized.vercel.app)
 
-🎥 **Demo Video**: [Watch Demo on YouTube](https://youtu.be/REPLACE_WITH_UPLOADED_VIDEO_ID) *(Replace with the uploaded unlisted video link before final submission)*
+🎥 **Demo Video**: [Watch Demo](https://web-3-0-decentralized.vercel.app/demo/zk-cid-pitch-video-en.mp4)
 
 ## Quick Overview
 
