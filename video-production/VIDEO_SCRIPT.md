@@ -1,4 +1,4 @@
-﻿# ZK-CID 黑客松参赛视频 · 总脚本 (Master Script)
+# ZK-CID 黑客松参赛视频 · 总脚本 (Master Script)
 
 - **目标时长**: 3 分 30 秒
 - **语言**: 英文旁白（面向全球评委）+ 中文字幕（可选用）
@@ -132,6 +132,16 @@
 | 3g | 再次尝试 Mint，展示被 revert（`Credential revoked`） | "the revoked user tries again — and gets rejected…" |
 
 **文件命名**: 将录好的片段保存到 `video-production/footage/`，按顺序命名 `clip-01.mp4` … `clip-07.mp4`（允许缺省，成片脚本会按存在性自动拼接）。
+
+## 三-b、成片构建命令
+
+```powershell
+cd video-production
+node cards/render-cards.js   # 渲染 7 张主视觉卡
+node build_video.js          # 生成 en / nocap 成片
+```
+
+线上提交使用 `zk-cid-pitch-video-en.mp4`，复制到 `zk-cid/packages/nextjs/public/demo/` 后由 Vercel 托管。
 
 ---
 
