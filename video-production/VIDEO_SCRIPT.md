@@ -138,6 +138,7 @@
 ```powershell
 cd video-production
 node cards/render-cards.js   # 渲染 7 张主视觉卡
+node record_screen_demo.js # 录制真实网页操作，输出到 recordings/
 node build_video.js          # 生成 en / nocap 成片
 ```
 

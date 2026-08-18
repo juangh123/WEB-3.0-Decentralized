@@ -17,11 +17,7 @@ const SEGMENTS = [
   [path.join(CARDS, "card-02.png"), 25, "out", null],
   [path.join(CARDS, "card-03.png"), 30, "in", null],
   [path.join(CARDS, "card-04.png"), 5, "out", null],
-  [path.join(SHOTS, "demo-00-landing.png"), 12, "in", "left"],
-  [path.join(SHOTS, "demo-01-comparison.png"), 12, "out", "right"],
-  [path.join(SHOTS, "demo-02-identity.png"), 12, "in", null],
-  [path.join(SHOTS, "demo-03-issued.png"), 12, "out", null],
-  [path.join(SHOTS, "demo-03-issued-success.png"), 12, "in", null],
+  [path.join(BASE, "recordings", "combined-demo-60s.mp4"), 60, "none", null],
   [path.join(CARDS, "card-05.png"), 25, "in", null],
   [path.join(CARDS, "card-06.png"), 30, "out", null],
   [path.join(CARDS, "card-07.png"), 20, "in", null],
@@ -46,37 +42,55 @@ SEGMENTS.forEach(([img, dur, mode, pan], i) => {
   const idx = i + 1;
   const out = path.join(SEGS, `seg-${String(idx).padStart(2, "0")}.mp4`);
   const frames = Math.max(2, Math.round(dur * FPS));
+  const isVideo = /\.(mp4|mov|webm|m4v)$/i.test(img);
+  let vf;
 
-  let zexpr;
-  if (mode === "in") zexpr = `min(1.0+0.00012*on,1.18)`;
-  else zexpr = `max(1.18-0.00012*on,1.0)`;
-
-  let xexpr;
-  let yexpr = "ih/2-(ih/zoom/2)";
-  if (pan === "left") {
-    xexpr = `(iw-iw/zoom)/2-(iw/zoom)*0.035*(on/${frames})`;
-  } else if (pan === "right") {
-    xexpr = `(iw-iw/zoom)/2+(iw/zoom)*0.035*(on/${frames})`;
+  if (isVideo) {
+    vf = [
+      "scale=1920:1080:force_original_aspect_ratio=decrease",
+      "pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=0x050914",
+      `fps=${FPS}`,
+      "fade=t=in:st=0:d=0.18",
+      "format=yuv420p"
+    ].join(",");
+    run([
+      "-y", "-i", img, "-vf", vf,
+      "-t", String(dur), "-r", String(FPS), "-an",
+      "-c:v", "libx264", "-preset", "medium", "-crf", "19",
+      out
+    ], BASE);
   } else {
-    xexpr = "iw/2-(iw/zoom/2)";
+    let zexpr;
+    if (mode === "in") zexpr = `min(1.0+0.00012*on,1.18)`;
+    else zexpr = `max(1.18-0.00012*on,1.0)`;
+
+    let xexpr;
+    let yexpr = "ih/2-(ih/zoom/2)";
+    if (pan === "left") {
+      xexpr = `(iw-iw/zoom)/2-(iw/zoom)*0.035*(on/${frames})`;
+    } else if (pan === "right") {
+      xexpr = `(iw-iw/zoom)/2+(iw/zoom)*0.035*(on/${frames})`;
+    } else {
+      xexpr = "iw/2-(iw/zoom/2)";
+    }
+
+    vf = [
+      "scale=2560:1440:force_original_aspect_ratio=increase",
+      "crop=2560:1440",
+      `zoompan=z='${zexpr}':d=${frames}:x='${xexpr}':y='${yexpr}':s=${W}x${H}:fps=${FPS}`,
+      "eq=contrast=1.035:saturation=1.05",
+      "unsharp=5:5:0.35:5:5:0.0",
+      "fade=t=in:st=0:d=0.18",
+      "format=yuv420p"
+    ].join(",");
+
+    run([
+      "-y", "-loop", "1", "-i", img, "-vf", vf,
+      "-t", String(dur), "-r", String(FPS),
+      "-c:v", "libx264", "-preset", "medium", "-crf", "19",
+      out
+    ], BASE);
   }
-
-  const vf = [
-    "scale=2560:1440:force_original_aspect_ratio=increase",
-    "crop=2560:1440",
-    `zoompan=z='${zexpr}':d=${frames}:x='${xexpr}':y='${yexpr}':s=${W}x${H}:fps=${FPS}`,
-    "eq=contrast=1.035:saturation=1.05",
-    "unsharp=5:5:0.35:5:5:0.0",
-    "fade=t=in:st=0:d=0.18",
-    "format=yuv420p"
-  ].join(",");
-
-  run([
-    "-y", "-loop", "1", "-i", img, "-vf", vf,
-    "-t", String(dur), "-r", String(FPS),
-    "-c:v", "libx264", "-preset", "medium", "-crf", "19",
-    out
-  ], BASE);
 
   lines.push(`file '${path.basename(out)}'`);
 });
