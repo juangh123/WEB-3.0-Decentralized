@@ -1,4 +1,4 @@
-import "dotenv/config";
+﻿import "dotenv/config";
 import { defineConfig, overrideTask } from "hardhat/config";
 import hardhatToolbox from "@nomicfoundation/hardhat-toolbox-mocha-ethers";
 import HardhatDeploy from "hardhat-deploy";
@@ -7,7 +7,9 @@ import generateTsAbis from "./scripts/generateTsAbis.js";
 // If not set, it uses the hardhat account 0 private key.
 // You can generate a random account with `yarn generate` or `yarn account:import` to import your existing PK
 const deployerPrivateKey =
-  process.env.__RUNTIME_DEPLOYER_PRIVATE_KEY ?? "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+  process.env.DEPLOYER_PRIVATE_KEY ??
+  process.env.__RUNTIME_DEPLOYER_PRIVATE_KEY ??
+  "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
 
 // API keys are read from environment variables only (no defaults shipped); see .env.example.
 // You can get your own Alchemy key at https://dashboard.alchemyapi.io
@@ -20,7 +22,7 @@ export default defineConfig({
   solidity: {
     compilers: [
       {
-        version: "0.8.23",
+        version: "0.8.28",
         settings: {
           optimizer: {
             enabled: true,

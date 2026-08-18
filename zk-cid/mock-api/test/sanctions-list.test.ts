@@ -1,9 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import handler from "./sanctions-list";
-
-// In-memory store — the handler imports from "../lib/store" which uses a shared
-// mutable store. We test the handler's contract, not the store internals.
+import handler from "../api/sanctions-list";
 
 function mockReq(method: string): VercelRequest {
   return {
@@ -16,21 +13,24 @@ function mockReq(method: string): VercelRequest {
 }
 
 function mockRes(): { _status: number; _headers: Record<string, string>; _body: unknown } {
-  const ctx = {
+  const res = {
     _status: 200,
     _headers: {} as Record<string, string>,
     _body: undefined as unknown,
-  };
-  const res = {
     status(code: number) {
-      ctx._status = code;
-      return { json(body: unknown) { ctx._body = body; return res; } };
+      res._status = code;
+      return {
+        json(body: unknown) {
+          res._body = body;
+          return res;
+        },
+      };
     },
     setHeader(key: string, value: string) {
-      ctx._headers[key] = value;
+      res._headers[key] = value;
     },
   } as unknown as VercelResponse;
-  return Object.assign(res, ctx);
+  return res;
 }
 
 describe("sanctions-list API", () => {

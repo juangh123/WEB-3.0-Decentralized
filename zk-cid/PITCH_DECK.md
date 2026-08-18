@@ -23,14 +23,15 @@
 
 ## Slide 4: Architecture & Tech Stack
 - **Track Focus**: Legal Tech for DeFi Compliance
-- **Smart Contracts**: Solidity, deployed on a local Anvil testnet (Sepolia-ready).
+- **Smart Contracts**: Solidity, deployed on Sepolia testnet; local Anvil/Hardhat used for reproducible tests.
 - **ZKP Protocol**: Semaphore v4 (industry standard for anonymous signaling).
 - **Automation**: Chainlink CRE Workflow for automated credential revocation.
 - **Frontend**: Next.js, Scaffold-ETH 2, wagmi, viem.
-- **Flow**: Local Identity �� Issuer Adds to Group �� Browser ZK Proof �� On-Chain Verification �� AccessNFT Minted.
+- **Flow**: Local Identity -> Issuer Adds to Group -> Browser ZK Proof -> On-Chain Verification -> AccessNFT Minted.
 
-## Slide 5: The Demo`n- **Demo Video**: [Watch ZK & CRE Demo on YouTube (Placeholder)](https://youtu.be/dummy-video-link)
-- **Screenshots**��ȡ�� `docs/assets/`��: `demo-00-landing.png`�����ҳ����`demo-02-identity.png`��������ɣ���`demo-03-issued-success.png`����֤�ɹ���
+## Slide 5: The Demo
+- **Demo Video**: [Watch ZK & CRE Demo on YouTube](https://youtu.be/REPLACE_WITH_UPLOADED_VIDEO_ID)
+- **Screenshots**: See `docs/assets/`: `demo-00-landing.png` (privacy comparison), `demo-02-identity.png` (identity generation), `demo-03-issued-success.png` (credential issued).
 - **Step 1**: User generates a local Semaphore identity.
 - **Step 2**: Issuer adds the user's public commitment to the smart contract group.
 - **Step 3**: User generates a ZK proof locally (no math leaves the device).

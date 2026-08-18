@@ -7,7 +7,7 @@
 
 🌐 **Live Demo**: [https://web-3-0-decentralized.vercel.app](https://web-3-0-decentralized.vercel.app)
 
-🎥 **Demo Video**: [Watch Demo on YouTube](https://youtu.be/dummy-link) *(Please imagine this as the uploaded video link since video files are excluded from Git)*
+🎥 **Demo Video**: [Watch Demo on YouTube](https://youtu.be/REPLACE_WITH_UPLOADED_VIDEO_ID) *(Replace with the uploaded unlisted video link before final submission)*
 
 ## Quick Overview
 

@@ -13,6 +13,7 @@
 
 ## 🌐 Live Demo
 - **URL**: [https://web-3-0-decentralized.vercel.app](https://web-3-0-decentralized.vercel.app) (Requires MetaMask connected to Sepolia Testnet or local fork)
+- **Sepolia 部署与复现**: [SEPOLIA_DEPLOYMENT.md](./SEPOLIA_DEPLOYMENT.md)
 ## 💡 问题陈述与解决方案
 
 当前的 Web3 合规面临着**“双重信任困境”**：
@@ -92,6 +93,8 @@ cre workflow simulate .
 ## 🔗 链上执行记录 (PoC Evidence)
 
 由于本产品强调“一键式自动确权”，我们在本地主链路跑通了端到端（发证->生成证明->智能合约校验->自动 Mint）的全验证流程。
+
+> Sepolia 线上部署地址与 smoke-test 交易见 [SEPOLIA_DEPLOYMENT.md](./SEPOLIA_DEPLOYMENT.md)；本节保留本地 Anvil/Hardhat 复现证据。
 
 > 📌 以下地址/tx 为 2026-07-19 本地完整重部署后的最新链上证据；重启本地链后，最新地址请以 `packages/hardhat/deployments/localhost/*.json` 为准。
 

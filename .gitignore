@@ -5,3 +5,9 @@ tmp/
 .git_backup/
 
 tmp_new/
+.vercel
+video-production/*.mp4
+video-production/*.wav
+video-production/audio/
+video-production/cards/
+video-production/segments/

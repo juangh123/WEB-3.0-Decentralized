@@ -3,6 +3,8 @@
 **日期**: 2026-07-15（链上证据已于 2026-07-19 本地完整重部署后刷新）
 **状态**: 核心流程已跑通，截图已就绪
 
+> 本节下方合约地址与交易哈希为 **本地 Anvil/Hardhat 复现证据**；Sepolia 线上地址与 smoke-test 交易见 `../SEPOLIA_DEPLOYMENT.md`。
+
 ---
 
 ## M2 主赛道 Demo 流程 (ZK Identity → NFT Mint)

@@ -82,7 +82,14 @@ const fetchSanctions = (
 
 /** Cron 触发的合规检查主逻辑(DON 模式执行) */
 const onCronTrigger = (runtime: Runtime<Config>, _payload: CronPayload): string => {
-  const cfg = runtime.config;
+  // config.json provides defaults; environment variables override those values
+  // when the workflow is executed in different environments (local vs CRE cloud).
+  const cfg: Config = {
+    ...runtime.config,
+    sanctionsApiUrl: process.env.SANCTIONS_API_URL ?? runtime.config.sanctionsApiUrl,
+    chainSelectorName: process.env.CHAIN_SELECTOR_NAME ?? runtime.config.chainSelectorName,
+    complianceGateAddress: process.env.COMPLIANCE_GATE_ADDRESS ?? runtime.config.complianceGateAddress,
+  };
 
   // ---------- 1. HTTP:拉取制裁名单(DON 共识) ----------
   const httpClient = new HTTPClient();

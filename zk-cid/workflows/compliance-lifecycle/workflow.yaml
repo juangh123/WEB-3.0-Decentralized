@@ -29,4 +29,4 @@ capabilities:
         rpc: ${SEPOLIA_RPC_URL}
         contracts:
           - name: ComplianceGate
-            address: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512"
+            address: "0xB393C4Aace43162b170d4f6A84a60fA1AF9D1Ef3"

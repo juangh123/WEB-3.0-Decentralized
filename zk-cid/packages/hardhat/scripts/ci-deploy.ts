@@ -28,7 +28,7 @@ async function main() {
   console.log("✔ 已配置 AccessNFT 为 ComplianceGate 的 Verifier 角色！");
 }
 
-main().catch((error) => {
+main().catch(error => {
   console.error(error);
   process.exitCode = 1;
 });

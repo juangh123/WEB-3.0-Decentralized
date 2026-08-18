@@ -96,7 +96,9 @@ const deployContracts: DeployFunction = async function (hreArg: any) {
   // (ComplianceGate.verifyCompliance reverts for any other caller).
   // We skip setting verifier dynamically here to avoid prompt-hang.
   // Configure AccessNFT as verifier manually via UI or script when needed.
-  console.log(`[Note] Please manually call setVerifier(${accessNFT.address}, true) on ComplianceGate ${complianceGate.address}`);
+  console.log(
+    `[Note] Please manually call setVerifier(${accessNFT.address}, true) on ComplianceGate ${complianceGate.address}`,
+  );
 };
 
 export default deployContracts;

@@ -19,6 +19,7 @@ function loadArtifact(name: string) {
 function saveDeployment(name: string, address: string) {
   const depDir = join(__dirname, "..", "deployments", "localhost");
   if (!existsSync(depDir)) mkdirSync(depDir, { recursive: true });
+  writeFileSync(join(depDir, ".chainId"), "31337");
   const artifact = loadArtifact(name);
   writeFileSync(
     join(depDir, `${name}.json`),
@@ -68,6 +69,11 @@ async function main() {
   const txRegister = await gate.setAccessNFT(accessNFTAddress);
   await txRegister.wait();
   console.log("AccessNFT registered on gate:", accessNFTAddress);
+
+  // Authorize AccessNFT to call verifyCompliance (onlyVerifier).
+  const txVerifier = await gate.setVerifier(accessNFTAddress, true);
+  await txVerifier.wait();
+  console.log("AccessNFT registered as verifier:", accessNFTAddress);
 
   // Set CRE Workflow address on ComplianceGate (use deployer as workflow for local demo)
   const tx = await gate.setWorkflow(deployerAddress);
