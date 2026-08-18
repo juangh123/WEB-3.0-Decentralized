@@ -86,10 +86,16 @@ $env:DEPLOYER_PRIVATE_KEY = "<issuer-private-key>"
 | Mint AccessNFT | `0xe371783abbb0fe1b429cc900d524b5b24ef338e652591c5b7e92a013a98eef9c` |
 | Revoke credential | `0x053cb12bc3bacb6d037ea246367a13da262ad72ab0f10a2178e7c8496105a21a` |
 
+Current live demo state after re-issuing a fresh commitment:
+
+- Commitment: `123456789012345678901234567890123456789`
+- Issue credential tx: `0xf4e28de8931123e71e0e76fa8cff24f96a38ef3da8b691658c4461cd9f234682`
+
 Verified state:
 
 - `ComplianceGate.groupId = 625`
 - `ComplianceGate.demoMode = true`
+- `ComplianceGate.getMembers() = [123456789012345678901234567890123456789]`
 - `AccessNFT.nextTokenId = 1`
 
 ## Publish Frontend
@@ -123,7 +129,7 @@ cd "F:\AI WORK\WEB 3.0 Decentralized\zk-cid\mock-api"
 Set `ADMIN_TOKEN` in that project and seed the smoke-test commitment:
 
 ```text
-SEED_SANCTIONED=987654321012345678901234567890123456789
+SEED_SANCTIONED=123456789012345678901234567890123456789
 ```
 
 Then update the CRE workflow:

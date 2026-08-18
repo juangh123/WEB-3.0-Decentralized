@@ -7,7 +7,7 @@ import { fileURLToPath } from "url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const GATE_ADDRESS = "0xB393C4Aace43162b170d4f6A84a60fA1AF9D1Ef3";
-const DEMO_COMMITMENT = "987654321012345678901234567890123456789";
+const DEMO_COMMITMENT = process.env.DEMO_COMMITMENT ?? "123456789012345678901234567890123456789";
 
 const gateArtifact = JSON.parse(
   readFileSync(join(__dirname, "..", "deployments", "sepolia", "ComplianceGate.json"), "utf8"),
