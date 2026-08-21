@@ -11,6 +11,6 @@
     "outDir": "dist",
     "rootDir": "."
   },
-  "include": ["./scripts", "./test", "./typechain-types"],
+  "include": ["./scripts", "./test"],
   "files": ["./hardhat.config.ts"]
 }

@@ -44,7 +44,7 @@ async function main() {
 
   // Step 2: Get current compliance group members
   console.log("\n[2/4] Reading compliance group members from chain...");
-  const members = await gate.getMembers();
+  const members: bigint[] = await gate.getMembers();
   console.log(
     "  On-chain members:",
     members.map(m => m.toString()),
@@ -87,7 +87,7 @@ async function main() {
   }
 
   // Verify
-  const remaining = await gate.getMembers();
+  const remaining: bigint[] = await gate.getMembers();
   console.log("\n" + "=".repeat(60));
   console.log("  REVOCATION COMPLETE");
   console.log("=".repeat(60));

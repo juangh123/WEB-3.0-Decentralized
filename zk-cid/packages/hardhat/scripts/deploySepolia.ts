@@ -16,7 +16,12 @@ function loadArtifact(name: string) {
   return JSON.parse(readFileSync(path, "utf-8"));
 }
 
-function saveDeployment(chainId: number, name: string, address: string, receipt: ethers.TransactionReceipt | null) {
+function saveDeployment(
+  chainId: number,
+  name: string,
+  address: string,
+  receipt: ethers.ContractTransactionReceipt | null | undefined,
+) {
   const depDir = join(__dirname, "..", "deployments", "sepolia");
   mkdirSync(depDir, { recursive: true });
   writeFileSync(join(depDir, ".chainId"), String(chainId));

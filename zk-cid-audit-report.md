@@ -136,7 +136,7 @@
 
 ### 本轮顺手修补(收口提交)
 
-- `packages/hardhat/tsconfig.json`: `files` 引用不存在的 `hardhat.config.cts` → 修正为 `./hardhat.config.ts`。修正前 `check-types` 直接报 TS6053(文件不存在)失败;修正后暴露出 **144 条预存类型错误**(138 条在生成的 `typechain-types/`,为 node16 ESM 显式扩展名兼容问题;6 条在手写文件: `namedAccounts` 为 hardhat-deploy v1 残留、`generateProofAndMint.ts` 引用未安装的 semaphore 旧包、`m3-demo.ts` 两处隐式 any)。按预案不深修,保留修正并如实记录——引用恢复真实、错误从"被掩盖"变为"可见",仓库状态更健康;不影响 hardhat 编译与测试(测试经 tsx 转译,不走 tsc)。
+- `packages/hardhat/tsconfig.json`: 已排除生成的 `typechain-types/`,并修复 `namedAccounts`、`ci-deploy.ts`、`deploySepolia.ts`、`m3-demo.ts` 以及 Semaphore 依赖声明,`yarn workspace @se-2/hardhat check-types` 已零错误。
 - 环境修复(未入库): `packages/hardhat/node_modules/zod` 本地残缺副本(缺 package.json/index.js)已删除,回退使用根目录 hoist 的 zod@3.25.76;工具通知文件 `.hardhat-deploy-v2-notice` 按其自述("阅读后可删除")删除。
 - 未提交: `opencode.json` 的本地改动(工具自动写入的 kimi-code MCP 配置),属本地工具状态。
 
@@ -148,4 +148,4 @@
 4. 有 CRE CLI 环境后运行 `cre workflow simulate`,将证据落盘 `workflows/compliance-lifecycle/evidence/`。
 5. Sepolia 真实部署(需真实 Semaphore 部署 + `setDemoMode(false)` + 私钥/_RPC 凭证)。
 6. 本地链重启后: 重新部署 → 按 deployments/*.json 回写 README 证据表与 workflow config 地址。
-7. 预存类型错误(可选): typechain node16 兼容、`namedAccounts` v1 残留、semaphore 旧包脚本清理。
+7. ~~预存类型错误(可选)~~ 已修复: `yarn workspace @se-2/hardhat check-types` 已零错误。

@@ -37,6 +37,13 @@
 - 分模块 conventional commits 最终提交
 - 输出验证结果与遗留事项清单(视频录制、repo/demo 链接、CRE CLI 实测等需用户线下完成项)
 
+### Phase 5 · TypeScript 类型检查清零 — ✅ 已完成
+- `packages/hardhat` 不再把生成的 `typechain-types/` 纳入 `check-types`
+- 移除 Hardhat 3 下已不兼容的 `namedAccounts` 配置
+- 修正 `ci-deploy.ts`、`deploySepolia.ts`、`m3-demo.ts` 的脚本类型
+- 为 `generateProofAndMint.ts` 补齐已实际使用的 Semaphore 包依赖
+- 门禁: `yarn workspace @se-2/hardhat check-types` 零错误
+
 ## 不做的事(明确排除)
 - 不推送任何 remote、不新建 GitHub 仓库(用户自行决定)
 - 不录制 demo 视频、不填写 PITCH_DECK 的 repo/demo 链接占位符
