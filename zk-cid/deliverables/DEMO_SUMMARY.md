@@ -58,8 +58,9 @@ Depth:     1
 ```bash
 # 1. 在 workflows 目录使用 CRE SDK CLI 模拟触发
 cd workflows/compliance-lifecycle
-# 使用 CRE SDK simulate 命令
-# 2. Workflow 自动拉取 API → 比对 members → 提交 revokeCredential
+# 工作流端到端模拟(仓库根目录执行,真实 CRE SDK TestRuntime)
+yarn workspace compliance-lifecycle test:sim
+# 模拟内容:拉取制裁 API → 比对 on-chain members → 生成 CRE 报告 → 提交 revokeCredential
 ```
 
 ---
@@ -90,7 +91,7 @@ cd workflows/compliance-lifecycle
 
 - **`a261fcd` fix(contracts)**:ComplianceGate 新增 `demoMode`(默认 true,仅 issuer 可改;置 false 后 Semaphore `validateProof` 失败必 revert);`verifyCompliance` 强制检查 `hasBeenRevoked`;新增 onlyAccessNFT 限制(外部 EOA 不能直调,唯一验证路径为 `AccessNFT.mint`);`issueCredential` 去重、`setWorkflow` 发事件、groupId 改由 `createGroup` 生成。`hardhat test` 15 passing;陈旧的 coverage/ 报告已删除。
 - **`daa438f` fix(nextjs)**:`deployedContracts.ts` ABI 补全;`tsc` 0 错误;`next build --webpack` 通过;首页改为 ZK-CID 落地页;`/user`、`/issuer`、`/verify` 转为 Legacy 页(顶部徽章标注),主演示路径迁移至 `/zk-cid`;issuer/verify 页新增 `CredentialRevoked` 事件展示。
-- **`574f876` feat(workflows)**:CRE 工作流按真实 `@chainlink/cre-sdk@1.16.0` API 重写(CronCapability 触发器 + `cre.handler` + `Runner.newRunner` + HTTPClient 共识 + `EVMClient.callContract` + `runtime.report`/`writeReport`);新增 `workflow.yaml`,统一消费 `config.json`;`tsc` 编译通过。本机无 CRE CLI,simulate 未实测,复现命令与已知风险见 `workflows/compliance-lifecycle/evidence/README.md`。
+- **`574f876` feat(workflows)**:CRE 工作流按真实 `@chainlink/cre-sdk@1.16.0` API 重写(CronCapability 触发器 + `cre.handler` + `Runner.newRunner` + HTTPClient 共识 + `EVMClient.callContract` + `runtime.report`/`writeReport`);新增 `workflow.yaml`,统一消费 `config.json`;`tsc` 编译通过。本机无完整 CRE CLI(DON 网络级 simulate 未实测);已用 CRE SDK TestRuntime 完成端到端模拟并通过(见 evidence/README.md),复现命令与已知风险见 `workflows/compliance-lifecycle/evidence/README.md`。
 - **`e9c0af0` fix(mock-api)**:统一响应 schema 为 `{ sanctioned, source, updatedAt }`;admin 端点增加 `x-admin-token` 鉴权(默认 `dev-token`);seed 改走 `SEED_SANCTIONED` 环境变量;补充 README。
 
 > 注:本文档上文的合约地址与交易哈希已随 **2026-07-19 本地完整重部署** 刷新（含 M3 撤销 tx 与撤销后拦截证据）;重启本地链后,最新地址请以 `packages/hardhat/deployments/localhost/*.json` 为准。

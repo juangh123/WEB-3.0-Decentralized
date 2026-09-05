@@ -3,8 +3,18 @@
 Use this document as the final copy-paste source for the DoraHacks BUIDL
 submission page.
 
-Hackathon: `https://dorahacks.io/hackathon/1904/detail`
-Tracks: `https://dorahacks.io/hackathon/legal-hack-2026/tracks`
+Hackathon: https://dorahacks.io/hackathon/legal-hack-2026
+Tracks: https://dorahacks.io/hackathon/legal-hack-2026/tracks
+Bounties: https://dorahacks.io/hackathon/legal-hack-2026/bounties
+
+Event facts (verified 2026-09-03):
+
+- Organizer: Blockchain Legal Institute (BLI)
+- Submission opens: 2026/05/15 12:01 | Deadline: 2026/11/01 01:01
+- Prize pool: 20,000 USD total (still developing, per event page)
+- Track chosen: LegalTech & RegTech / Law-Finance-Compliance
+- Bounty target: Chainlink CRE "Best workflow with CRE" (2x $1,000, https://dorahacks.io/hackathon/bounty/1362)
+- Second bounty available (optional): RYO-CHAN "Autonomous Agents" (6,000 USD, https://dorahacks.io/hackathon/bounty/1380)
 
 ## Submission Fields
 
@@ -23,7 +33,8 @@ LegalTech & RegTech / Law, Finance & Compliance
 **Relevant Bounty**
 
 Chainlink CRE — Best Workflow / Decentralized Compliance Automation
-(select this only if the DoraHacks submission form lists a Chainlink CRE bounty)
+(select this because the DoraHacks submission form lists the Chainlink CRE
+bounty: https://dorahacks.io/hackathon/bounty/1362)
 
 **Short Description**
 
@@ -43,10 +54,10 @@ privacy and compliance.
 
 ## Solution
 
-ZK-CID separates “prove compliance” from “reveal identity”:
+ZK-CID separates "prove compliance" from "reveal identity":
 
 1. A licensed issuer verifies the user off-chain.
-2. The issuer adds only the user’s public commitment to a Semaphore group on-chain.
+2. The issuer adds only the user's public commitment to a Semaphore group on-chain.
 3. The user generates a ZK proof in the browser.
 4. `ComplianceGate` verifies the proof, checks revocation status, and mints an
    AccessNFT through the whitelisted `AccessNFT` contract.
@@ -64,11 +75,11 @@ ZK-CID separates “prove compliance” from “reveal identity”:
 
 ## Live URLs
 
-- Demo: `https://web-3-0-decentralized.vercel.app`
-- Main flow: `https://web-3-0-decentralized.vercel.app/zk-cid`
-- Mock sanctions API: `https://mock-api-topaz-zeta.vercel.app/api/sanctions-list`
-- Demo video: `https://web-3-0-decentralized.vercel.app/demo/zk-cid-pitch-video-en.mp4`
-- GitHub: `https://github.com/juangh123/WEB-3.0-Decentralized`
+- Demo: https://web-3-0-decentralized.vercel.app
+- Main flow: https://web-3-0-decentralized.vercel.app/zk-cid
+- Mock sanctions API: https://mock-api-topaz-zeta.vercel.app/api/sanctions-list
+- Demo video: https://web-3-0-decentralized.vercel.app/demo/zk-cid-pitch-video-en.mp4
+- GitHub: https://github.com/juangh123/WEB-3.0-Decentralized
 
 ## Sepolia Live Evidence
 
@@ -95,6 +106,7 @@ yarn next:lint --max-warnings=0
 yarn hardhat:lint --max-warnings=0
 yarn workspace compliance-lifecycle compile
 yarn workspace compliance-lifecycle compile:cre
+yarn workspace compliance-lifecycle test:sim
 yarn workspace zk-cid-mock-sanctions-api test
 node --check zk-cid/mock-api/server.js
 ```
@@ -116,12 +128,18 @@ Invoke-RestMethod -Uri 'https://mock-api-topaz-zeta.vercel.app/api/admin' `
 
 ## CRE Evidence
 
-- `main.ts` passes TypeScript compilation.
+- `core.ts` / `main.ts` pass TypeScript compilation.
 - Real `@chainlink/cre-sdk` compiler has been executed and produced
-  `workflows/compliance-lifecycle/dist/compliance-lifecycle.wasm`.
-- `cre workflow simulate` has not been executed because the complete CRE CLI
-  is not installed in this development environment; no simulated output is
-  fabricated. See `workflows/compliance-lifecycle/evidence/README.md`.
+  `workflows/compliance-lifecycle/dist/compliance-lifecycle.wasm` (2.7 MB).
+- End-to-end SDK simulation executed with the real CRE SDK TestRuntime
+  (`yarn workspace compliance-lifecycle test:sim`): 3/3 tests pass. The
+  workflow fetches the sanctions API, reads on-chain `getMembers()`,
+  computes the intersection, generates a CRE report, and writes a revoke
+  transaction — see `workflows/compliance-lifecycle/test/compliance-lifecycle.sim.test.ts`.
+- Full `cre workflow simulate` (CRE CLI, DON network-level) has not been
+  executed because the complete CRE CLI is not installed in this development
+  environment; no CLI simulation output is fabricated. The honest boundary is
+  documented in `workflows/compliance-lifecycle/evidence/README.md`.
 
 ## Known Limitations
 

@@ -7,7 +7,8 @@
     "build": "tsc",
     "test": "jest",
     "compile": "tsc",
-    "compile:cre": "npx -y bun@1.1.42 node_modules/@chainlink/cre-sdk/bin/cre-compile.ts main.ts dist/compliance-lifecycle.wasm --skip-type-checks"
+    "compile:cre": "npx -y bun@1.1.42 node_modules/@chainlink/cre-sdk/bin/cre-compile.ts main.ts dist/compliance-lifecycle.wasm --skip-type-checks",
+    "test:sim": "npx -y bun@1.1.42 test test/compliance-lifecycle.sim.test.ts"
   },
   "dependencies": {
     "@chainlink/cre-sdk": "^1.16.0"

@@ -43,11 +43,49 @@ yarn workspace compliance-lifecycle compile:cre
 `tsc -p workflows/compliance-lifecycle/tsconfig.json` 已零错误通过,
 两者共同覆盖“类型有效”和“可编译为 CRE Workflow WASM”。
 
-## 未实测项
+## SDK 级端到端模拟(已实测通过)
 
-本机仍 **没有安装完整 CRE CLI**(`cre` 命令不存在),因此
-`cre workflow simulate` 端到端模拟 **尚未执行**,此目录下不放任何
-伪造的模拟输出或截图。
+本机虽然没有完整 CRE CLI,但 `@chainlink/cre-sdk@1.16.0` 自带
+**TestRuntime**(`@chainlink/cre-sdk/test`),可在 Node/bun 进程内
+用真实 Runtime + 能力 Mock 完整执行本工作流编排逻辑。已新增
+`test/compliance-lifecycle.sim.test.ts`,3 条用例全部通过:
+
+```powershell
+# workspace 根目录
+yarn workspace compliance-lifecycle test:sim
+```
+
+```text
+bun test v1.1.42
+test\compliance-lifecycle.sim.test.ts:
+(pass) sanctions list has no overlap -> credentials stay valid (status ok, no writeReport)
+(pass) sanctioned member intersects on-chain members -> CRE report + writeReport revokes it
+(pass) sanctioned list has no on-chain match -> no writeReport (false positive guard)
+ 3 pass
+ 0 fail
+```
+
+模拟中实际执行的链路(与生产代码同一份 `core.ts`):
+
+1. `HTTPClient.sendRequest(...)` -> `http-actions@1.0.0-alpha` 能力 Mock
+   (返回与线上 mock-api 相同 JSON schema 的制裁名单)
+2. `EVMClient.callContract(getMembers)` -> `evm:ChainSelector:...@1.0.0`
+   能力 Mock(返回 ABI 编码成员数组,与 Sepolia `getMembers()` 一致)
+3. 交集计算命中后 `runtime.report(prepareReportRequest(callData))`
+   -> `consensus@1.0.0-alpha` 默认 Report 处理(产出 DON 签名报告)
+4. `EVMClient.writeReport(...)` -> 能力 Mock 返回 `TX_STATUS_SUCCESS`
+   与 txHash,日志输出 `revoked commitment=...`
+
+> 定位说明:这是 **SDK 层 TypeScript 运行时模拟**,证明工作流编排逻辑
+> 可端到端执行、判定与报告/上链路径正确;它不等同于完整 CRE CLI 的
+> `cre workflow simulate`(DON 网络级仿真),后者仍需评审者在装有
+> CRE CLI 的环境复现,命令见下文。
+
+## 未实测项(保留的诚实边界)
+
+完整 CRE CLI(`cre` 命令)仍未安装,`cre workflow simulate` 的
+DON 网络级仿真 **尚未执行**;此目录不放任何伪造的 CLI 模拟输出。
+SDK 级模拟(上文)已实际运行并通过,两者边界明确、无夸大。
 
 ## 复现命令(评审者可在装有 CRE CLI 的环境执行)
 
@@ -82,3 +120,4 @@ cre workflow simulate .
 3. **Merkle siblings**:撤销调用传空数组(合约已知限制,以
    `hasBeenRevoked` 标记作为执行依据),生产环境需接入 Merkle
    索引器。
+

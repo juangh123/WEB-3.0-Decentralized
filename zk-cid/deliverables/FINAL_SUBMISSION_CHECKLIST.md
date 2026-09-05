@@ -32,7 +32,8 @@ Use this checklist immediately before submitting the DoraHacks BUIDL.
   Sepolia `ComplianceGate` address
 - [x] `tsc` compilation passes
 - [x] Real CRE SDK compilation produces `dist/compliance-lifecycle.wasm`
-- [x] Full `cre workflow simulate` is not claimed as passed
+- [x] yarn workspace compliance-lifecycle test:sim (CRE SDK TestRuntime end-to-end simulation, 3/3 pass)
+- [x] Full `cre workflow simulate` (CRE CLI) is not claimed as passed; honest boundary documented
 
 ## Regression Gates
 
