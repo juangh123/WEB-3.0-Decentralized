@@ -1,0 +1,111 @@
+﻿1
+00:00:00,000 --> 00:00:04,000
+Web3 has a compliance paradox.
+
+2
+00:00:04,000 --> 00:00:10,500
+Traditional KYC makes you hand over your passport, your face, your home address — to databases that get hacked every week.
+
+3
+00:00:10,500 --> 00:00:15,000
+But fully anonymous DeFi? Shut down by regulators. You have to choose: expose your privacy, or break the law.
+
+4
+00:00:15,000 --> 00:00:20,500
+And that's not the only problem. Compliance isn't static.
+
+5
+00:00:20,500 --> 00:00:29,000
+When someone lands on an OFAC sanctions list, revoking their access can take days — because it depends on manual, centralized updates.
+
+6
+00:00:29,000 --> 00:00:34,500
+One point of failure. One too many.
+
+7
+00:00:34,500 --> 00:00:40,000
+ZK-CID fixes both halves of this broken system.
+
+8
+00:00:40,000 --> 00:00:45,000
+ZK-CID: Zero-Knowledge Compliant Identity.
+
+9
+00:00:45,000 --> 00:00:52,000
+We combine Decentralized Identity with Zero-Knowledge Proofs, so you can prove "I am compliant" — without ever revealing "who I am."
+
+10
+00:00:52,000 --> 00:01:01,000
+Think of a nightclub: the bouncer knows you're over twenty-one. They just don't know your name, your birthday, or your ID number.
+
+11
+00:01:01,000 --> 00:01:10,000
+That's what we built for DeFi.
+
+12
+00:01:10,000 --> 00:01:16,000
+Let's see it live. First, I generate an anonymous identity right here in the browser — my private key never leaves this device.
+
+13
+00:01:16,000 --> 00:01:24,000
+Second, a trusted issuer verifies my documents off-chain, then adds my anonymous commitment to an on-chain Semaphore group.
+
+14
+00:01:24,000 --> 00:01:32,000
+Now for the magic: I want into a regulated DeFi app, so I generate a Zero-Knowledge Proof right in the browser.
+
+15
+00:01:32,000 --> 00:01:42,000
+The math proves two things: I'm in the approved group, and I've never used this proof before. I submit it on-chain; the contract verifies it and mints my Access NFT.
+
+16
+00:01:42,000 --> 00:01:48,000
+I'm in — and the protocol never learned my identity.
+
+17
+00:01:48,000 --> 00:01:58,000
+And here's the part judges love: when a user hits a sanctions list, our Chainlink CRE workflow revokes their credential on-chain automatically — no humans, no delay.
+
+18
+00:01:58,000 --> 00:02:15,000
+Watch: the revoked user tries to mint again — and gets rejected. Credential revoked. Done.
+
+19
+00:02:15,000 --> 00:02:20,000
+Under the hood:
+
+20
+00:02:20,000 --> 00:02:29,000
+Semaphore v4 for anonymous signaling, Solidity contracts on Hardhat, a Next.js frontend built on Scaffold-ETH 2 —
+
+21
+00:02:29,000 --> 00:02:40,000
+and Chainlink CRE for fully automated compliance lifecycle management. Every step is auditable on-chain, while privacy stays mathematically protected.
+
+22
+00:02:40,000 --> 00:02:48,000
+What does this unlock? Any DeFi protocol — a DEX, a lending platform — can plug into our gate and become regulatory-ready in a day.
+
+23
+00:02:48,000 --> 00:02:56,000
+They never touch user data, so they never own the legal risk. Regulators get verifiable compliance. Users get absolute privacy.
+
+24
+00:02:56,000 --> 00:03:02,000
+Everybody wins.
+
+25
+00:03:02,000 --> 00:03:10,000
+This isn't just a hackathon project — it's the infrastructure compliant Web3 has been waiting for.
+
+26
+00:03:10,000 --> 00:03:17,000
+Try it yourself: the live demo is live at web-3-0-decentralized.vercel.app, and the code is open source on GitHub.
+
+27
+00:03:17,000 --> 00:03:24,000
+I'm a solo developer building the trust layer for the next generation of DeFi.
+
+28
+00:03:24,000 --> 00:03:30,000
+Thank you — and let's build a compliant, private Web3 together.

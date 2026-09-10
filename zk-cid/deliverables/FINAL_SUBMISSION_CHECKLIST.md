@@ -59,3 +59,17 @@ Use this checklist immediately before submitting the DoraHacks BUIDL.
 - [ ] Confirm bounty selection includes Chainlink CRE where available
 - [ ] Confirm live URLs, repo URL, video URL, and Sepolia tx links
 - [ ] Confirm Known Limitations section is visible to judges
+
+## Submission Materials (prepared 2026-09-09)
+
+- [x] Project logo: `zk-cid/deliverables/media/zk-cid-logo-512.png` (512x512)
+- [x] Submission cover / OG image: `zk-cid/deliverables/media/submission-cover.png` (1280x720)
+- [x] Pitch deck PDF: `zk-cid/deliverables/media/ZK-CID-Pitch-Deck.pdf` (8 slides, 16:9)
+- [x] Architecture diagram: `zk-cid/deliverables/media/architecture-diagram.png`
+- [x] Demo video thumbnails: `zk-cid/deliverables/media/video-thumbnail-20s.png`, `video-thumbnail-60s.png`
+- [x] Screenshots gallery: `zk-cid/docs/assets/demo-00-landing.png`, `demo-01-comparison.png`, `demo-02-identity.png`, `demo-03-issued-success.png`, `demo-03-issued.png`
+- [x] Demo video (38 MB, 1080p 3:30) tracked and live-hosted
+- [x] All live URLs re-verified 2026-09-09 (demo, /zk-cid, video, mock API, GitHub, Sepolia)
+- [ ] Upload logo, cover, screenshots and pitch deck PDF on the DoraHacks BUIDL form
+- [ ] Paste submission copy from `zk-cid/deliverables/DORA_SUBMISSION.md` (user action)
+- [ ] Confirm primary track selection and Chainlink CRE bounty on the form (user action)

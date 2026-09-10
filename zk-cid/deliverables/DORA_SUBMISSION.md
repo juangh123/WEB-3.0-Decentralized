@@ -7,7 +7,7 @@ Hackathon: https://dorahacks.io/hackathon/legal-hack-2026
 Tracks: https://dorahacks.io/hackathon/legal-hack-2026/tracks
 Bounties: https://dorahacks.io/hackathon/legal-hack-2026/bounties
 
-Event facts (verified 2026-09-03):
+Event facts (verified 2026-09-03, re-verified 2026-09-09):
 
 - Organizer: Blockchain Legal Institute (BLI)
 - Submission opens: 2026/05/15 12:01 | Deadline: 2026/11/01 01:01
@@ -151,6 +151,19 @@ Invoke-RestMethod -Uri 'https://mock-api-topaz-zeta.vercel.app/api/admin' `
 - `creWorkflow` is currently set to the deployer wallet because the real CRE
   forwarder address has not been configured; issuer-manual/script revocation is
   used as the on-chain smoke-test evidence.
+
+## Submission Materials (ready-to-upload files)
+
+| Item | File | Notes |
+|------|------|-------|
+| Project logo (512x512) | `zk-cid/deliverables/media/zk-cid-logo-512.png` | App branding, black shield on white |
+| Submission cover (1280x720) | `zk-cid/deliverables/media/submission-cover.png` | Use for OG / social preview |
+| Pitch deck (8 slides, 16:9 PDF) | `zk-cid/deliverables/media/ZK-CID-Pitch-Deck.pdf` | English, matches PITCH_DECK.md |
+| Architecture diagram | `zk-cid/deliverables/media/architecture-diagram.png` | Mermaid render, 880x821 |
+| Video thumbnails | `zk-cid/deliverables/media/video-thumbnail-20s.png` / `video-thumbnail-60s.png` | Extracted from demo video |
+| Screenshots | `zk-cid/docs/assets/demo-00-landing.png`, `demo-01-comparison.png`, `demo-02-identity.png`, `demo-03-issued-success.png`, `demo-03-issued.png` | For gallery upload |
+| Demo video (file) | `zk-cid/packages/nextjs/public/demo/zk-cid-pitch-video-en.mp4` | 1920x1080, 3:30, 38 MB; also live-hosted |
+| Submit copy | this file | Paste into the DoraHacks form |
 
 ## Final Checklist
 
