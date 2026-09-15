@@ -160,9 +160,9 @@ Invoke-RestMethod -Uri 'https://mock-api-topaz-zeta.vercel.app/api/admin' `
 | Submission cover (1280x720) | `zk-cid/deliverables/media/submission-cover.png` | Use for OG / social preview |
 | Pitch deck (8 slides, 16:9 PDF) | `zk-cid/deliverables/media/ZK-CID-Pitch-Deck.pdf` | English, matches PITCH_DECK.md |
 | Architecture diagram | `zk-cid/deliverables/media/architecture-diagram.png` | Mermaid render, 880x821 |
-| Video thumbnails | `zk-cid/deliverables/media/video-thumbnail-20s.png` / `video-thumbnail-60s.png` | Extracted from demo video |
+| Video thumbnails | `zk-cid/deliverables/media/video-thumbnail-20s.png` / `video-thumbnail-60s.png` | Final-cut hook and live-demo frames |
 | Screenshots | `zk-cid/docs/assets/demo-00-landing.png`, `demo-01-comparison.png`, `demo-02-identity.png`, `demo-03-issued-success.png`, `demo-03-issued.png` | For gallery upload |
-| Demo video (file) | `zk-cid/packages/nextjs/public/demo/zk-cid-pitch-video-en.mp4` | 1920x1080, 3:30, 38 MB; also live-hosted |
+| Demo video (file) | `zk-cid/packages/nextjs/public/demo/zk-cid-pitch-video-en.mp4` | 1920x1080, 2:48, 30 MB; English voiceover + captions, also live-hosted |
 | Submit copy | this file | Paste into the DoraHacks form |
 
 ## Final Checklist

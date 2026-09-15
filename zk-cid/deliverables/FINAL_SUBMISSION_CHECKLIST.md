@@ -68,8 +68,8 @@ Use this checklist immediately before submitting the DoraHacks BUIDL.
 - [x] Architecture diagram: `zk-cid/deliverables/media/architecture-diagram.png`
 - [x] Demo video thumbnails: `zk-cid/deliverables/media/video-thumbnail-20s.png`, `video-thumbnail-60s.png`
 - [x] Screenshots gallery: `zk-cid/docs/assets/demo-00-landing.png`, `demo-01-comparison.png`, `demo-02-identity.png`, `demo-03-issued-success.png`, `demo-03-issued.png`
-- [x] Demo video (38 MB, 1080p 3:30) tracked and live-hosted
-- [x] All live URLs re-verified 2026-09-09 (demo, /zk-cid, video, mock API, GitHub, Sepolia)
+- [x] Demo video (30 MB, 1080p 2:48, English voiceover + captions) tracked and live-hosted
+- [x] All live URLs re-verified 2026-09-15 (demo, /zk-cid, video, mock API, GitHub, Sepolia)
 - [ ] Upload logo, cover, screenshots and pitch deck PDF on the DoraHacks BUIDL form
 - [ ] Paste submission copy from `zk-cid/deliverables/DORA_SUBMISSION.md` (user action)
 - [ ] Confirm primary track selection and Chainlink CRE bounty on the form (user action)

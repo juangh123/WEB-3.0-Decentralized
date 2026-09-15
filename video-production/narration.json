@@ -1,0 +1,108 @@
+{
+  "voice": "en-US-AndrewMultilingualNeural",
+  "rate": "-4%",
+  "volume": "+0%",
+  "pitch": "-2Hz",
+  "leadIn": 0.45,
+  "tail": 0.75,
+  "sections": [
+    {
+      "id": "hook",
+      "visual": { "kind": "card", "src": "card-01.png", "mode": "in" },
+      "sentences": [
+        "Web3 has a compliance paradox.",
+        "Traditional KYC stores passports, faces, and addresses in centralized databases.",
+        "Fully anonymous DeFi gets shut down by regulators.",
+        "Until now, users had to choose: expose their privacy, or break the law."
+      ]
+    },
+    {
+      "id": "problem",
+      "visual": { "kind": "card", "src": "card-02.png", "mode": "out" },
+      "sentences": [
+        "And compliance never stops changing.",
+        "When a wallet hits a sanctions list, access may stay open for days because revocation depends on manual updates.",
+        "One centralized failure point, for users and protocols alike."
+      ]
+    },
+    {
+      "id": "solution",
+      "visual": { "kind": "card", "src": "card-03.png", "mode": "in" },
+      "sentences": [
+        "ZK-CID fixes both sides.",
+        "We combine decentralized identity with zero-knowledge proofs, so a user can prove I am compliant without revealing who I am.",
+        "The issuer verifies documents off-chain and stores only an anonymous commitment.",
+        "The protocol sees a valid proof, never the person's identity."
+      ]
+    },
+    {
+      "id": "demo-intro",
+      "visual": { "kind": "card", "src": "card-04.png", "mode": "out" },
+      "sentences": ["Let us see it live."]
+    },
+    {
+      "id": "demo-1",
+      "visual": { "kind": "clip", "src": "combined-demo-60s.mp4", "start": 0.0, "end": 12.0 },
+      "badge": "STEP 1  |  ANONYMOUS IDENTITY, GENERATED LOCALLY",
+      "sentences": [
+        "Step one. The user generates a Semaphore identity locally in the browser.",
+        "The private key never leaves the device."
+      ]
+    },
+    {
+      "id": "demo-2",
+      "visual": { "kind": "clip", "src": "combined-demo-60s.mp4", "start": 12.0, "end": 22.0 },
+      "badge": "STEP 2  |  ISSUER VERIFIES OFF-CHAIN, COMMITS ON-CHAIN",
+      "sentences": [
+        "Step two. A trusted issuer verifies the user's documents off-chain.",
+        "Only the anonymous commitment is added to the on-chain compliance group."
+      ]
+    },
+    {
+      "id": "demo-3",
+      "visual": { "kind": "clip", "src": "combined-demo-60s.mp4", "start": 22.0, "end": 43.0 },
+      "badge": "STEP 3  |  ZERO-KNOWLEDGE PROOF VERIFIED ON-CHAIN",
+      "sentences": [
+        "Step three. To enter a regulated DeFi app, the user generates a zero-knowledge proof in the browser.",
+        "It proves approved-group membership and prevents replay.",
+        "ComplianceGate verifies it and mints the Access NFT."
+      ]
+    },
+    {
+      "id": "demo-4",
+      "visual": { "kind": "clip", "src": "combined-demo-60s.mp4", "start": 43.0, "end": 60.0 },
+      "badge": "STEP 4  |  CHAINLINK CRE REVOKES AUTOMATICALLY",
+      "sentences": [
+        "Step four. When a sanctions list changes, the Chainlink CRE workflow matches on-chain members and revokes the credential automatically.",
+        "No manual update, no delay."
+      ]
+    },
+    {
+      "id": "arch",
+      "visual": { "kind": "card", "src": "card-05.png", "mode": "in" },
+      "sentences": [
+        "Under the hood: Semaphore v4 for anonymous membership, Solidity and Hardhat for on-chain verification, and a Next.js frontend on Scaffold-ETH 2.",
+        "Chainlink CRE orchestrates the complete compliance lifecycle."
+      ]
+    },
+    {
+      "id": "impact",
+      "visual": { "kind": "card", "src": "card-06.png", "mode": "out" },
+      "sentences": [
+        "This is not a mock-up. Contracts are deployed on Sepolia, and the end-to-end flow is covered by tests.",
+        "The CRE simulation executes fetch, match, report, and revoke.",
+        "Any DeFi protocol can integrate the gate without taking custody of user data.",
+        "Regulators get verifiable compliance. Users keep their privacy."
+      ]
+    },
+    {
+      "id": "close",
+      "visual": { "kind": "card", "src": "card-07.png", "mode": "in" },
+      "sentences": [
+        "The live demo and open-source code are ready for judges to test.",
+        "ZK-CID: private by design, compliant by proof.",
+        "Thank you."
+      ]
+    }
+  ]
+}

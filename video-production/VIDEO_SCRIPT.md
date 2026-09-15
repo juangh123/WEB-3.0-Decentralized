@@ -1,7 +1,7 @@
 # ZK-CID 黑客松参赛视频 · 总脚本 (Master Script)
 
-- **目标时长**: 3 分 30 秒
-- **语言**: 英文旁白（面向全球评委）+ 中文字幕（可选用）
+- **当前最终版**: 2 分 47.88 秒（`zk-cid-pitch-video-en.mp4` / `zk-cid-pitch-video-zh.mp4`）
+- **语言**: 英文旁白（面向全球评委）+ 英文字幕或中文字幕双版本
 - **线上素材**: https://web-3-0-decentralized.vercel.app
 - **代码仓库**: https://github.com/juangh123/WEB-3.0-Decentralized
 - **赛事**: BLI Legal Tech Hackathon Edition 2 — Law / Finance / Compliance（附加 Chainlink CRE 赏金）
@@ -133,16 +133,21 @@
 
 **文件命名**: 将录好的片段保存到 `video-production/footage/`，按顺序命名 `clip-01.mp4` … `clip-07.mp4`（允许缺省，成片脚本会按存在性自动拼接）。
 
-## 三-b、成片构建命令
+## 三-b、成片构建命令（最终版 v3）
 
 ```powershell
 cd video-production
-node cards/render-cards.js   # 渲染 7 张主视觉卡
-node record_screen_demo.js # 录制真实网页操作，输出到 recordings/
-node build_video.js          # 生成 en / nocap 成片
+node cards/render-cards.js       # 渲染最终卡片素材
+node make_voiceover.js --force   # 重新生成分段英文旁白和 VTT 时间轴
+node build_video_v3.js           # 生成 en / zh 两版最终成片
 ```
 
-线上提交使用 `zk-cid-pitch-video-en.mp4`，复制到 `zk-cid/packages/nextjs/public/demo/` 后由 Vercel 托管。
+线上提交使用 `zk-cid-pitch-video-en.mp4`；中文评委版使用
+`zk-cid-pitch-video-zh.mp4`。最终文件会同步到 `zk-cid/deliverables/videos/`、
+`zk-cid/deliverables/media/` 和 `zk-cid/packages/nextjs/public/demo/`。
+
+> 下方逐段脚本保留了早期 3:30 叙事方案；最终版以 `narration.json`、
+> `captions_zh.json` 和 `build_video_v3.js` 为准。
 
 ---
 

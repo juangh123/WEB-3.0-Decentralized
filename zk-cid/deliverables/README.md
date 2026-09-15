@@ -8,11 +8,11 @@ This directory contains all finalized media, artifacts, and presentation materia
 
 ### 1. 🎥 Videos (`deliverables/videos/`)
 Direct local access to project pitch videos and subtitles:
-- **`zk-cid-pitch-video-en.mp4`** (38 MB, 1080p, 3m 30s)
-  Official English submission pitch video with embedded captions.
+- **`zk-cid-pitch-video-en.mp4`** (30 MB, 1080p, 2m 48s)
+  Official English submission pitch video with English voiceover and embedded captions.
   *Online Live URL:* `https://web-3-0-decentralized.vercel.app/demo/zk-cid-pitch-video-en.mp4`
-- **`zk-cid-pitch-video-zh.mp4`** (37 MB, 1080p, 3m 30s)
-  Chinese voiceover/captioned edition for multilingual judges.
+- **`zk-cid-pitch-video-zh.mp4`** (30 MB, 1080p, 2m 48s)
+  Chinese captioned edition with the same English voiceover for multilingual judges.
 - **`subtitles_en.srt`** & **`subtitles_zh.srt`**
   Full transcript & SRT timing files.
 
