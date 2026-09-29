@@ -10,10 +10,15 @@ export type ScaffoldConfig = {
 };
 
 export const DEFAULT_ALCHEMY_API_KEY = "IZYEU2cWBgnFmgiTAgpWD";
+const isProduction = process.env.NODE_ENV === "production";
+const productionNetworks = [chains.sepolia] as const;
+const developmentNetworks = [chains.sepolia, chains.hardhat] as const;
 
 const scaffoldConfig = {
   // The networks on which your DApp is live
-  targetNetworks: [chains.sepolia, chains.hardhat],
+  // Keep the local Hardhat chain out of production bundles. This avoids exposing a
+  // localhost network option to deployed users while preserving the usual local setup.
+  targetNetworks: isProduction ? productionNetworks : developmentNetworks,
 
   // The interval at which your front-end polls the RPC servers for new data
   // it has no effect if you only target the local network (default is 4000)

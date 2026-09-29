@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { Group } from "@semaphore-protocol/group";
-import { Identity } from "@semaphore-protocol/identity";
-import { SemaphoreProof, generateProof } from "@semaphore-protocol/proof";
+import type { Identity } from "@semaphore-protocol/identity";
+import type { SemaphoreProof } from "@semaphore-protocol/proof";
 
 export const useProof = () => {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -25,6 +24,7 @@ export const useProof = () => {
     setError(null);
     try {
       // 1. 重建包含所有成员的群组
+      const { Group } = await import("@semaphore-protocol/group");
       const group = new Group(groupMembers);
 
       // 2. 将目标用户的以太坊地址作为 Message，绑定此证明只能由该地址提交
@@ -33,6 +33,9 @@ export const useProof = () => {
       const scope = groupId.toString();
 
       // 3. 浏览器端生成 ZK Proof (无需下载巨型 wasm/zkey, Semaphore v4 已优化)
+      // Load the prover (and its snarkjs/WASM payload) only when a proof is actually
+      // requested so the demo page does not ship ~1MB of ZK tooling on first paint.
+      const { generateProof } = await import("@semaphore-protocol/proof");
       const generatedProof = await generateProof(identity, group, message, scope);
 
       setProof(generatedProof);

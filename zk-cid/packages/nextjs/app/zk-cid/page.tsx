@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createWalletClient, encodeFunctionData, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { sepolia } from "viem/chains";
@@ -14,6 +14,13 @@ import {
 import { useIdentity } from "~~/hooks/zk-cid/useIdentity";
 import { useProof } from "~~/hooks/zk-cid/useProof";
 import { getAlchemyHttpUrl, notification } from "~~/utils/scaffold-eth";
+
+type SanctionsPayload = {
+  sanctioned: string[];
+  source: string | null;
+  updatedAt: string | null;
+  error: string | null;
+};
 
 export default function ZKCIDDemo() {
   const { address } = useAccount();
@@ -81,6 +88,44 @@ export default function ZKCIDDemo() {
 
   const isIssuerWallet =
     !!address && !!issuerAddress && address.toLowerCase() === (issuerAddress as string).toLowerCase();
+  // External sanctions list, fetched through the same-origin /api/sanctions proxy so the
+  // browser never talks to the mock API cross-origin. This mirrors the CRE workflow data
+  // source and lets visitors see the intersection with the on-chain member set.
+  const [sanctions, setSanctions] = useState<SanctionsPayload | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    const controller = new AbortController();
+    fetch("/api/sanctions", { cache: "no-store", signal: controller.signal })
+      .then(response => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+      })
+      .then(payload => {
+        if (!cancelled) setSanctions(payload as SanctionsPayload);
+      })
+      .catch(error => {
+        if (!cancelled) {
+          setSanctions({ sanctioned: [], source: null, updatedAt: null, error: String(error?.message ?? error) });
+        }
+      });
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, []);
+
+  const sanctionedMembers = useMemo(() => {
+    if (!sanctions?.sanctioned?.length) return [];
+    return groupMembers.filter(member => sanctions.sanctioned.includes(member));
+  }, [groupMembers, sanctions]);
+  const sanctionsUpdatedAtValue = sanctions?.updatedAt;
+  const sanctionsUpdatedAt = (() => {
+    if (!sanctionsUpdatedAtValue) return "—";
+    const timestamp = new Date(sanctionsUpdatedAtValue);
+    return Number.isNaN(timestamp.getTime())
+      ? sanctionsUpdatedAtValue
+      : timestamp.toLocaleString("zh-CN", { hour12: false });
+  })();
 
   const currentCommitmentStr = identity ? identity.commitment.toString() : "";
   const isMemberInGroup = useMemo(() => {
@@ -401,7 +446,9 @@ export default function ZKCIDDemo() {
             <div className="flex justify-between items-center text-xs">
               <span className="text-base-content/70">发证机构地址 (Issuer):</span>
               <span className="font-mono font-bold">
-                {issuerAddress ? `${(issuerAddress as string).slice(0, 10)}…${(issuerAddress as string).slice(-6)}` : "加载中..."}
+                {issuerAddress
+                  ? `${(issuerAddress as string).slice(0, 10)}…${(issuerAddress as string).slice(-6)}`
+                  : "加载中..."}
               </span>
             </div>
 
@@ -416,8 +463,8 @@ export default function ZKCIDDemo() {
                   </span>
                 ) : (
                   <span>
-                    当前钱包不是发证机构（Issuer），合约会拒绝自行发证。请改用发证机构钱包，或让演示方为你的
-                    Commitment 发证后再回到 Tab 1 生成证明。
+                    当前钱包不是发证机构（Issuer），合约会拒绝自行发证。请改用发证机构钱包，或让演示方为你的 Commitment
+                    发证后再回到 Tab 1 生成证明。
                   </span>
                 )}
               </div>
@@ -583,6 +630,44 @@ export default function ZKCIDDemo() {
             </span>
           </div>
         </div>
+      </div>
+
+      <div className="w-full max-w-3xl mt-4 bg-base-200 p-5 rounded-2xl border border-base-300 text-xs">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-bold">CRE 数据源 · 外部制裁名单</h3>
+          {!sanctions || sanctions.error ? (
+            <span className="badge badge-ghost">未连接</span>
+          ) : sanctionedMembers.length > 0 ? (
+            <span className="badge badge-error text-white">{sanctionedMembers.length} 命中</span>
+          ) : (
+            <span className="badge badge-success text-white">无命中</span>
+          )}
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+          <div className="flex justify-between gap-3">
+            <span className="opacity-70">名单条目数</span>
+            <span className="font-mono">{sanctions ? sanctions.sanctioned.length : "加载中..."}</span>
+          </div>
+          <div className="flex justify-between gap-3">
+            <span className="opacity-70">链上成员命中数</span>
+            <span className="font-mono">{isMembersLoading ? "加载中..." : sanctionedMembers.length}</span>
+          </div>
+          <div className="flex justify-between gap-3 sm:col-span-2">
+            <span className="opacity-70">数据源</span>
+            <span className="font-mono truncate max-w-[240px]" title={sanctions?.source ?? undefined}>
+              {sanctions?.source ?? "—"}
+            </span>
+          </div>
+          <div className="flex justify-between gap-3 sm:col-span-2">
+            <span className="opacity-70">同步时间</span>
+            <span className="font-mono">{sanctionsUpdatedAt}</span>
+          </div>
+        </div>
+        {sanctions?.error && <p className="mt-2 opacity-70 break-all">制裁名单接口当前不可用：{sanctions.error}</p>}
+        <p className="mt-3 opacity-70 leading-relaxed">
+          该名单与 CRE 工作流的制裁数据源一致，命中成员会进入 revokeCredential
+          撤销路径。此处只展示实时同步和交集结果，不会从浏览器发起交易。
+        </p>
       </div>
     </div>
   );
