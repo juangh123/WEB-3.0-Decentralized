@@ -1,11 +1,19 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { createWalletClient, encodeFunctionData, http } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
+import { sepolia } from "viem/chains";
 import { useAccount } from "wagmi";
-import { useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
+import {
+  useDeployedContractInfo,
+  useScaffoldReadContract,
+  useScaffoldWriteContract,
+  useTransactor,
+} from "~~/hooks/scaffold-eth";
 import { useIdentity } from "~~/hooks/zk-cid/useIdentity";
 import { useProof } from "~~/hooks/zk-cid/useProof";
-import { notification } from "~~/utils/scaffold-eth";
+import { getAlchemyHttpUrl, notification } from "~~/utils/scaffold-eth";
 
 export default function ZKCIDDemo() {
   const { address } = useAccount();
@@ -38,6 +46,41 @@ export default function ZKCIDDemo() {
     if (!onChainMembers) return [];
     return (onChainMembers as readonly bigint[]).map(member => member.toString());
   }, [onChainMembers]);
+  const { data: gateContract } = useDeployedContractInfo({ contractName: "ComplianceGate" });
+  const { data: issuerAddress } = useScaffoldReadContract({
+    contractName: "ComplianceGate",
+    functionName: "issuer",
+  });
+  const { data: isDemoMode } = useScaffoldReadContract({
+    contractName: "ComplianceGate",
+    functionName: "demoMode",
+  });
+  const { data: workflowAddress } = useScaffoldReadContract({
+    contractName: "ComplianceGate",
+    functionName: "creWorkflow",
+  });
+
+  // Optional demo issuer. When NEXT_PUBLIC_DEMO_ISSUER_KEY is set, visitors can walk the
+  // full issue -> prove -> mint flow without holding the issuer wallet. Leave it unset to
+  // require the real issuer (default). The key is a testnet-only credential and is exposed
+  // to the browser by design, so never point this at a wallet holding real value.
+  const demoIssuerKey = process.env.NEXT_PUBLIC_DEMO_ISSUER_KEY as `0x${string}` | undefined;
+  const demoIssuerWallet = useMemo(() => {
+    if (!demoIssuerKey || !demoIssuerKey.startsWith("0x")) return undefined;
+    try {
+      return createWalletClient({
+        account: privateKeyToAccount(demoIssuerKey),
+        chain: sepolia,
+        transport: http(getAlchemyHttpUrl(sepolia.id)),
+      });
+    } catch {
+      return undefined;
+    }
+  }, [demoIssuerKey]);
+  const demoTransactor = useTransactor(demoIssuerWallet);
+
+  const isIssuerWallet =
+    !!address && !!issuerAddress && address.toLowerCase() === (issuerAddress as string).toLowerCase();
 
   const currentCommitmentStr = identity ? identity.commitment.toString() : "";
   const isMemberInGroup = useMemo(() => {
@@ -74,6 +117,28 @@ export default function ZKCIDDemo() {
     } catch (e: any) {
       console.error(e);
       notification.error(e?.message || "发证失败，请检查钱包网络与交易。");
+    }
+  };
+  const handleDemoIssue = async () => {
+    if (!identity) {
+      notification.error("请先在 Tab 1 生成本地身份！");
+      setActiveTab("user");
+      return;
+    }
+    if (!demoIssuerWallet || !gateContract) return;
+    try {
+      await demoTransactor({
+        to: gateContract.address,
+        data: encodeFunctionData({
+          abi: gateContract.abi,
+          functionName: "issueCredential",
+          args: [BigInt(identity.commitment.toString())],
+        }),
+      });
+      notification.success("演示机构已发证上链（Demo Issuer）。");
+    } catch (e: any) {
+      console.error(e);
+      notification.error(e?.message || "演示机构发证失败，请检查 RPC 与演示私钥配置。");
     }
   };
 
@@ -333,10 +398,35 @@ export default function ZKCIDDemo() {
               </div>
             </div>
 
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-base-content/70">发证机构地址 (Issuer):</span>
+              <span className="font-mono font-bold">
+                {issuerAddress ? `${(issuerAddress as string).slice(0, 10)}…${(issuerAddress as string).slice(-6)}` : "加载中..."}
+              </span>
+            </div>
+
+            {!isMemberInGroup && (
+              <div className={`alert text-xs py-2 shadow-sm ${isIssuerWallet ? "alert-success" : "alert-info"}`}>
+                {isIssuerWallet ? (
+                  <span>当前钱包即为发证机构，可直接为本 Commitment 发证上链。</span>
+                ) : demoIssuerWallet ? (
+                  <span>
+                    当前钱包不是发证机构。合约仅允许 Issuer 发证，可点击下方「演示机构发证」用内置 Demo Issuer
+                    完成上链（测试网演示专用）。
+                  </span>
+                ) : (
+                  <span>
+                    当前钱包不是发证机构（Issuer），合约会拒绝自行发证。请改用发证机构钱包，或让演示方为你的
+                    Commitment 发证后再回到 Tab 1 生成证明。
+                  </span>
+                )}
+              </div>
+            )}
+
             <button
               className="btn btn-primary w-full"
               onClick={handleIssueCredential}
-              disabled={groupId === undefined || isIssuing || isMemberInGroup || !identity}
+              disabled={groupId === undefined || isIssuing || isMemberInGroup || !identity || !isIssuerWallet}
             >
               {isIssuing ? (
                 <>
@@ -344,10 +434,18 @@ export default function ZKCIDDemo() {
                 </>
               ) : isMemberInGroup ? (
                 "该身份已完成发证入群 (无需重复操作)"
+              ) : !isIssuerWallet ? (
+                "当前钱包非发证机构 (Issuer)"
               ) : (
                 "审核 KYC 并发证上链 (Add to Semaphore Group)"
               )}
             </button>
+
+            {demoIssuerWallet && !isMemberInGroup && identity && (
+              <button className="btn btn-outline btn-secondary w-full" onClick={handleDemoIssue}>
+                演示机构发证（Demo Issuer / 测试网专用）
+              </button>
+            )}
 
             {isMemberInGroup && (
               <div className="flex justify-end">
@@ -440,6 +538,51 @@ export default function ZKCIDDemo() {
             )}
           </div>
         )}
+      </div>
+
+      <div className="w-full max-w-3xl mt-6 bg-base-200 p-5 rounded-2xl border border-base-300 text-xs">
+        <h3 className="text-sm font-bold mb-3">链上实时状态 (Sepolia)</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+          <div className="flex justify-between gap-3">
+            <span className="opacity-70">ComplianceGate</span>
+            {gateContract ? (
+              <a
+                className="link font-mono"
+                href={`https://sepolia.etherscan.io/address/${gateContract.address}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {gateContract.address.slice(0, 10)}…{gateContract.address.slice(-6)}
+              </a>
+            ) : (
+              <span className="font-mono">加载中...</span>
+            )}
+          </div>
+          <div className="flex justify-between gap-3">
+            <span className="opacity-70">群组 ID</span>
+            <span className="font-mono">{groupId?.toString() ?? "加载中..."}</span>
+          </div>
+          <div className="flex justify-between gap-3">
+            <span className="opacity-70">链上成员数</span>
+            <span className="font-mono">{isMembersLoading ? "加载中..." : groupMembers.length}</span>
+          </div>
+          <div className="flex justify-between gap-3">
+            <span className="opacity-70">Demo Mode</span>
+            <span className="font-mono">{isDemoMode === undefined ? "加载中..." : String(isDemoMode)}</span>
+          </div>
+          <div className="flex justify-between gap-3">
+            <span className="opacity-70">Issuer</span>
+            <span className="font-mono">
+              {issuerAddress ? `${(issuerAddress as string).slice(0, 10)}…` : "加载中..."}
+            </span>
+          </div>
+          <div className="flex justify-between gap-3">
+            <span className="opacity-70">CRE Workflow</span>
+            <span className="font-mono">
+              {workflowAddress ? `${(workflowAddress as string).slice(0, 10)}…` : "加载中..."}
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   );
