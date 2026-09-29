@@ -23,7 +23,14 @@ const localWalletClient = createWalletClient({
 export const FaucetButton = () => {
   const { address, chain: ConnectedChain } = useAccount();
 
-  const { data: balance } = useWatchBalance({ address, chain: hardhat });
+  // Only watch the local chain once the wallet is actually on it. Watching it
+  // unconditionally makes every visitor poll http://127.0.0.1:8545 and fill the
+  // console with ERR_CONNECTION_REFUSED, even on the deployed Sepolia site.
+  const isOnLocalChain = ConnectedChain?.id === hardhat.id;
+  const { data: balance } = useWatchBalance({
+    address: isOnLocalChain ? address : undefined,
+    chain: isOnLocalChain ? hardhat : undefined,
+  });
 
   const [loading, setLoading] = useState(false);
 

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useAccount } from "wagmi";
-import { useScaffoldEventHistory, useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
+import { useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { useIdentity } from "~~/hooks/zk-cid/useIdentity";
 import { useProof } from "~~/hooks/zk-cid/useProof";
 import { notification } from "~~/utils/scaffold-eth";
@@ -26,17 +26,18 @@ export default function ZKCIDDemo() {
     functionName: "groupId",
   });
 
-  const { data: userAddedEvents, isLoading: isEventsLoading } = useScaffoldEventHistory({
+  // Read the live member set straight from the contract. Event-history reads start at
+  // block 0 on Sepolia, which public RPC endpoints reject or time out, so the demo used
+  // to render "0 members" even though the on-chain group already had entries.
+  const { data: onChainMembers, isLoading: isMembersLoading } = useScaffoldReadContract({
     contractName: "ComplianceGate",
-    eventName: "UserAdded",
-    fromBlock: 0n,
-    watch: true,
+    functionName: "getMembers",
   });
 
   const groupMembers = useMemo(() => {
-    if (!userAddedEvents) return [];
-    return userAddedEvents.map(event => event.args.commitment?.toString() ?? "");
-  }, [userAddedEvents]);
+    if (!onChainMembers) return [];
+    return (onChainMembers as readonly bigint[]).map(member => member.toString());
+  }, [onChainMembers]);
 
   const currentCommitmentStr = identity ? identity.commitment.toString() : "";
   const isMemberInGroup = useMemo(() => {
@@ -242,7 +243,7 @@ export default function ZKCIDDemo() {
 
               <div className="flex items-center justify-between text-xs bg-base-300 px-4 py-2 rounded-lg">
                 <span>
-                  链上群组当前成员总数：<strong>{isEventsLoading ? "加载中..." : groupMembers.length}</strong>
+                  链上群组当前成员总数：<strong>{isMembersLoading ? "加载中..." : groupMembers.length}</strong>
                 </span>
                 <span>
                   群组 ID：<strong>{groupId?.toString() ?? "加载中..."}</strong>
