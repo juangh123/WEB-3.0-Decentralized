@@ -13,12 +13,13 @@ revocation based on an external sanctions API, written against the real
 - **Step 1 (HTTP)**: Each DON node fetches the sanctions list from the Mock
   API via `HTTPClient.sendRequest` in node mode; results are agreed with
   `consensusIdenticalAggregation`.
-- **Step 2 (EVM read)**: `EVMClient.callContract` reads `getMembers()` from
-  the `ComplianceGate` contract at the last finalized block.
-- **Step 3 (Compute)**: Intersect on-chain members with the sanctions list.
+- **Step 2 (EVM read)**: `EVMClient.callContract` reads `getMembers()` and
+  `getLeaves()` from the `ComplianceGate` contract at the last finalized block.
+- **Step 3 (Compute)**: Intersect on-chain members with the sanctions list and
+  rebuild the Semaphore tree from stable leaves.
 - **Step 4 (EVM write)**: For each hit, a DON-signed report is produced via
   `runtime.report(prepareReportRequest(...))` and submitted with
-  `EVMClient.writeReport`, which calls `revokeCredential` on-chain.
+  `EVMClient.writeReport`, which calls `revokeCredentialWithMerkleProof` on-chain.
 
 ## Files
 

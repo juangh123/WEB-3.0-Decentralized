@@ -1,5 +1,5 @@
 {
-  "address": "0xB393C4Aace43162b170d4f6A84a60fA1AF9D1Ef3",
+  "address": "0x1b8ae78C37c3E29DFcB0236E1c562b3CCFA44F70",
   "abi": [
     {
       "inputs": [
@@ -49,6 +49,25 @@
         }
       ],
       "name": "CredentialRevoked",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "commitment",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "siblingCount",
+          "type": "uint256"
+        }
+      ],
+      "name": "CredentialRevokedFromTree",
       "type": "event"
     },
     {
@@ -137,6 +156,19 @@
           "internalType": "bool",
           "name": "",
           "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getLeaves",
+      "outputs": [
+        {
+          "internalType": "uint256[]",
+          "name": "",
+          "type": "uint256[]"
         }
       ],
       "stateMutability": "view",
@@ -240,6 +272,44 @@
           "type": "uint256"
         }
       ],
+      "name": "leafIndices",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "leaves",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
       "name": "memberIndices",
       "outputs": [
         {
@@ -284,6 +354,24 @@
         }
       ],
       "name": "revokeCredential",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "commitment",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256[]",
+          "name": "merkleProofSiblings",
+          "type": "uint256[]"
+        }
+      ],
+      "name": "revokeCredentialWithMerkleProof",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -443,7 +531,7 @@
     }
   ],
   "receipt": {
-    "blockNumber": 11484473,
-    "transactionHash": "0xb642852e5c449fbb9729cc24b50e04488568127161a198c8a97e1465c0744700"
+    "blockNumber": 11810361,
+    "transactionHash": "0xfe593613bab81860bdddc54e3dde59d16b97ad8c83f2620a1dd587360b858635"
   }
 }

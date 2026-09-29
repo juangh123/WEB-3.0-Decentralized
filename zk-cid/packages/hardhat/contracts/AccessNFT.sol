@@ -24,6 +24,7 @@ contract AccessNFT is ERC721 {
     function mint(ISemaphore.SemaphoreProof calldata proof) external {
         require(!hasMinted[msg.sender], "Already minted");
         require(!usedNullifiers[proof.nullifier], "Proof already used");
+        require(proof.message == uint256(uint160(msg.sender)), "Message must bind sender");
 
         // Effects first (checks-effects-interactions): mark before calling out to the gate.
         usedNullifiers[proof.nullifier] = true;

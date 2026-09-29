@@ -9,12 +9,12 @@ const COMMITMENT_2 = 22222222222222222222222222222222222222222222222222222222222
 const NULLIFIER_1 = 3333333333333333333333333333333333333333333333333333333333333333n;
 const NULLIFIER_2 = 4444444444444444444444444444444444444444444444444444444444444444n;
 
-function makeProof(nullifier: bigint, merkleTreeRoot: bigint) {
+function makeProof(nullifier: bigint, merkleTreeRoot: bigint, message = 0n) {
   return {
     merkleTreeDepth: 1,
     merkleTreeRoot,
     nullifier,
-    message: 0n,
+    message,
     scope: 0n,
     points: [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n],
   };
@@ -70,6 +70,18 @@ describe("ComplianceGate and AccessNFT", function () {
       await expect(gate.connect(workflow).revokeCredential(COMMITMENT_1, [])).to.emit(gate, "CredentialRevoked");
     });
 
+    it("allows the CRE workflow to remove the credential from the Merkle tree", async function () {
+      await gate.setWorkflow(workflow.address);
+      await gate.connect(workflow).issueCredential(COMMITMENT_1);
+
+      await expect(gate.connect(workflow).revokeCredentialWithMerkleProof(COMMITMENT_1, []))
+        .to.emit(gate, "CredentialRevokedFromTree")
+        .withArgs(COMMITMENT_1, 0);
+
+      expect(await mockSemaphore.getGroupMembers(await gate.groupId())).to.deep.equal([]);
+      expect(await gate.getLeaves()).to.deep.equal([0n]);
+    });
+
     it("restricts admin setters to the issuer", async function () {
       await expect(gate.connect(attacker).setWorkflow(attacker.address)).to.be.revertedWith("Not issuer");
       await expect(gate.connect(attacker).setAccessNFT(attacker.address)).to.be.revertedWith("Not issuer");
@@ -96,7 +108,7 @@ describe("ComplianceGate and AccessNFT", function () {
       await gate.issueCredential(COMMITMENT_1);
       expect(await gate.getMembers()).to.deep.equal([COMMITMENT_1]);
 
-      const tx = nft.connect(user1).mint(makeProof(NULLIFIER_1, COMMITMENT_1));
+      const tx = nft.connect(user1).mint(makeProof(NULLIFIER_1, COMMITMENT_1, BigInt(user1.address)));
       await expect(tx).to.emit(gate, "ComplianceVerified").withArgs(NULLIFIER_1);
       expect(await nft.balanceOf(user1.address)).to.equal(1n);
       expect(await nft.ownerOf(0n)).to.equal(user1.address);
@@ -105,16 +117,25 @@ describe("ComplianceGate and AccessNFT", function () {
 
     it("reverts when the same nullifier is verified twice", async function () {
       await gate.issueCredential(COMMITMENT_1);
-      await nft.connect(user1).mint(makeProof(NULLIFIER_1, COMMITMENT_1));
-      await expect(nft.connect(user2).mint(makeProof(NULLIFIER_1, COMMITMENT_1))).to.be.revertedWith(
-        "Proof already used",
-      );
+      await nft.connect(user1).mint(makeProof(NULLIFIER_1, COMMITMENT_1, BigInt(user1.address)));
+      await expect(
+        nft.connect(user2).mint(makeProof(NULLIFIER_1, COMMITMENT_1, BigInt(user2.address))),
+      ).to.be.revertedWith("Proof already used");
     });
 
     it("reverts when the same address mints twice", async function () {
       await gate.issueCredential(COMMITMENT_1);
-      await nft.connect(user1).mint(makeProof(NULLIFIER_1, COMMITMENT_1));
-      await expect(nft.connect(user1).mint(makeProof(NULLIFIER_2, COMMITMENT_1))).to.be.revertedWith("Already minted");
+      await nft.connect(user1).mint(makeProof(NULLIFIER_1, COMMITMENT_1, BigInt(user1.address)));
+      await expect(
+        nft.connect(user1).mint(makeProof(NULLIFIER_2, COMMITMENT_1, BigInt(user1.address))),
+      ).to.be.revertedWith("Already minted");
+    });
+
+    it("rejects a proof whose message is bound to another wallet", async function () {
+      await gate.issueCredential(COMMITMENT_1);
+      await expect(
+        nft.connect(user1).mint(makeProof(NULLIFIER_1, COMMITMENT_1, BigInt(user2.address))),
+      ).to.be.revertedWith("Message must bind sender");
     });
   });
 
@@ -127,9 +148,9 @@ describe("ComplianceGate and AccessNFT", function () {
       expect(await gate.getMembers()).to.deep.equal([]);
 
       // The demo group is a single-member tree, so proof.merkleTreeRoot == commitment.
-      await expect(nft.connect(user1).mint(makeProof(NULLIFIER_1, COMMITMENT_1))).to.be.revertedWith(
-        "Credential revoked",
-      );
+      await expect(
+        nft.connect(user1).mint(makeProof(NULLIFIER_1, COMMITMENT_1, BigInt(user1.address))),
+      ).to.be.revertedWith("Credential revoked");
 
       await expect(gate.revokeCredential(COMMITMENT_1, [])).to.be.revertedWith("Already revoked");
     });
@@ -144,8 +165,18 @@ describe("ComplianceGate and AccessNFT", function () {
       await gate.issueCredential(COMMITMENT_1);
 
       expect(await gate.hasBeenRevoked(COMMITMENT_1)).to.equal(false);
-      await nft.connect(user1).mint(makeProof(NULLIFIER_1, COMMITMENT_1));
+      await nft.connect(user1).mint(makeProof(NULLIFIER_1, COMMITMENT_1, BigInt(user1.address)));
       expect(await nft.balanceOf(user1.address)).to.equal(1n);
+    });
+
+    it("re-issues cleanly after on-tree revocation", async function () {
+      await gate.issueCredential(COMMITMENT_1);
+      await gate.revokeCredentialWithMerkleProof(COMMITMENT_1, []);
+      await gate.issueCredential(COMMITMENT_1);
+
+      expect(await gate.getMembers()).to.deep.equal([COMMITMENT_1]);
+      expect(await gate.getLeaves()).to.deep.equal([0n, COMMITMENT_1]);
+      expect(await mockSemaphore.getGroupMembers(await gate.groupId())).to.deep.equal([COMMITMENT_1]);
     });
   });
 
@@ -201,10 +232,9 @@ describe("ComplianceGate and AccessNFT", function () {
       await gate.issueCredential(COMMITMENT_1);
       await mockSemaphore.setValidationResult(false); // simulate an invalid ZK proof
 
-      await expect(nft.connect(user1).mint(makeProof(NULLIFIER_1, COMMITMENT_1))).to.be.revertedWithCustomError(
-        mockSemaphore,
-        "Semaphore__InvalidProof",
-      );
+      await expect(
+        nft.connect(user1).mint(makeProof(NULLIFIER_1, COMMITMENT_1, BigInt(user1.address))),
+      ).to.be.revertedWithCustomError(mockSemaphore, "Semaphore__InvalidProof");
 
       // The failed verification must not burn the nullifier.
       expect(await gate.verifiedNullifiers(NULLIFIER_1)).to.equal(false);
@@ -214,7 +244,7 @@ describe("ComplianceGate and AccessNFT", function () {
       await gate.setDemoMode(false);
       await gate.issueCredential(COMMITMENT_1);
 
-      await nft.connect(user1).mint(makeProof(NULLIFIER_1, COMMITMENT_1));
+      await nft.connect(user1).mint(makeProof(NULLIFIER_1, COMMITMENT_1, BigInt(user1.address)));
       expect(await nft.balanceOf(user1.address)).to.equal(1n);
     });
   });

@@ -1,17 +1,19 @@
 import "dotenv/config";
 import { ethers } from "ethers";
+import { Group } from "@semaphore-protocol/group";
 import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const GATE_ADDRESS = "0xB393C4Aace43162b170d4f6A84a60fA1AF9D1Ef3";
 const DEMO_COMMITMENT = process.env.DEMO_COMMITMENT ?? "123456789012345678901234567890123456789";
 
-const gateArtifact = JSON.parse(
+const gateDeployment = JSON.parse(
   readFileSync(join(__dirname, "..", "deployments", "sepolia", "ComplianceGate.json"), "utf8"),
 );
+const GATE_ADDRESS = gateDeployment.address;
+const gateArtifact = { abi: gateDeployment.abi };
 
 async function main() {
   const action = process.argv[2] ?? "status";
@@ -55,9 +57,16 @@ async function main() {
     const receipt = await tx.wait();
     console.log("issueCredential tx:", receipt.hash);
   } else if (action === "revoke") {
-    const tx = await gateWriter.revokeCredential(commitment, []);
+    const leaves: bigint[] = await gate.getLeaves();
+    const group = new Group(leaves.map(value => BigInt(value)));
+    const memberIndex = group.indexOf(commitment);
+    if (memberIndex < 0) {
+      throw new Error("Commitment is missing from the on-chain Merkle leaves");
+    }
+    const merkleProofSiblings = group.generateMerkleProof(memberIndex).siblings.map(value => BigInt(value));
+    const tx = await gateWriter.revokeCredentialWithMerkleProof(commitment, merkleProofSiblings);
     const receipt = await tx.wait();
-    console.log("revokeCredential tx:", receipt.hash);
+    console.log("revokeCredentialWithMerkleProof tx:", receipt.hash);
   } else {
     throw new Error(`Unknown action: ${action}. Use status | issue | revoke`);
   }

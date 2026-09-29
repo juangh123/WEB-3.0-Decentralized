@@ -22,10 +22,10 @@
 
 ### Q3. 如果一个用户在这个白名单里，后来他变成了恐怖分子/上了制裁名单，你怎么把他踢出去（撤销凭证）？
 **评委潜台词**：合规不仅仅是一次性的，需要动态管理，你的系统支持吗？
-**回答策略**：展示已实现的自动撤销闭环，并诚实说明 ZK Merkle 层面的已知限制。
+**回答策略**：展示已实现的自动撤销闭环和链上 Merkle 树级移除。
 **话术**：
-> "撤销功能已经实现，而且是全自动的。Issuer（或 CRE 工作流）调用 `revokeCredential` 后，合约会写入 `hasBeenRevoked` 标记，而 `verifyCompliance` 在每次验证时都会强制检查这个标记——被撤销的用户即使拿着之前生成的 ZK Proof 也无法再通过校验。我们的 Chainlink CRE 工作流会定时比对链下制裁名单与链上成员，命中后自动发起撤销，全程无需人工介入。
-> 坦诚地讲，当前版本在 ZK Merkle 树层面仍有一个已知限制：从树中移除 Commitment 时传入的是空 siblings，因此以 `hasBeenRevoked` 标记作为强制执行依据。生产环境的标准做法是接入 Merkle 索引器（如 The Graph 或自建 indexer）为移除操作提供真实的 siblings 路径；定期轮换群组、Accumulator（累加器）也是可行的替代方案，已列入我们的 Roadmap。"
+> "撤销功能已经实现，而且是全自动的。我们的 Chainlink CRE 工作流会定时比对链下制裁名单与链上成员，命中后读取合约中的稳定 Merkle leaves，重建与链上完全一致的 Semaphore 树并生成真实 siblings，然后调用 `revokeCredentialWithMerkleProof` 从树中移除该 Commitment。合约还会写入 `hasBeenRevoked` 标记作为纵深防御，因此被撤销用户之前生成的 ZK Proof 既会因根失效而无效，也会被显式撤销检查拦截。
+> 我们还用真实 Sepolia 合约验证了重建根与链上 Semaphore 根完全一致，临时成员被移除后 `hasMember` 返回 false，而合法演示成员保持有效。"
 
 ### Q4. 你的系统里 Issuer（颁发方）是不是太中心化了？
 **评委潜台词**：Web3 讲究去中心化，但你的发证人是中心化的，这不 Web3。

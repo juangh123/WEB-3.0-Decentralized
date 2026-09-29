@@ -19,12 +19,14 @@ Use this checklist immediately before submitting the DoraHacks BUIDL.
 
 ## Sepolia Consistency
 
-- [x] `ComplianceGate` = `0xB393C4Aace43162b170d4f6A84a60fA1AF9D1Ef3`
-- [x] `AccessNFT` = `0xF0B9199CAeD03b5E0A5f9924f3B4171B56e70e64`
+- [x] `ComplianceGate` = `0x1b8ae78C37c3E29DFcB0236E1c562b3CCFA44F70`
+- [x] `AccessNFT` = `0x5e7140b8c967440A5B7Db15a4B82F4e4428cCc32`
 - [x] `deployedContracts.ts` includes both Sepolia addresses
 - [x] Mock API seed commitment matches current `getMembers()`
 - [x] Sepolia issue transaction recorded:
-  `0xf4e28de8931123e71e0e76fa8cff24f96a38ef3da8b691658c4461cd9f234682`
+  `0x37e37f2a3cba81d6327bbfe0e7565649a51115771f0a1ad329ba788deef51dcf`
+- [x] Sepolia on-tree removal verified:
+  `0x8f0cb9341d4cf108101fb07a835c334c39f23ca9994bb26acc4497ee9e829ee0`
 
 ## CRE Workflow
 

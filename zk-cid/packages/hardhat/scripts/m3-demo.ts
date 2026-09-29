@@ -1,5 +1,6 @@
 // M3 CRE Workflow Demo: Simulate sanctions check + on-chain revocation
 import { ethers } from "ethers";
+import { Group } from "@semaphore-protocol/group";
 import { readFileSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
@@ -45,6 +46,7 @@ async function main() {
   // Step 2: Get current compliance group members
   console.log("\n[2/4] Reading compliance group members from chain...");
   const members: bigint[] = await gate.getMembers();
+  const leaves: bigint[] = await gate.getLeaves();
   console.log(
     "  On-chain members:",
     members.map(m => m.toString()),
@@ -76,7 +78,13 @@ async function main() {
       continue;
     }
     try {
-      const tx = await gate.revokeCredential(commitment, []);
+      const group = new Group(leaves.map(value => BigInt(value)));
+      const memberIndex = group.indexOf(BigInt(commitment));
+      if (memberIndex < 0) {
+        throw new Error("commitment is missing from the on-chain leaves");
+      }
+      const merkleProofSiblings = group.generateMerkleProof(memberIndex).siblings.map(value => BigInt(value));
+      const tx = await gate.revokeCredentialWithMerkleProof(commitment, merkleProofSiblings);
       const receipt = await tx.wait();
       console.log(`  ✓ Credential ${commitment} REVOKED`);
       console.log(`     Tx: ${receipt.hash}`);

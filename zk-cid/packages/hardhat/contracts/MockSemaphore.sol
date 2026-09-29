@@ -104,4 +104,9 @@ contract MockSemaphore is ISemaphore {
     function verifyProof(uint256 groupId, SemaphoreProof calldata proof) external view returns (bool) {
         return validationShouldPass;
     }
+
+    /// @notice Test helper: exposes the current members of a mocked group.
+    function getGroupMembers(uint256 groupId) external view returns (uint256[] memory) {
+        return groups[groupId];
+    }
 }

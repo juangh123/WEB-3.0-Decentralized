@@ -62,7 +62,8 @@ ZK-CID separates "prove compliance" from "reveal identity":
 4. `ComplianceGate` verifies the proof, checks revocation status, and mints an
    AccessNFT through the whitelisted `AccessNFT` contract.
 5. A Chainlink CRE workflow periodically pulls the sanctions API, reads
-   `ComplianceGate.getMembers()`, and calls `revokeCredential` on matches.
+   `ComplianceGate.getMembers()` / `getLeaves()`, rebuilds the Semaphore tree,
+   and calls `revokeCredentialWithMerkleProof` with real siblings on matches.
 
 ## Architecture
 
@@ -83,18 +84,19 @@ ZK-CID separates "prove compliance" from "reveal identity":
 
 ## Sepolia Live Evidence
 
-- `ComplianceGate`: `0xB393C4Aace43162b170d4f6A84a60fA1AF9D1Ef3`
-- `AccessNFT`: `0xF0B9199CAeD03b5E0A5f9924f3B4171B56e70e64`
+- `ComplianceGate`: `0x1b8ae78C37c3E29DFcB0236E1c562b3CCFA44F70`
+- `AccessNFT`: `0x5e7140b8c967440A5B7Db15a4B82F4e4428cCc32`
 - Semaphore v4 dependency: `0x8A1fd199516489B0Fb7153EB5f075cDAC83c693D`
 - Deployer/issuer wallet: `0x951c41D827d0A6F5b9ef4C44943E3Feb25E51348`
 - Current live commitment: `123456789012345678901234567890123456789`
-- `groupId`: `625`
+- `groupId`: `712`
 - `demoMode`: `true`
 - `getMembers()`: `["123456789012345678901234567890123456789"]`
 
 Key transactions:
 
-- Issue credential: `0xf4e28de8931123e71e0e76fa8cff24f96a38ef3da8b691658c4461cd9f234682`
+- Issue credential: `0x37e37f2a3cba81d6327bbfe0e7565649a51115771f0a1ad329ba788deef51dcf`
+- Revoke temporary credential from tree: `0x8f0cb9341d4cf108101fb07a835c334c39f23ca9994bb26acc4497ee9e829ee0`
 - Deployment details and reproduction steps: `zk-cid/SEPOLIA_DEPLOYMENT.md`
 
 ## Validation Commands
@@ -133,9 +135,10 @@ Invoke-RestMethod -Uri 'https://mock-api-topaz-zeta.vercel.app/api/admin' `
   `workflows/compliance-lifecycle/dist/compliance-lifecycle.wasm` (2.7 MB).
 - End-to-end SDK simulation executed with the real CRE SDK TestRuntime
   (`yarn workspace compliance-lifecycle test:sim`): 3/3 tests pass. The
-  workflow fetches the sanctions API, reads on-chain `getMembers()`,
-  computes the intersection, generates a CRE report, and writes a revoke
-  transaction — see `workflows/compliance-lifecycle/test/compliance-lifecycle.sim.test.ts`.
+  workflow fetches the sanctions API, reads on-chain `getMembers()` and
+  `getLeaves()`, computes the intersection, rebuilds the Semaphore tree,
+  generates a CRE report, and writes a tree-level revoke transaction — see
+  `workflows/compliance-lifecycle/test/compliance-lifecycle.sim.test.ts`.
 - Full `cre workflow simulate` (CRE CLI, DON network-level) has not been
   executed because the complete CRE CLI is not installed in this development
   environment; no CLI simulation output is fabricated. The honest boundary is
@@ -145,9 +148,9 @@ Invoke-RestMethod -Uri 'https://mock-api-topaz-zeta.vercel.app/api/admin' `
 
 - `demoMode = true` is kept for a repeatable hackathon demo; strict Semaphore
   validation is a production roadmap item.
-- `revokeCredential` passes empty `merkleProofSiblings`; revocation is enforced
-  by `hasBeenRevoked`, not by on-tree removal. A Merkle indexer is required for
-  production on-tree removal.
+- On-tree revocation is production-wired: the CRE workflow rebuilds the
+  Semaphore tree from the contract's stable leaves and supplies real Merkle
+  siblings to `revokeCredentialWithMerkleProof`.
 - `creWorkflow` is currently set to the deployer wallet because the real CRE
   forwarder address has not been configured; issuer-manual/script revocation is
   used as the on-chain smoke-test evidence.

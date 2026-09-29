@@ -69,9 +69,11 @@ test\compliance-lifecycle.sim.test.ts:
 
 1. `HTTPClient.sendRequest(...)` -> `http-actions@1.0.0-alpha` 能力 Mock
    (返回与线上 mock-api 相同 JSON schema 的制裁名单)
-2. `EVMClient.callContract(getMembers)` -> `evm:ChainSelector:...@1.0.0`
-   能力 Mock(返回 ABI 编码成员数组,与 Sepolia `getMembers()` 一致)
-3. 交集计算命中后 `runtime.report(prepareReportRequest(callData))`
+2. `EVMClient.callContract(getMembers)` 与 `getLeaves()` ->
+   `evm:ChainSelector:...@1.0.0` 能力 Mock(返回 ABI 编码成员/稳定叶子数组,
+   与 Sepolia 合约状态一致)
+3. 交集计算命中后按稳定 leaves 重建 Semaphore 树并生成真实 Merkle siblings,
+   再调用 `runtime.report(prepareReportRequest(callData))`
    -> `consensus@1.0.0-alpha` 默认 Report 处理(产出 DON 签名报告)
 4. `EVMClient.writeReport(...)` -> 能力 Mock 返回 `TX_STATUS_SUCCESS`
    与 txHash,日志输出 `revoked commitment=...`
@@ -104,8 +106,8 @@ cd workflows/compliance-lifecycle
 cre workflow simulate .
 ```
 
-预期行为:每个 cron 周期抓取制裁名单 -> 读取 `getMembers()` ->
-命中时通过 `writeReport` 调用 `revokeCredential`,日志中出现
+预期行为:每个 cron 周期抓取制裁名单 -> 读取 `getMembers()`/`getLeaves()` ->
+命中时通过 `writeReport` 调用 `revokeCredentialWithMerkleProof`,日志中出现
 `revoked commitment=...`。
 
 ## 遗留风险
@@ -117,7 +119,8 @@ cre workflow simulate .
 2. **链选择器**:默认配置为 `ethereum-testnet-sepolia`;若目标合
    约部署在本地链,需要在 CRE 模拟环境中映射对应的链配置,
    `chainSelectorName` 必须能在 `getNetwork()` 中解析。
-3. **Merkle siblings**:撤销调用传空数组(合约已知限制,以
-   `hasBeenRevoked` 标记作为执行依据),生产环境需接入 Merkle
-   索引器。
+3. **Merkle siblings**:工作流已按合约的稳定 leaves 重建 Semaphore
+   树并生成真实 siblings;Sepolia 实链验证中重建根与链上根一致。
+   完整 DON 网络级 `cre workflow simulate` 仍需在安装 CRE CLI 的
+   环境中执行。
 

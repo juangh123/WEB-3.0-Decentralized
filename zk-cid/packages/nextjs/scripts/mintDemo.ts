@@ -13,9 +13,11 @@ async function main() {
 
   const group = new Group(members);
   const scope = "DeFi_Protocol_A";
+  const userAddress = process.env.MINT_ADDRESS ?? "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
+  const message = BigInt(userAddress);
 
   console.log("\n=== Generating ZK Proof ===");
-  const fullProof = await generateProof(identity, group, scope, scope);
+  const fullProof = await generateProof(identity, group, message, scope);
   console.log("Proof generated successfully!");
   console.log("Nullifier:", fullProof.nullifier.toString());
   console.log("Root:", fullProof.merkleTreeRoot.toString());

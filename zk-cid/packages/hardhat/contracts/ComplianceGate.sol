@@ -3,7 +3,7 @@ pragma solidity ^0.8.23;
 
 import "@semaphore-protocol/contracts/interfaces/ISemaphore.sol";
 
-/// @title ComplianceGate v2.1
+/// @title ComplianceGate v2.2
 /// @notice Issues, verifies and revokes ZK compliance credentials on top of a Semaphore group.
 /// @dev Lifecycle: the Issuer (or the CRE workflow) issues credentials as members of a dedicated
 /// Semaphore group -> AccessNFT verifies a Semaphore proof through this gate -> the credential
@@ -13,12 +13,10 @@ import "@semaphore-protocol/contracts/interfaces/ISemaphore.sol";
 /// - `demoMode` (default: true) skips the on-chain Semaphore ZK validation so mocked proofs can
 ///   drive local demos end to end. The issuer can switch it off with `setDemoMode(false)`; in
 ///   strict mode any invalid proof reverts inside `semaphore.validateProof` and is never swallowed.
-/// - A Semaphore proof does not reveal the identity commitment, so an on-chain revocation cannot
-///   be matched to a proof 1:1. As a demo-grade substitute, revocation is enforced against
-///   `proof.merkleTreeRoot`: in the demo the group is operated as a single-member tree whose root
-///   equals the member commitment. In production, revocation must instead remove the member from
-///   the Semaphore group (see `revokeCredential`) so stale proofs fail the Merkle root check
-///   performed by `validateProof`.
+/// - Revocation can be final only after the commitment is removed from the Semaphore tree. This
+///   contract keeps a stable `leaves` array (removed leaves become zero) so off-chain clients can
+///   rebuild the exact tree and calculate `merkleProofSiblings`. Both revocation entry points
+///   always perform the on-tree removal, including valid empty proofs for a single-member tree.
 contract ComplianceGate {
     ISemaphore public semaphore;
     uint256 public groupId;
@@ -33,11 +31,16 @@ contract ComplianceGate {
     uint256[] public members;
     /// @dev Index of each commitment in the `members` array, enabling O(1) removal.
     mapping(uint256 => uint256) public memberIndices;
+    /// @dev Stable Semaphore leaves. Revoked entries are set to zero and never shifted.
+    uint256[] public leaves;
+    /// @dev Index of each active commitment in the stable `leaves` array.
+    mapping(uint256 => uint256) public leafIndices;
     /// @dev Addresses authorized to call `verifyCompliance` (decouples AccessNFT hard-wiring).
     mapping(address => bool) public verifiers;
 
     event UserAdded(uint256 indexed commitment);
     event CredentialRevoked(uint256 indexed commitment);
+    event CredentialRevokedFromTree(uint256 indexed commitment, uint256 siblingCount);
     event ComplianceVerified(uint256 indexed nullifier);
     event WorkflowUpdated(address indexed workflow);
     event AccessNFTUpdated(address indexed accessNFT);
@@ -102,24 +105,40 @@ contract ComplianceGate {
         semaphore.addMember(groupId, commitment);
         memberIndices[commitment] = members.length;
         members.push(commitment);
+        leafIndices[commitment] = leaves.length;
+        leaves.push(commitment);
         emit UserAdded(commitment);
     }
 
-    /// @notice Revoke credential (called automatically by the CRE Workflow on sanctions hits).
+    /// @notice Backward-compatible revocation alias. Always removes the member from the tree.
     function revokeCredential(uint256 commitment, uint256[] calldata merkleProofSiblings) external onlyAuthorized {
+        _revokeCredential(commitment, merkleProofSiblings);
+    }
+
+    /// @notice Revoke a credential and always remove it from the Semaphore Merkle tree.
+    /// @dev Empty `merkleProofSiblings` is valid for a single-member tree and must still call
+    /// `removeMember`; this is the production path used by the CRE workflow.
+    function revokeCredentialWithMerkleProof(
+        uint256 commitment,
+        uint256[] calldata merkleProofSiblings
+    ) external onlyAuthorized {
+        _revokeCredential(commitment, merkleProofSiblings);
+    }
+
+    function _revokeCredential(
+        uint256 commitment,
+        uint256[] calldata merkleProofSiblings
+    ) internal {
         require(!hasBeenRevoked[commitment], "Already revoked");
         require(isMember[commitment], "Unknown credential");
         hasBeenRevoked[commitment] = true;
         isMember[commitment] = false;
 
-        // Remove the member from the on-chain Semaphore group when the off-chain Merkle proof
-        // siblings are available. Known Limitation: the CRE demo does not run a Merkle indexer,
-        // so it calls this function with an empty siblings array and the on-tree removal is
-        // skipped; the `hasBeenRevoked` marker above stays the enforcement source and is checked
-        // again in `verifyCompliance`.
-        if (merkleProofSiblings.length > 0) {
-            semaphore.removeMember(groupId, commitment, merkleProofSiblings);
-        }
+        semaphore.removeMember(groupId, commitment, merkleProofSiblings);
+        emit CredentialRevokedFromTree(commitment, merkleProofSiblings.length);
+
+        leaves[leafIndices[commitment]] = 0;
+        delete leafIndices[commitment];
 
         // O(1) swap-delete from the members array using the pre-computed index.
         uint256 idx = memberIndices[commitment];
@@ -138,10 +157,8 @@ contract ComplianceGate {
     /// @notice Verify a Semaphore proof. Callable only by registered verifier contracts.
     function verifyCompliance(ISemaphore.SemaphoreProof calldata proof) external onlyVerifier {
         require(!verifiedNullifiers[proof.nullifier], "Replay detected");
-        // Revocation enforcement. Known Limitation: the proof does not carry the commitment,
-        // so the check runs against proof.merkleTreeRoot (see contract-level docs). In the demo
-        // flow (single-member group) the root equals the revoked commitment and this closes the
-        // loop; the production path is the on-tree removal in `revokeCredential`.
+        // Defense in depth for legacy/demo roots. Production revocation removes the member
+        // from the Semaphore tree, so stale proofs fail `validateProof` in strict mode.
         require(!hasBeenRevoked[proof.merkleTreeRoot], "Credential revoked");
 
         if (demoMode) {
@@ -159,5 +176,10 @@ contract ComplianceGate {
 
     function getMembers() external view returns (uint256[] memory) {
         return members;
+    }
+
+    /// @notice Returns the stable Semaphore leaves, including zero entries for revoked members.
+    function getLeaves() external view returns (uint256[] memory) {
+        return leaves;
     }
 }

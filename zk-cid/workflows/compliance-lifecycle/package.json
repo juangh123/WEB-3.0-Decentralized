@@ -11,7 +11,8 @@
     "test:sim": "npx -y bun@1.1.42 test test/compliance-lifecycle.sim.test.ts"
   },
   "dependencies": {
-    "@chainlink/cre-sdk": "^1.16.0"
+    "@chainlink/cre-sdk": "^1.16.0",
+    "@semaphore-protocol/group": "^4.14.2"
   },
   "devDependencies": {
     "@types/jest": "^29.5.11",

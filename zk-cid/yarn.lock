@@ -10641,6 +10641,7 @@ __metadata:
   resolution: "compliance-lifecycle@workspace:workflows/compliance-lifecycle"
   dependencies:
     "@chainlink/cre-sdk": "npm:^1.16.0"
+    "@semaphore-protocol/group": "npm:^4.14.2"
     "@types/jest": "npm:^29.5.11"
     "@types/node": "npm:^22.0.0"
     jest: "npm:^29.7.0"

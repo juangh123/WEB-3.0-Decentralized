@@ -2,9 +2,9 @@
  * ZK-CID 合规生命周期工作流核心逻辑(与 Runner/宿主无关,可被测试运行时直接驱动)
  *
  * 流程:Cron 定时触发 -> DON 各节点拉取 Mock 制裁名单 API(共识聚合)
- *      -> EVMClient.callContract 读取链上 getMembers()
+ *      -> EVMClient.callContract 读取 getMembers()/getLeaves()
  *      -> 对命中者生成 CRE 签名报告,经 EVMClient.writeReport
- *         调用 ComplianceGate.revokeCredential 完成链上撤销
+ *         调用 ComplianceGate.revokeCredentialWithMerkleProof 完成树级撤销
  */
 import {
   CronCapability,
@@ -26,6 +26,7 @@ import {
   type Runtime,
   type Workflow,
 } from "@chainlink/cre-sdk";
+import { Group } from "@semaphore-protocol/group";
 import {
   decodeFunctionResult,
   encodeFunctionData,
@@ -50,7 +51,9 @@ export type Config = {
 
 export const GATE_ABI = parseAbi([
   "function getMembers() view returns (uint256[])",
+  "function getLeaves() view returns (uint256[])",
   "function revokeCredential(uint256 commitment, uint256[] merkleProofSiblings)",
+  "function revokeCredentialWithMerkleProof(uint256 commitment, uint256[] merkleProofSiblings)",
 ]);
 
 /** Mock API 的响应结构(与 mock-api/server.js 的统一 schema 对齐) */
@@ -59,6 +62,48 @@ type SanctionsResponse = {
   source?: string;
   updatedAt?: string;
 };
+
+/**
+ * Rebuilds the exact Semaphore tree as represented by the contract's stable leaves.
+ * Revoked leaves are zero and stay in place, which is the same semantic used by
+ * Semaphore's `removeMember`.
+ */
+export function buildMerkleProofSiblings(leaves: readonly bigint[], commitment: bigint): bigint[] {
+  const group = new Group(leaves.map(value => BigInt(value)));
+  const memberIndex = group.indexOf(commitment);
+  if (memberIndex < 0) {
+    throw new Error(`commitment ${commitment.toString()} is missing from the on-chain leaves`);
+  }
+  return group.generateMerkleProof(memberIndex).siblings.map(value => BigInt(value));
+}
+
+function readUint256Array(
+  evmClient: EVMClient,
+  runtime: Runtime<Config>,
+  cfg: Config,
+  functionName: "getMembers" | "getLeaves",
+): readonly bigint[] {
+  const callData = encodeFunctionData({
+    abi: GATE_ABI,
+    functionName,
+  });
+  const reply = evmClient
+    .callContract(runtime, {
+      call: encodeCallMsg({
+        from: zeroAddress,
+        to: cfg.complianceGateAddress as Address,
+        data: callData,
+      }),
+      blockNumber: LAST_FINALIZED_BLOCK_NUMBER,
+    })
+    .result();
+
+  return decodeFunctionResult({
+    abi: GATE_ABI,
+    functionName,
+    data: bytesToHex(reply.data),
+  }) as readonly bigint[];
+}
 
 /**
  * 节点模式下的 HTTP 抓取函数:每个 DON 节点各自请求制裁名单,
@@ -105,29 +150,24 @@ export function runComplianceCheck(
   }
   const evmClient = new EVMClient(network.chainSelector.selector);
 
-  const readCallData = encodeFunctionData({
-    abi: GATE_ABI,
-    functionName: "getMembers",
-  });
-  const readReply = evmClient
-    .callContract(runtime, {
-      call: encodeCallMsg({
-        from: zeroAddress,
-        to: cfg.complianceGateAddress as Address,
-        data: readCallData,
-      }),
-      blockNumber: LAST_FINALIZED_BLOCK_NUMBER,
-    })
-    .result();
-
-  const members = decodeFunctionResult({
-    abi: GATE_ABI,
-    functionName: "getMembers",
-    data: bytesToHex(readReply.data),
-  }) as readonly bigint[];
+  const members = readUint256Array(evmClient, runtime, cfg, "getMembers");
   runtime.log(`on-chain members fetched: ${members.length}`);
 
-  // ---------- 3. 计算:制裁名单与链上成员求交集 ----------
+  // ---------- 3. EVM 读:获取稳定 Merkle leaves,用于生成链上移除证明 ----------
+  const leaves = readUint256Array(evmClient, runtime, cfg, "getLeaves");
+  const activeLeaves = leaves.filter(leaf => leaf !== 0n);
+  const activeLeafSet = new Set(activeLeaves.map(leaf => leaf.toString()));
+  const membersMatchLeaves =
+    activeLeaves.length === members.length &&
+    members.every(member => activeLeafSet.has(member.toString()));
+  if (!membersMatchLeaves) {
+    throw new Error(
+      `on-chain state mismatch: ${members.length} active members but ${activeLeaves.length} non-zero leaves`,
+    );
+  }
+  runtime.log(`on-chain leaves fetched: ${leaves.length} (${activeLeaves.length} active)`);
+
+  // ---------- 4. 计算:制裁名单与链上成员求交集 ----------
   const sanctionedSet = new Set(
     sanctionedList.map((entry) => BigInt(entry).toString()),
   );
@@ -144,19 +184,21 @@ export function runComplianceCheck(
     });
   }
 
-  // ---------- 4. EVM 写:生成 CRE 报告并上链撤销 ----------
-  // 说明:CRE 写链的真实方式是 runtime.report() 产出 DON 签名报告,
-  // 再由 EVMClient.writeReport 递交给目标链。合约端 revokeCredential
-  // 已具备强制效力(hasBeenRevoked 标记 + 成员数组移除)。
-  // 已知限制:演示环境无 Merkle 索引器,merkleProofSiblings 传空数组,
-  // 合约会跳过 Semaphore 树的链上移除,以 hasBeenRevoked 标记作为执行依据。
+  // ---------- 5. EVM 写:生成精确 Merkle 证明并强制从树中移除 ----------
+  // CRE 写链的真实方式是 runtime.report() 产出 DON 签名报告,
+  // 再由 EVMClient.writeReport 递交给目标链。
   const revokedList: string[] = [];
   const txHashes: string[] = [];
+  const proofs: Array<{ commitment: string; siblings: string[] }> = [];
   for (const commitment of toRevoke) {
+    const merkleProofSiblings = buildMerkleProofSiblings(leaves, commitment);
+    runtime.log(
+      `merkle proof generated commitment=${commitment.toString()} siblingCount=${merkleProofSiblings.length}`,
+    );
     const callData = encodeFunctionData({
       abi: GATE_ABI,
-      functionName: "revokeCredential",
-      args: [commitment, []],
+      functionName: "revokeCredentialWithMerkleProof",
+      args: [commitment, merkleProofSiblings],
     });
 
     const report = runtime.report(prepareReportRequest(callData)).result();
@@ -170,6 +212,10 @@ export function runComplianceCheck(
 
     if (writeReply.txStatus === TxStatus.SUCCESS) {
       revokedList.push(commitment.toString());
+      proofs.push({
+        commitment: commitment.toString(),
+        siblings: merkleProofSiblings.map(value => value.toString()),
+      });
       txHashes.push(
         writeReply.txHash ? bytesToHex(writeReply.txHash) : "",
       );
@@ -186,6 +232,7 @@ export function runComplianceCheck(
     revokedCount: revokedList.length,
     revokedCommitments: revokedList,
     txHashes,
+    proofs,
     source: sanctionsData.source,
     executedAt: runtime.now().toISOString(),
   });

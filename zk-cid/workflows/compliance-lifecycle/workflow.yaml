@@ -6,8 +6,8 @@
 name: compliance-lifecycle
 version: 1.0.0
 description: >
-  Cron 定时拉取 Mock 制裁名单 API,与链上 ComplianceGate.getMembers()
-  求交集,对命中者自动调用 revokeCredential 完成链上撤销。
+  Cron 定时拉取 Mock 制裁名单 API,读取链上 getMembers()/getLeaves()
+  求交集并生成真实 Merkle siblings,对命中者完成树级撤销。
 
 entrypoint: main.ts
 config: config.json
@@ -29,4 +29,4 @@ capabilities:
         rpc: ${SEPOLIA_RPC_URL}
         contracts:
           - name: ComplianceGate
-            address: "0xB393C4Aace43162b170d4f6A84a60fA1AF9D1Ef3"
+            address: "0x1b8ae78C37c3E29DFcB0236E1c562b3CCFA44F70"

@@ -4,9 +4,9 @@
  * 使用 @chainlink/cre-sdk/test 的真实 TestRuntime + 能力 Mock
  * (HTTP / EVM)在同一进程内完整执行 runComplianceCheck 主逻辑:
  *
- *   cron 触发 -> 抓取制裁名单(DON 共识) -> 读取链上 getMembers()
- *   -> 求交集 -> runtime.report() 生成 DON 签名报告
- *   -> EVMClient.writeReport 模拟上链撤销
+ *   cron 触发 -> 抓取制裁名单(DON 共识) -> 读取 getMembers()/getLeaves()
+ *   -> 求交集并重建 Semaphore 树生成 siblings -> runtime.report()
+ *   -> EVMClient.writeReport 模拟链上树级撤销
  *
  * 运行方式(workspace 根目录):
  *   yarn workspace compliance-lifecycle test:sim
@@ -21,18 +21,24 @@ import { anyPack, anyUnpack } from "@bufbuild/protobuf/wkt";
 import { EVM_PB, HTTP_CLIENT_PB } from "@chainlink/cre-sdk/pb";
 import { getNetwork } from "@chainlink/cre-sdk";
 import {
+  bytesToHex,
+  decodeFunctionData,
   encodeFunctionResult,
   hexToBytes,
   type Address,
 } from "viem";
-import { GATE_ABI, runComplianceCheck, type Config } from "../core";
+import {
+  GATE_ABI,
+  runComplianceCheck,
+  type Config,
+} from "../core";
 
 /** 与 config.json / Sepolia 实况一致的工作流配置 */
 const CFG: Config = {
   schedule: "*/5 * * * *",
   sanctionsApiUrl: "https://mock-api-topaz-zeta.vercel.app/api/sanctions-list",
   chainSelectorName: "ethereum-testnet-sepolia",
-  complianceGateAddress: "0xB393C4Aace43162b170d4f6A84a60fA1AF9D1Ef3",
+  complianceGateAddress: "0x1b8ae78C37c3E29DFcB0236E1c562b3CCFA44F70",
   gasLimit: "500000",
 };
 
@@ -43,6 +49,7 @@ const LIVE_MEMBER = 123456789012345678901234567890123456789n;
 function registerMocks(opts: {
   sanctioned: string[];
   members: bigint[];
+  leaves?: bigint[];
 }) {
   const selector = getNetwork({ chainSelectorName: CFG.chainSelectorName })!
     .chainSelector.selector;
@@ -72,12 +79,16 @@ function registerMocks(opts: {
   const calls = { callContract: 0, writeReport: 0 };
   registerTestCapability(evmCapabilityId, (req) => {
     if (req.method === "CallContract") {
-      anyUnpack(req.payload, EVM_PB.CallContractRequestSchema);
+      const request = anyUnpack(req.payload, EVM_PB.CallContractRequestSchema)!;
       calls.callContract += 1;
+      const decoded = decodeFunctionData({
+        abi: GATE_ABI,
+        data: bytesToHex(request.call?.data ?? new Uint8Array()),
+      });
       const encoded = encodeFunctionResult({
         abi: GATE_ABI,
-        functionName: "getMembers",
-        result: opts.members,
+        functionName: decoded.functionName,
+        result: decoded.functionName === "getLeaves" ? (opts.leaves ?? opts.members) : opts.members,
       });
       const reply = create(EVM_PB.CallContractReplySchema, {
         data: hexToBytes(encoded),
@@ -122,8 +133,8 @@ test("sanctions list has no overlap -> credentials stay valid (status ok, no wri
   if (parsed.checkedMembers !== 1) {
     throw new Error(`expected 1 checked member, got ${parsed.checkedMembers}`);
   }
-  if (calls.callContract !== 1) {
-    throw new Error(`expected 1 callContract, got ${calls.callContract}`);
+  if (calls.callContract !== 2) {
+    throw new Error(`expected 2 callContract reads, got ${calls.callContract}`);
   }
   if (calls.writeReport !== 0) {
     throw new Error(`expected 0 writeReport, got ${calls.writeReport}`);
@@ -146,6 +157,7 @@ test("sanctioned member intersects on-chain members -> CRE report + writeReport 
     revokedCount: number;
     revokedCommitments: string[];
     txHashes: string[];
+    proofs: Array<{ commitment: string; siblings: string[] }>;
   };
 
   if (parsed.status !== "revoked") {
@@ -159,6 +171,15 @@ test("sanctioned member intersects on-chain members -> CRE report + writeReport 
   }
   if (parsed.txHashes[0] !== "0xdeadbeefcafebabe") {
     throw new Error(`unexpected tx hash: ${parsed.txHashes[0]}`);
+  }
+  if (parsed.proofs.length !== 1) {
+    throw new Error(`expected 1 Merkle proof, got ${parsed.proofs.length}`);
+  }
+  if (parsed.proofs[0].commitment !== LIVE_MEMBER.toString()) {
+    throw new Error(`unexpected proof commitment: ${parsed.proofs[0].commitment}`);
+  }
+  if (parsed.proofs[0].siblings.length !== 1 || parsed.proofs[0].siblings[0] !== "9999999999999999999") {
+    throw new Error(`unexpected Merkle siblings: ${JSON.stringify(parsed.proofs[0].siblings)}`);
   }
   if (calls.writeReport !== 1) {
     throw new Error(`expected 1 writeReport, got ${calls.writeReport}`);

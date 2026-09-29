@@ -6,8 +6,8 @@ This document records the live Sepolia deployment and the exact commands used to
 
 | Contract | Address | Deployment Transaction |
 | --- | --- | --- |
-| ComplianceGate | `0xB393C4Aace43162b170d4f6A84a60fA1AF9D1Ef3` | `0xb642852e5c449fbb9729cc24b50e04488568127161a198c8a97e1465c0744700` |
-| AccessNFT | `0xF0B9199CAeD03b5E0A5f9924f3B4171B56e70e64` | `0x24741c412a2403a7511cd382662f13ee72fc37e41eb5d6cf0393602dcc113846` |
+| ComplianceGate v2.2 | `0x1b8ae78C37c3E29DFcB0236E1c562b3CCFA44F70` | `0xfe593613bab81860bdddc54e3dde59d16b97ad8c83f2620a1dd587360b858635` |
+| AccessNFT | `0x5e7140b8c967440A5B7Db15a4B82F4e4428cCc32` | `0x066fd2f47ec73da2bb42cee93713730fd762de4e7fc7668986d06015bc7fd5c0` |
 
 External dependency:
 
@@ -77,26 +77,32 @@ cd "F:\AI WORK\WEB 3.0 Decentralized\zk-cid\packages\hardhat"
 $env:DEPLOYER_PRIVATE_KEY = "<issuer-private-key>"
 .\node_modules\.bin\tsx.cmd scripts\sepoliaSmokeDemo.ts status
 .\node_modules\.bin\tsx.cmd scripts\sepoliaSmokeDemo.ts issue
-.\node_modules\.bin\tsx.cmd scripts\sepoliaSmokeDemo.ts revoke
 ```
+
+The `revoke` action now builds the Merkle siblings from `getLeaves()` and calls
+`revokeCredentialWithMerkleProof`. Use a temporary commitment when reproducing
+the tree-removal step, and keep the live demo commitment issued.
 
 | Step | Transaction |
 | --- | --- |
-| Issue credential | `0x68cbf4503e18e262f8273f002ee6d3d1d49e7885b99d4ba45de396621963fecc` |
-| Mint AccessNFT | `0xe371783abbb0fe1b429cc900d524b5b24ef338e652591c5b7e92a013a98eef9c` |
-| Revoke credential | `0x053cb12bc3bacb6d037ea246367a13da262ad72ab0f10a2178e7c8496105a21a` |
+| Issue live demo credential | `0x37e37f2a3cba81d6327bbfe0e7565649a51115771f0a1ad329ba788deef51dcf` |
+| Issue temporary tree-test credential | `0xe06ef14d4183a19fcd03d6269f2701839ef2ac809928b223244ee41d32f9adfa` |
+| Revoke temporary credential from tree | `0x8f0cb9341d4cf108101fb07a835c334c39f23ca9994bb26acc4497ee9e829ee0` |
 
 Current live demo state after re-issuing a fresh commitment:
 
 - Commitment: `123456789012345678901234567890123456789`
-- Issue credential tx: `0xf4e28de8931123e71e0e76fa8cff24f96a38ef3da8b691658c4461cd9f234682`
+- Issue credential tx: `0x37e37f2a3cba81d6327bbfe0e7565649a51115771f0a1ad329ba788deef51dcf`
 
 Verified state:
 
-- `ComplianceGate.groupId = 625`
+- `ComplianceGate.groupId = 712`
 - `ComplianceGate.demoMode = true`
 - `ComplianceGate.getMembers() = [123456789012345678901234567890123456789]`
-- `AccessNFT.nextTokenId = 1`
+- `ComplianceGate.getLeaves() = [123456789012345678901234567890123456789, 0]`
+- Rebuilt Semaphore root equals on-chain `getMerkleTreeRoot(712)`
+- Temporary commitment `987654321098765432109876543210987654321` is no longer a member
+- `AccessNFT.nextTokenId = 0`
 
 ## Publish Frontend
 
@@ -146,7 +152,7 @@ Then update the CRE workflow:
 
 ```powershell
 $env:SANCTIONS_API_URL = "https://mock-api-topaz-zeta.vercel.app/api/sanctions-list"
-$env:COMPLIANCE_GATE_ADDRESS = "0xB393C4Aace43162b170d4f6A84a60fA1AF9D1Ef3"
+$env:COMPLIANCE_GATE_ADDRESS = "0x1b8ae78C37c3E29DFcB0236E1c562b3CCFA44F70"
 ```
 
 ### CRE Workflow Compilation Evidence
@@ -171,6 +177,6 @@ not installed on this development machine; no simulated output is fabricated.
 ## Known Production Gaps
 
 - `demoMode` remains `true`; strict Semaphore validation should only be enabled after real proof generation is wired into the frontend.
-- `revokeCredential` currently receives empty `merkleProofSiblings`, so revocation is enforced by `hasBeenRevoked` rather than on-tree removal.
+- Full DON network-level `cre workflow simulate` has not been executed because the complete CRE CLI is not installed on this machine.
 - `creWorkflow` is currently the deployer; update it to the CRE workflow address before production use.
 - The live sanctions list must be seeded with the same commitment that is currently a member of the new `ComplianceGate` group; otherwise the CRE revocation demo has no intersection.

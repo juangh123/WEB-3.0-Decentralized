@@ -65,9 +65,10 @@ async function main() {
   const group = new Group(memberStrings);
 
   const scope = "DeFi_Protocol_A";
+  const message = BigInt(signer.address);
 
   console.log("\nGenerating ZK proof...");
-  const fullProof = await generateProof(identity, group, scope, scope);
+  const fullProof = await generateProof(identity, group, message, scope);
   console.log("Proof generated successfully!");
   console.log("Nullifier:", fullProof.nullifier.toString());
   console.log("Root:", fullProof.merkleTreeRoot.toString());

@@ -1544,7 +1544,7 @@ const deployedContracts = {
   },
   11155111: {
     AccessNFT: {
-      address: "0xF0B9199CAeD03b5E0A5f9924f3B4171B56e70e64",
+      address: "0x5e7140b8c967440A5B7Db15a4B82F4e4428cCc32",
       abi: [
         {
           inputs: [
@@ -2101,9 +2101,10 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
+      deployedOnBlock: 11810362,
     },
     ComplianceGate: {
-      address: "0xB393C4Aace43162b170d4f6A84a60fA1AF9D1Ef3",
+      address: "0x1b8ae78C37c3E29DFcB0236E1c562b3CCFA44F70",
       abi: [
         {
           inputs: [
@@ -2153,6 +2154,25 @@ const deployedContracts = {
             },
           ],
           name: "CredentialRevoked",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "commitment",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "siblingCount",
+              type: "uint256",
+            },
+          ],
+          name: "CredentialRevokedFromTree",
           type: "event",
         },
         {
@@ -2241,6 +2261,19 @@ const deployedContracts = {
               internalType: "bool",
               name: "",
               type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getLeaves",
+          outputs: [
+            {
+              internalType: "uint256[]",
+              name: "",
+              type: "uint256[]",
             },
           ],
           stateMutability: "view",
@@ -2344,6 +2377,44 @@ const deployedContracts = {
               type: "uint256",
             },
           ],
+          name: "leafIndices",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          name: "leaves",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
           name: "memberIndices",
           outputs: [
             {
@@ -2388,6 +2459,24 @@ const deployedContracts = {
             },
           ],
           name: "revokeCredential",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "commitment",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256[]",
+              name: "merkleProofSiblings",
+              type: "uint256[]",
+            },
+          ],
+          name: "revokeCredentialWithMerkleProof",
           outputs: [],
           stateMutability: "nonpayable",
           type: "function",
@@ -2547,7 +2636,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 11484473,
+      deployedOnBlock: 11810361,
     },
   },
 } as const;
