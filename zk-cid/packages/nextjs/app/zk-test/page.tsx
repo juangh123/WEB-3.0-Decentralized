@@ -1,9 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Group } from "@semaphore-protocol/group";
-import { Identity } from "@semaphore-protocol/identity";
-import { generateProof, verifyProof } from "@semaphore-protocol/proof";
 
 export default function ZKTestPage() {
   const [logs, setLogs] = useState<string[]>([]);
@@ -21,11 +18,13 @@ export default function ZKTestPage() {
     try {
       // 1. 生成用户身份 (Identity)
       addLog("🔄 1. 正在生成用户零知识身份 (Identity)...");
+      const { Identity } = await import("@semaphore-protocol/identity");
       const identity = new Identity();
       addLog(`✅ 身份生成成功! Commitment: ${identity.commitment.toString().substring(0, 15)}...`);
 
       // 2. 创建合规群组并加入 (模拟 Issuer)
       addLog("🔄 2. 正在创建合规群组 (Group 1)，并将用户加入...");
+      const { Group } = await import("@semaphore-protocol/group");
       const group = new Group();
       group.addMember(identity.commitment);
       addLog(`✅ 加群成功! 当前群组人数: ${group.members.length}`);
@@ -35,6 +34,7 @@ export default function ZKTestPage() {
       const message = "I am compliant!"; // 你要签名的消息 (如: DeFi Action)
       const scope = "ComplianceGate_v1"; // 作用域，相当于 External Nullifier，防重放
 
+      const { generateProof, verifyProof } = await import("@semaphore-protocol/proof");
       const proof = await generateProof(identity, group, message, scope);
       addLog(`✅ ZK 证明生成成功! Nullifier: ${proof.nullifier.toString().substring(0, 15)}...`);
 
