@@ -171,12 +171,19 @@ Or from the `zk-cid` workspace root:
 yarn workspace compliance-lifecycle compile:cre
 ```
 
-Full `cre workflow simulate` has not been run because the complete CRE CLI is
-not installed on this development machine; no simulated output is fabricated.
+The official CRE CLI (v1.36.0) now compiles this workflow successfully from a
+copy of the workflow placed on a path without spaces (`cre workflow build
+compliance-lifecycle -T staging-settings`; on Windows the CLI fails when the
+path contains spaces). Binary hash with bun 1.2.21:
+`482ea06d8a701e60b8149e1bea2f7ad7f53c14b85e8c2598575decafe0f9e31a`; the hash
+changes with the bun version (bun 1.1.42 produced `5d914691…c67a`).
+`cre workflow simulate` requires a Chainlink CRE account credential
+(`cre login` or `CRE_API_KEY` from https://app.chain.link) which is not
+available on this development machine, so no simulated output is fabricated.
 
 ## Known Production Gaps
 
 - `demoMode` remains `true`; strict Semaphore validation should only be enabled after real proof generation is wired into the frontend.
-- Full DON network-level `cre workflow simulate` has not been executed because the complete CRE CLI is not installed on this machine.
+- Full DON network-level `cre workflow simulate` has not been executed because it requires a Chainlink CRE account credential (`cre login` / `CRE_API_KEY`); the CLI itself is installed and `cre workflow build` passes.
 - `creWorkflow` is currently the deployer; update it to the CRE workflow address before production use.
 - The live sanctions list must be seeded with the same commitment that is currently a member of the new `ComplianceGate` group; otherwise the CRE revocation demo has no intersection.

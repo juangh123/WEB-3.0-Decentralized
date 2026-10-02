@@ -1,0 +1,74 @@
+# Continuous integration for the ZK-CID source tree.
+#
+# GitHub Actions only reads workflows from the REPOSITORY ROOT `.github/workflows`.
+# The Yarn workspace (and therefore every project script) lives in `zk-cid/`,
+# hence `defaults.run.working-directory` below.
+#
+# Frontend deployment is handled by the Vercel Git integration for this repo;
+# the previous `vercel-deploy.yml` was never executed (it lived under
+# `zk-cid/.github/workflows`) and required a VERCEL_TOKEN secret, so it was removed.
+
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: zk-cid
+
+jobs:
+  build-and-test:
+    name: Build, lint and test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+          cache-dependency-path: zk-cid/yarn.lock
+
+      - name: Enable Corepack (Yarn 4)
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Compile contracts
+        run: yarn hardhat:compile
+
+      - name: Run contract tests
+        run: yarn hardhat:test
+
+      - name: Check types (hardhat)
+        run: yarn hardhat:check-types
+
+      - name: Lint contracts
+        run: yarn hardhat:lint --max-warnings=0
+
+      - name: Lint frontend
+        run: yarn next:lint --max-warnings=0
+
+      - name: Check types (frontend)
+        run: yarn next:check-types
+
+      - name: Build frontend
+        run: yarn next:build
+
+      - name: Check types (CRE workflow)
+        run: yarn workspace compliance-lifecycle compile
+
+      - name: Test mock sanctions API
+        run: yarn workspace zk-cid-mock-sanctions-api test

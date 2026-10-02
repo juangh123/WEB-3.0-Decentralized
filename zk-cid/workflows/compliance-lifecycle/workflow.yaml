@@ -1,32 +1,21 @@
-# CRE 工作流清单:compliance-lifecycle
-# 供 CRE CLI(cre workflow deploy / cre simulate)读取的触发器与链配置。
-# 说明:本文件为声明式配置,触发器 schedule 同时由 config.json 注入运行时,
-# 两者需保持一致。
+# CRE CLI 工作流设置(官方 schema,`cre workflow build|simulate` 读取本文件)。
+# 触发器与 HTTP/EVM 能力均在代码中声明(core.ts 的 CronCapability + cre.handler),
+# 这里只告诉 CLI 入口文件、运行时配置与 secrets 的位置。
+# 运行方式(项目根为上一层 workflows/):
+#   cd zk-cid/workflows
+#   cre workflow build compliance-lifecycle -T staging-settings
+staging-settings:
+  user-workflow:
+    workflow-name: "compliance-lifecycle-staging"
+  workflow-artifacts:
+    workflow-path: "./main.ts"
+    config-path: "./config.json"
+    secrets-path: ""
 
-name: compliance-lifecycle
-version: 1.0.0
-description: >
-  Cron 定时拉取 Mock 制裁名单 API,读取链上 getMembers()/getLeaves()
-  求交集并生成真实 Merkle siblings,对命中者完成树级撤销。
-
-entrypoint: main.ts
-config: config.json
-
-triggers:
-  - type: cron
-    capability: cron-trigger@1.0.0
-    schedule: "*/5 * * * *"
-
-capabilities:
-  http:
-    id: http-actions@1.0.0-alpha
-  evm:
-    id: evm@1.0.0
-    chains:
-      - chainSelectorName: ethereum-testnet-sepolia
-        # 部署到本地模拟时改为 anvil/hardhat 节点;CRE simulate 通过
-        # 其本地链环境提供 EVM 读写能力
-        rpc: ${SEPOLIA_RPC_URL}
-        contracts:
-          - name: ComplianceGate
-            address: "0x1b8ae78C37c3E29DFcB0236E1c562b3CCFA44F70"
+production-settings:
+  user-workflow:
+    workflow-name: "compliance-lifecycle-production"
+  workflow-artifacts:
+    workflow-path: "./main.ts"
+    config-path: "./config.json"
+    secrets-path: ""

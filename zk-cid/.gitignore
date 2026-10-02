@@ -37,3 +37,12 @@ opencode.json
 
 hardhat-chain.log*
 .vercel
+
+# local deliverable renders: uploaded to the hackathon form by hand, not part of
+# the source tree. The canonical demo video that the live site serves stays at
+# packages/nextjs/public/demo/zk-cid-pitch-video-en.mp4
+deliverables/media/*.mp4
+deliverables/videos/*.mp4
+
+# leftover nested git repository backup from the original scaffold
+.git_backup/

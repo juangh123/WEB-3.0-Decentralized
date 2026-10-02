@@ -260,6 +260,9 @@ export default function ZKCIDDemo() {
     <div className="flex flex-col items-center pt-10 p-4 max-w-5xl mx-auto">
       <div className="text-center mb-8">
         <h1 className="text-4xl font-extrabold tracking-tight mb-2">ZK-CID 隐私合规身份实测</h1>
+        <p className="text-lg font-medium opacity-90 max-w-xl mx-auto mb-1">
+          Privacy-Preserving Compliance Credentials, Live on Sepolia
+        </p>
         <p className="text-base opacity-75 max-w-xl mx-auto">
           基于零知识证明 (Semaphore ZK) 与 Chainlink CRE 的链上合规隐私通行证与去中心化授权系统
         </p>
@@ -270,28 +273,33 @@ export default function ZKCIDDemo() {
           className={`tab tab-lg ${activeTab === "user" ? "tab-active font-semibold" : ""}`}
           onClick={() => setActiveTab("user")}
         >
-          1. User (身份与证明)
+          1. User (身份与证明 / Identity &amp; Proof)
         </button>
         <button
           className={`tab tab-lg ${activeTab === "issuer" ? "tab-active font-semibold" : ""}`}
           onClick={() => setActiveTab("issuer")}
         >
-          2. Issuer (KYC发证入群)
+          2. Issuer (KYC发证入群 / Issue Credential)
         </button>
         <button
           className={`tab tab-lg ${activeTab === "verifier" ? "tab-active font-semibold" : ""}`}
           onClick={() => setActiveTab("verifier")}
         >
-          3. Verifier (链上验证与DeFi)
+          3. Verifier (链上验证与DeFi / Verify &amp; Mint)
         </button>
       </div>
 
       <div className="w-full max-w-3xl bg-base-200 p-8 rounded-2xl shadow-xl border border-base-300">
         {activeTab === "user" && (
           <div className="flex flex-col gap-5">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold">第一步：用户身份生成与隐私证明</h2>
-              <span className="badge badge-primary badge-outline text-xs">Client-Side ZK</span>
+            <div className="flex flex-wrap justify-between items-center gap-2">
+              <h2 className="text-2xl font-bold">
+                第一步：用户身份生成与隐私证明
+                <span className="block text-sm font-normal opacity-70 mt-1">
+                  Step 1 · Generate your identity and a zero-knowledge proof locally
+                </span>
+              </h2>
+              <span className="badge badge-primary badge-outline text-xs shrink-0">Client-Side ZK</span>
             </div>
             <p className="text-sm opacity-80 leading-relaxed">
               您的 Semaphore
@@ -413,9 +421,14 @@ export default function ZKCIDDemo() {
 
         {activeTab === "issuer" && (
           <div className="flex flex-col gap-5">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold">第二步：Issuer 机构 KYC 与上链发证</h2>
-              <span className="badge badge-secondary badge-outline text-xs">Authority Role</span>
+            <div className="flex flex-wrap justify-between items-center gap-2">
+              <h2 className="text-2xl font-bold">
+                第二步：Issuer 机构 KYC 与上链发证
+                <span className="block text-sm font-normal opacity-70 mt-1">
+                  Step 2 · Issuer verifies KYC off-chain and adds the anonymous commitment on-chain
+                </span>
+              </h2>
+              <span className="badge badge-secondary badge-outline text-xs shrink-0">Authority Role</span>
             </div>
             <p className="text-sm opacity-80 leading-relaxed">
               在此环节，合规发证机构验证链下身份（如护照、制裁名单筛查）后，将用户的匿名 Commitment 添加到链上 Semaphore
@@ -510,9 +523,14 @@ export default function ZKCIDDemo() {
 
         {activeTab === "verifier" && (
           <div className="flex flex-col gap-5">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold">第三步：业务端链上零知识验证与权限解锁</h2>
-              <span className="badge badge-accent badge-outline text-xs">DeFi / DApp Gate</span>
+            <div className="flex flex-wrap justify-between items-center gap-2">
+              <h2 className="text-2xl font-bold">
+                第三步：业务端链上零知识验证与权限解锁
+                <span className="block text-sm font-normal opacity-70 mt-1">
+                  Step 3 · DeFi gate verifies the proof on-chain and mints the AccessNFT
+                </span>
+              </h2>
+              <span className="badge badge-accent badge-outline text-xs shrink-0">DeFi / DApp Gate</span>
             </div>
             <p className="text-sm opacity-80 leading-relaxed">
               DeFi 协议或 DApp 智能合约在链上直接验证 Groth16 零知识证明。验证通过后即可铸造
@@ -588,7 +606,9 @@ export default function ZKCIDDemo() {
       </div>
 
       <div className="w-full max-w-3xl mt-6 bg-base-200 p-5 rounded-2xl border border-base-300 text-xs">
-        <h3 className="text-sm font-bold mb-3">链上实时状态 (Sepolia)</h3>
+        <h3 className="text-sm font-bold mb-3">
+          链上实时状态 (Sepolia) <span className="font-normal opacity-60">· Live On-Chain State</span>
+        </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
           <div className="flex justify-between gap-3">
             <span className="opacity-70">ComplianceGate</span>
@@ -634,7 +654,9 @@ export default function ZKCIDDemo() {
 
       <div className="w-full max-w-3xl mt-4 bg-base-200 p-5 rounded-2xl border border-base-300 text-xs">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-bold">CRE 数据源 · 外部制裁名单</h3>
+          <h3 className="text-sm font-bold">
+            CRE 数据源 · 外部制裁名单 <span className="font-normal opacity-60">· External Sanctions List</span>
+          </h3>
           {!sanctions || sanctions.error ? (
             <span className="badge badge-ghost">未连接</span>
           ) : sanctionedMembers.length > 0 ? (

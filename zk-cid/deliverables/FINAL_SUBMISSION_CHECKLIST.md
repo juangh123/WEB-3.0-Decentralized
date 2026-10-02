@@ -34,8 +34,10 @@ Use this checklist immediately before submitting the DoraHacks BUIDL.
   Sepolia `ComplianceGate` address
 - [x] `tsc` compilation passes
 - [x] Real CRE SDK compilation produces `dist/compliance-lifecycle.wasm`
+- [x] Official CRE CLI v1.36.0 `cre workflow build compliance-lifecycle -T staging-settings` succeeds
+  (run from a space-free path copy; bun 1.2.21 → binary hash `482ea06d...`)
 - [x] yarn workspace compliance-lifecycle test:sim (CRE SDK TestRuntime end-to-end simulation, 3/3 pass)
-- [x] Full `cre workflow simulate` (CRE CLI) is not claimed as passed; honest boundary documented
+- [ ] Full `cre workflow simulate` (CRE CLI) not yet run: needs a Chainlink CRE account credential (`cre login` / `CRE_API_KEY`) — not claimed as passed, boundary documented
 
 ## Regression Gates
 

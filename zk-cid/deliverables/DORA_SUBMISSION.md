@@ -133,6 +133,13 @@ Invoke-RestMethod -Uri 'https://mock-api-topaz-zeta.vercel.app/api/admin' `
 - `core.ts` / `main.ts` pass TypeScript compilation.
 - Real `@chainlink/cre-sdk` compiler has been executed and produced
   `workflows/compliance-lifecycle/dist/compliance-lifecycle.wasm` (2.7 MB).
+- Official CRE CLI v1.36.0 `cre workflow build compliance-lifecycle -T staging-settings`
+  succeeds (verified 2026-10-02 on a copy of the workflow placed on a
+  space-free path; the CLI fails on Windows paths containing spaces). Binary
+  hash with bun 1.2.21:
+  `482ea06d8a701e60b8149e1bea2f7ad7f53c14b85e8c2598575decafe0f9e31a`
+  (hash varies with the bun version). The repo ships the official
+  `workflows/project.yaml` + `workflow.yaml` schema the CLI requires.
 - End-to-end SDK simulation executed with the real CRE SDK TestRuntime
   (`yarn workspace compliance-lifecycle test:sim`): 3/3 tests pass. The
   workflow fetches the sanctions API, reads on-chain `getMembers()` and
@@ -140,9 +147,11 @@ Invoke-RestMethod -Uri 'https://mock-api-topaz-zeta.vercel.app/api/admin' `
   generates a CRE report, and writes a tree-level revoke transaction — see
   `workflows/compliance-lifecycle/test/compliance-lifecycle.sim.test.ts`.
 - Full `cre workflow simulate` (CRE CLI, DON network-level) has not been
-  executed because the complete CRE CLI is not installed in this development
-  environment; no CLI simulation output is fabricated. The honest boundary is
-  documented in `workflows/compliance-lifecycle/evidence/README.md`.
+  executed because it requires a Chainlink CRE account credential (`cre login`
+  or `CRE_API_KEY` from https://app.chain.link); the CLI itself is installed
+  and compiles the workflow. No CLI simulation output is fabricated. The
+  honest boundary is documented in
+  `workflows/compliance-lifecycle/evidence/README.md`.
 
 ## Known Limitations
 

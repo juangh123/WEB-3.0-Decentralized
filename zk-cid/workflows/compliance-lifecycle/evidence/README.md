@@ -19,6 +19,35 @@
 
 ### 已完成的真实 CRE 编译证据
 
+一键复现脚本(镜像到无空格路径 + build + simulate,输出自动写入本目录):
+
+```powershell
+cd zk-cid\workflows
+$env:CRE_API_KEY = "<在 https://app.chain.link 创建的 key>"   # 或先执行 cre login
+.\run-cre-simulate.ps1
+```
+
+只验证编译、不跑 simulate:`.\run-cre-simulate.ps1 -BuildOnly`
+
+`cre-simulate-<时间戳>.log` 为该脚本的原始输出。仓库内已有一份
+`cre-simulate-20261002-192709.log`(BuildOnly,官方 CLI 编译成功)。
+
+**官方 CRE CLI v1.36.0 已实测编译通过**(2026-10-02,Windows):
+
+```powershell
+# 注意:需先把 compliance-lifecycle 复制到不含空格的路径(见下方前置条件)
+cd <无空格路径>\workflows
+cre workflow build compliance-lifecycle -T staging-settings
+# ✓ Workflow compiled successfully
+# Binary hash: 482ea06d8a701e60b8149e1bea2f7ad7f53c14b85e8c2598575decafe0f9e31a  (bun 1.2.21)
+```
+
+前置条件:CLI 需要 `bun` 在 PATH 中;Windows 下仓库路径**不能含空格**
+(CLI 内部以未加引号的 `cre-compile.cmd` 路径调用 cmd,含空格会报 `'F:\AI' is not recognized ...`)。
+该 hash 由编译工具链决定:bun 1.2.21 得到 `482ea06d…e31a`,bun 1.1.42 得到
+`5d914691…c67a`(2026-10-02 两次独立复跑均稳定复现,同一 bun 版本下可重复)。
+因此记录 hash 时务必同时记录 bun 版本。
+
 已在 Windows/PowerShell 开发机使用 `npx -y bun@1.1.42` 调用本机安装的
 `@chainlink/cre-sdk/bin/cre-compile.ts` 成功生成 WASM:
 
@@ -85,8 +114,10 @@ test\compliance-lifecycle.sim.test.ts:
 
 ## 未实测项(保留的诚实边界)
 
-完整 CRE CLI(`cre` 命令)仍未安装,`cre workflow simulate` 的
-DON 网络级仿真 **尚未执行**;此目录不放任何伪造的 CLI 模拟输出。
+官方 CRE CLI 已在本机安装(v1.36.0)并实测 `cre workflow build` 通过;
+但 `cre workflow simulate` 需要在 https://app.chain.link 创建的账号凭证
+(交互式 `cre login` 或非交互式 `CRE_API_KEY` 环境变量),本机没有该凭证,
+因此 DON 网络级仿真 **尚未执行**;此目录不放任何伪造的 CLI 模拟输出。
 SDK 级模拟(上文)已实际运行并通过,两者边界明确、无夸大。
 
 ## 复现命令(评审者可在装有 CRE CLI 的环境执行)
@@ -101,9 +132,13 @@ yarn workspace mock-api start        # 监听 http://localhost:3001
 # 3. 类型检查 / 编译工作流
 ./node_modules/.bin/tsc -p workflows/compliance-lifecycle/tsconfig.json
 
-# 4. 运行 CRE 本地模拟(在工作流目录下)
-cd workflows/compliance-lifecycle
-cre workflow simulate .
+# 4. 编译工作流(官方 CLI,无需登录)
+cd zk-cid/workflows
+cre workflow build compliance-lifecycle -T staging-settings
+
+# 5. 运行 CRE 本地模拟(需要登录或 CRE_API_KEY)
+cre login                       # 交互式;或设置环境变量 CRE_API_KEY=<key>
+cre workflow simulate compliance-lifecycle -T staging-settings
 ```
 
 预期行为:每个 cron 周期抓取制裁名单 -> 读取 `getMembers()`/`getLeaves()` ->

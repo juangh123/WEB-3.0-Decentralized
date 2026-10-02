@@ -1,7 +1,10 @@
 
 .vercel/
+.playwright-cli/
 *.pid
 *.log
+# ...except the CRE CLI evidence logs, which are part of the submission package
+!zk-cid/workflows/compliance-lifecycle/evidence/cre-simulate-*.log
 tmp/
 .git_backup/
 

@@ -27,9 +27,21 @@ revocation based on an external sanctions API, written against the real
 - `compliance-lifecycle/config.json` — runtime config consumed via
   `runtime.config` (schedule, API URL, chain selector, contract address,
   gas limit).
-- `compliance-lifecycle/workflow.yaml` — trigger and chain declaration for
-  the CRE CLI.
+- `compliance-lifecycle/workflow.yaml` — workflow-level CRE CLI settings
+  (official `staging-settings` / `production-settings` schema).
+- `project.yaml` — project-level CRE CLI settings (RPC endpoints per target).
 - `compliance-lifecycle/dist/` — `tsc` build output.
 - `compliance-lifecycle/evidence/README.md` — honest status, reproduction
   commands, and remaining risks. Simulation output is only added after an
   actual `cre workflow simulate` run on a machine with the CRE CLI.
+
+## CRE CLI Commands
+
+```bash
+cd zk-cid/workflows
+cre workflow build compliance-lifecycle -T staging-settings
+cre workflow simulate compliance-lifecycle -T staging-settings   # requires `cre login` / CRE_API_KEY
+```
+
+Notes: the CLI needs `bun` on `PATH`, and on Windows the repository path must
+not contain spaces (the CLI invokes `cre-compile.cmd` without quoting).

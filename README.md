@@ -9,6 +9,36 @@
 
 🎥 **Demo Video**: [Watch Demo](https://web-3-0-decentralized.vercel.app/demo/zk-cid-pitch-video-en.mp4)
 
+## Hackathon Submission
+
+- **Event**: [BLI Legal Tech Hackathon 2 (legal-hack-2026)](https://dorahacks.io/hackathon/legal-hack-2026)
+- **Deadline**: 2026-11-01 01:01 UTC (Beijing time 09:01)
+- **Track**: `All BUIDLs` (the only selectable track; LegalTech & RegTech is a category inside it)
+- **Bounty**: [Chainlink CRE — Best Workflow with CRE](https://dorahacks.io/hackathon/bounty/1362)
+
+## Verify It Yourself
+
+```bash
+cd zk-cid
+yarn install --immutable
+yarn hardhat:test                                  # contract tests
+yarn next:build                                    # frontend production build
+yarn workspace compliance-lifecycle compile        # CRE workflow type check
+yarn workspace zk-cid-mock-sanctions-api test      # mock sanctions API
+```
+
+Sepolia deployment, transaction hashes and the CRE evidence chain are documented in
+[zk-cid/SEPOLIA_DEPLOYMENT.md](zk-cid/SEPOLIA_DEPLOYMENT.md) and
+[zk-cid/workflows/compliance-lifecycle/evidence/README.md](zk-cid/workflows/compliance-lifecycle/evidence/README.md).
+Known limitations (demo mode, CRE CLI simulate boundary) are listed in
+[zk-cid/README.md](zk-cid/README.md).
+
+## Live Deployment
+
+- **ComplianceGate (Sepolia)**: `0x1b8ae78C37c3E29DFcB0236E1c562b3CCFA44F70`
+- **AccessNFT (Sepolia)**: `0x5e7140b8c967440A5B7Db15a4B82F4e4428cCc32`
+- **Mock sanctions API**: [https://mock-api-topaz-zeta.vercel.app/api/sanctions-list](https://mock-api-topaz-zeta.vercel.app/api/sanctions-list)
+
 ## Quick Overview
 
 Current Web3 compliance is flawed: users leak privacy to centralized KYC gates, and manual revocation of sanctioned identities is slow. 

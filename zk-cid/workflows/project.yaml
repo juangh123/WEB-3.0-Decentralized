@@ -1,0 +1,16 @@
+# CRE CLI project settings (schema required by `cre workflow build|simulate`).
+# Docs: https://docs.chain.link/cre/getting-started/cli-installation
+#
+# Run the workflow from this directory so the CLI can resolve the settings:
+#   cd zk-cid/workflows
+#   cre workflow build compliance-lifecycle -T staging-settings
+#   cre workflow simulate compliance-lifecycle -T staging-settings   # needs `cre login` / CRE_API_KEY
+staging-settings:
+  rpcs:
+    - chain-name: ethereum-testnet-sepolia
+      url: https://ethereum-sepolia-rpc.publicnode.com
+
+production-settings:
+  rpcs:
+    - chain-name: ethereum-testnet-sepolia
+      url: https://ethereum-sepolia-rpc.publicnode.com

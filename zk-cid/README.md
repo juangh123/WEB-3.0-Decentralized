@@ -60,13 +60,17 @@ yarn start
 
 `workflows/compliance-lifecycle/` 为独立的 Chainlink CRE 工作流:Cron 定时拉取 Mock 制裁名单 API,读取链上 `getMembers()` 与 `getLeaves()` 求交集并重建 Semaphore 树,对命中者自动调用 `revokeCredentialWithMerkleProof` 完成树级撤销。代码按真实 `@chainlink/cre-sdk@1.16.0` API 编写,已通过 `tsc` 类型检查,并已用 `npx bun` 调用真实 `cre-compile` 生成 `dist/compliance-lifecycle.wasm`。
 
-> ⚠️ **诚实声明**:`cre workflow simulate` 端到端模拟**尚未实测**(需要完整 CRE CLI 与受支持链环境)。完整复现步骤、编译证据与已知风险见 `workflows/compliance-lifecycle/evidence/README.md`,核心命令:
+> ⚠️ **诚实声明**:官方 CRE CLI(v1.36.0)的 `cre workflow build` **已实测通过**(在无空格路径副本中执行,bun 1.2.21 下 binary hash `482ea06d…e31a`;hash 随 bun 版本变化,详见 evidence);`cre workflow simulate` 需要 Chainlink 账号凭证(`cre login` 或 `CRE_API_KEY`,在 https://app.chain.link 创建),**尚未实测**。完整复现步骤、编译证据与已知风险见 `workflows/compliance-lifecycle/evidence/README.md`,核心命令:
 
 ```bash
-# 需先安装 CRE CLI(参考 https://docs.chain.link/cre)
-cd workflows/compliance-lifecycle
-cre workflow simulate .
+# 需先安装 CRE CLI(参考 https://docs.chain.link/cre)与 bun
+cd zk-cid/workflows
+cre workflow build compliance-lifecycle -T staging-settings
+cre login   # 或设置 CRE_API_KEY,然后:
+cre workflow simulate compliance-lifecycle -T staging-settings
 ```
+
+> Windows 提示:CRE CLI 内部通过 `cmd` 调用 `cre-compile`,仓库路径**不能包含空格**(否则报 `'F:\AI' is not recognized ...`)。
 
 已完成的真实 CRE 编译复现命令:
 
