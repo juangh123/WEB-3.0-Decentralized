@@ -21,6 +21,7 @@
 - **Deadline**: 2026-11-01 01:01 UTC (Beijing time 09:01)
 - **Track**: `All BUIDLs` (the only selectable track; LegalTech & RegTech is a category inside it)
 - **Bounty**: [Chainlink CRE — Best Workflow with CRE](https://dorahacks.io/hackathon/bounty/1362)
+- **Submission**: [ZK-CID on DoraHacks](https://dorahacks.io/buidl/48603) — published 2026-10-02, under review
 
 ## Verify It Yourself
 
