@@ -1,6 +1,8 @@
 ﻿# ZK-CID 🛡️
 **Zero-Knowledge Compliance Identity & Decentralized Workflow Orchestration**
 
+[![CI](https://github.com/juangh123/WEB-3.0-Decentralized/actions/workflows/ci.yml/badge.svg)](https://github.com/juangh123/WEB-3.0-Decentralized/actions/workflows/ci.yml)
+
 > **一句话定位**: "ZK-CID 用 ZK 零知识证明保护 Web3 用户验证端隐私，用 Chainlink CRE 消除颁发端信任——合规数据由去中心化预言机网络自动编排，用户隐私由数学密码学守护。"
 
 🏆 **Track**: Law / Finance / Compliance (Blockchain Legal Institute) & Best Workflow with CRE (Chainlink)
