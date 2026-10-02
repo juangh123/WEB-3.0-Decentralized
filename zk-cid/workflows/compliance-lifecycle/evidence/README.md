@@ -120,18 +120,63 @@ test\compliance-lifecycle.sim.test.ts:
 4. `EVMClient.writeReport(...)` -> 能力 Mock 返回 `TX_STATUS_SUCCESS`
    与 txHash,日志输出 `revoked commitment=...`
 
-> 定位说明:这是 **SDK 层 TypeScript 运行时模拟**,证明工作流编排逻辑
-> 可端到端执行、判定与报告/上链路径正确;它不等同于完整 CRE CLI 的
-> `cre workflow simulate`(DON 网络级仿真),后者仍需评审者在装有
-> CRE CLI 的环境复现,命令见下文。
+> 定位说明:这是 **SDK 层 TypeScript 运行时模拟**,用能力 Mock 覆盖判定与
+> 报告路径;它不能替代官方 CLI。官方 `cre workflow simulate` 的实测结果见
+> 下一节(2026-10-02 已真实执行通过)。
 
-## 未实测项(保留的诚实边界)
+## 官方 CRE CLI `workflow simulate` 实测结果(2026-10-02)
 
-官方 CRE CLI 已在本机安装(v1.36.0)并实测 `cre workflow build` 通过;
-但 `cre workflow simulate` 需要在 https://app.chain.link 创建的账号凭证
-(交互式 `cre login` 或非交互式 `CRE_API_KEY` 环境变量),本机没有该凭证,
-因此 DON 网络级仿真 **尚未执行**;此目录不放任何伪造的 CLI 模拟输出。
-SDK 级模拟(上文)已实际运行并通过,两者边界明确、无夸大。
+`cre workflow simulate` 已用官方 CLI v1.36.0 在本机真实执行,完整日志见
+`cre-simulate-20261002-215452.log`。运行命令:
+
+```powershell
+cd zk-cid/workflows
+.\run-cre-simulate.ps1     # 需要 cre login 或 CRE_API_KEY
+```
+
+关键输出(原始日志逐字摘录,未改写):
+
+```text
+  Binary hash: d1246a6f879aa78eea039961a77f2fe201fde9b4cf6420a3ba346755e812626c
+  Config hash: 85fb3bf2fe8f28236020687885fa8784453d5a66b988096fe66fd7c68a4da494
+[SIMULATION] Simulator Initialized
+[SIMULATION] Running trigger trigger=cron-trigger@1.0.0
+[USER LOG] sanctions list fetched: 1 entries (source=Mock OFAC SDN Sanctions List (Demo))
+[USER LOG] on-chain members fetched: 1
+[USER LOG] on-chain leaves fetched: 2 (1 active)
+[USER LOG] merkle proof generated commitment=123456789012345678901234567890123456789 siblingCount=1
+[USER LOG] revoked commitment=123456789012345678901234567890123456789
+✓ Workflow Simulation Result:
+"{\"status\": \"revoked\", \"revokedCount\": 1, \"revokedCommitments\": [\"1234…789\"],
+  \"txHashes\": [\"\"], \"proofs\": [{\"commitment\": \"1234…789\", \"siblings\": [\"0\"]}],
+  \"source\": \"Mock OFAC SDN Sanctions List (Demo)\", \"executedAt\": \"2026-10-02T13:56:14.839Z\"}"
+│ Simulation complete! Ready to deploy your workflow?  │
+```
+
+这条链路是**真实执行**的:工作流经 DON 共识路径抓取线上制裁名单 API,用
+`EVMClient.callContract` 读取 Sepolia 上 `getMembers()` / `getLeaves()`,用本地
+LeanIMT + Poseidon(2) 重建 Semaphore 树生成 Merkle siblings,再经
+`runtime.report()` 产出报告并走 `writeReport` 的撤销分支。`txHashes` 为空是
+模拟语义(未加 `--broadcast`,不会真的发交易);`siblings` 为 `["0"]` 与链上
+单成员树的真实结构一致。
+
+### 为跑通 simulate 修复的三个真实缺陷
+
+1. **`poseidon-lite` 依赖 `atob`,CRE WASM 运行时没有该全局** —— 只要 import
+   就会在整个工作流启动时 `wasm trap: unreachable`。已改为:
+   `@zk-kit/lean-imt`(Semaphore v4 同款树)+ 本地 `poseidon2-lite.ts`
+   (内联 t=3 常量,自带 base64 解码),并用 `test/poseidon2-lite.test.ts`
+   锁定与 `poseidon-lite` 的输出逐位一致(4 组向量,含大数)。
+2. **工作流代码访问 `process.env`**,而 CRE WASM 运行时没有 `process` 全局 ——
+   触发执行时报 `process is not defined`。已改为
+   `typeof process !== "undefined" ? process.env : {}` 的防御式读取,
+   生产值仍然来自 `config.json`。
+3. **工作流目录里遗留的注释版 `project.yaml`** 会被 CLI 优先读取,导致
+   `simulate` 报 `no RPC URLs found for target "staging-settings"`。
+   已删除该文件,项目级配置只保留 `zk-cid/workflows/project.yaml`。
+
+另外,bun 1.1.x 生成的 WASM 在 CRE 引擎里同样会 `wasm trap`;
+本仓库的 `compile:cre` / `test:sim` 已改用 **bun 1.2.21**。
 
 ## 复现命令(评审者可在装有 CRE CLI 的环境执行)
 
@@ -168,7 +213,10 @@ cre workflow simulate compliance-lifecycle -T staging-settings
    约部署在本地链,需要在 CRE 模拟环境中映射对应的链配置,
    `chainSelectorName` 必须能在 `getNetwork()` 中解析。
 3. **Merkle siblings**:工作流已按合约的稳定 leaves 重建 Semaphore
-   树并生成真实 siblings;Sepolia 实链验证中重建根与链上根一致。
-   完整 DON 网络级 `cre workflow simulate` 仍需在安装 CRE CLI 的
-   环境中执行。
+   树并生成真实 siblings;Sepolia 实链验证中重建根与链上根一致,
+   官方 CLI simulate 也已复现(见上文日志)。
+4. **真实广播仍需 forwarder**:`simulate` 未开启 `--broadcast`,所以没有
+   真实交易。要让 DON 签名的报告真正写进 `ComplianceGate`,合约还需要实现
+   `IReceiver`/`onReport` 并把 `creWorkflow` 指向 CRE forwarder —— 这是
+   当前唯一保留的"模拟 → 生产"边界,已在 README 与提交文案中如实标注。
 

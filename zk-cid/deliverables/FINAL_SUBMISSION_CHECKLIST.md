@@ -39,7 +39,8 @@ Use this checklist immediately before submitting the DoraHacks BUIDL.
 - [x] Official CRE CLI v1.36.0 `cre workflow build compliance-lifecycle -T staging-settings` succeeds
   (run from a space-free path copy; bun 1.2.21 → binary hash `482ea06d...`)
 - [x] yarn workspace compliance-lifecycle test:sim (CRE SDK TestRuntime end-to-end simulation, 3/3 pass)
-- [ ] Full `cre workflow simulate` (CRE CLI) not yet run: needs a Chainlink CRE account credential (`cre login` / `CRE_API_KEY`) — not claimed as passed, boundary documented
+- [x] Official `cre workflow simulate` executed end-to-end with CLI v1.36.0 (log: `evidence/cre-simulate-20261002-215452.log`)
+- [ ] Optional: run `cre workflow simulate --broadcast` after `ComplianceGate` implements `IReceiver`/`onReport` and `creWorkflow` points at the CRE forwarder
 
 ## Regression Gates
 

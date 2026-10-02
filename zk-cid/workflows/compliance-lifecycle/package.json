@@ -7,17 +7,18 @@
     "build": "tsc",
     "test": "jest",
     "compile": "tsc",
-    "compile:cre": "npx -y bun@1.1.42 node_modules/@chainlink/cre-sdk/bin/cre-compile.ts main.ts dist/compliance-lifecycle.wasm --skip-type-checks",
-    "test:sim": "npx -y bun@1.1.42 test test/compliance-lifecycle.sim.test.ts"
+    "compile:cre": "npx -y bun@1.2.21 node_modules/@chainlink/cre-sdk/bin/cre-compile.ts main.ts dist/compliance-lifecycle.wasm --skip-type-checks",
+    "test:sim": "npx -y bun@1.2.21 test test/compliance-lifecycle.sim.test.ts test/poseidon2-lite.test.ts"
   },
   "dependencies": {
     "@chainlink/cre-sdk": "^1.16.0",
-    "@semaphore-protocol/group": "^4.14.2"
+    "@zk-kit/lean-imt": "^2.2.5"
   },
   "devDependencies": {
     "@types/jest": "^29.5.11",
     "@types/node": "^22.0.0",
     "jest": "^29.7.0",
+    "poseidon-lite": "^0.3.0",
     "ts-jest": "^29.1.1",
     "typescript": "^5.0.0"
   }

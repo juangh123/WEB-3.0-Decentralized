@@ -60,7 +60,7 @@ yarn start
 
 `workflows/compliance-lifecycle/` 为独立的 Chainlink CRE 工作流:Cron 定时拉取 Mock 制裁名单 API,读取链上 `getMembers()` 与 `getLeaves()` 求交集并重建 Semaphore 树,对命中者自动调用 `revokeCredentialWithMerkleProof` 完成树级撤销。代码按真实 `@chainlink/cre-sdk@1.16.0` API 编写,已通过 `tsc` 类型检查,并已用 `npx bun` 调用真实 `cre-compile` 生成 `dist/compliance-lifecycle.wasm`。
 
-> ⚠️ **诚实声明**:官方 CRE CLI(v1.36.0)的 `cre workflow build` **已实测通过**(在无空格路径副本中执行,bun 1.2.21 下 binary hash `482ea06d…e31a`;hash 随 bun 版本变化,详见 evidence);`cre workflow simulate` 需要 Chainlink 账号凭证(`cre login` 或 `CRE_API_KEY`,在 https://app.chain.link 创建),**尚未实测**。完整复现步骤、编译证据与已知风险见 `workflows/compliance-lifecycle/evidence/README.md`,核心命令:
+> ✅ **实测声明**:官方 CRE CLI(v1.36.0)的 `cre workflow build` 与 `cre workflow simulate` **均已实测通过**(2026-10-02)。simulate 完整跑通「抓取制裁名单 → 读取 `getMembers()`/`getLeaves()` → 重建 Semaphore 树生成 Merkle siblings → 撤销命中成员」,原始日志见 `workflows/compliance-lifecycle/evidence/cre-simulate-20261002-215452.log`。唯一保留的边界是:simulate 未开 `--broadcast`,真实写链仍需合约实现 `IReceiver`/`onReport` 并接入 CRE forwarder。核心命令:
 
 ```bash
 # 需先安装 CRE CLI(参考 https://docs.chain.link/cre)与 bun
@@ -134,7 +134,8 @@ ZK-CID 提供了一种**可插拔、无需信任的合规中间件**。对于 De
 
 - **Demo Mode 默认开启**：`ComplianceGate` 以 `demoMode = true` 部署，本地演示使用 MockSemaphore 校验路径；严格模式需由 issuer 调用 `setDemoMode(false)` 并配置真实的 Semaphore 部署（demoMode 关闭后，`validateProof` 失败必然 revert）。
 - **撤销的 Merkle 语义**：CRE 工作流读取 `getLeaves()`，按链上稳定叶子重建 Semaphore 树并生成真实 siblings，再调用 `revokeCredentialWithMerkleProof` 从树中移除成员；`hasBeenRevoked` 保留为纵深防御标记。
-- **CRE 编译已实测、simulate 未实测**：工作流代码已通过 `tsc` 类型检查，并已生成 `compliance-lifecycle.wasm`；`cre workflow simulate` 需在安装完整 CRE CLI 的环境中执行；`writeReport` 在纯本地链上的支持取决于 CRE 模拟环境的链配置（详见 `workflows/compliance-lifecycle/evidence/README.md`）。
+- **CRE 编译与 simulate 均已实测**：工作流通过 `tsc` 类型检查，WASM 由 `cre-compile` 生成，官方 CLI `cre workflow simulate` 已端到端跑通（日志见 `workflows/compliance-lifecycle/evidence/cre-simulate-20261002-215452.log`）。为此修复了三个真实缺陷：`poseidon-lite` 依赖 `atob`（改用本地 Poseidon(2)）、工作流访问不存在的 `process` 全局、以及工作流目录里冲突的旧 `project.yaml`。
+- **真实广播尚未开启**：simulate 默认不广播，`txHashes` 为空符合预期。要让 DON 签名报告真正写进 `ComplianceGate`，合约还需实现 `IReceiver`/`onReport` 并把 `creWorkflow` 指向 CRE forwarder——这是当前"模拟 → 生产"的分界线。
 - **文档中的链上地址**：README / DEMO_SUMMARY 中的地址与交易哈希来自 2026-07-19 本地完整重部署（最新证据），链重启/重部署后以 `packages/hardhat/deployments/localhost/*.json` 为准。
 
 ---

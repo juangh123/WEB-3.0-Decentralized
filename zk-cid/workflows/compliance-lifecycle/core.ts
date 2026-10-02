@@ -26,7 +26,7 @@ import {
   type Runtime,
   type Workflow,
 } from "@chainlink/cre-sdk";
-import { Group } from "@semaphore-protocol/group";
+import { LeanIMT } from "@zk-kit/lean-imt";
 import {
   decodeFunctionResult,
   encodeFunctionData,
@@ -34,6 +34,7 @@ import {
   zeroAddress,
   type Address,
 } from "viem";
+import { poseidon2 } from "./poseidon2-lite";
 
 /** 工作流运行时配置(config.json 注入,测试中可直接显式传入) */
 export type Config = {
@@ -67,14 +68,27 @@ type SanctionsResponse = {
  * Rebuilds the exact Semaphore tree as represented by the contract's stable leaves.
  * Revoked leaves are zero and stay in place, which is the same semantic used by
  * Semaphore's `removeMember`.
+ *
+ * Implemented with `@zk-kit/lean-imt` (the tree Semaphore v4 itself uses) plus the
+ * local Poseidon(2) from `poseidon2-lite.ts`, instead of
+ * `@semaphore-protocol/group`. The wrapper package pulls in `poseidon-lite`,
+ * whose constants are decoded with the browser global `atob()`; the CRE WASM
+ * runtime has no `atob`, so importing it traps the workflow at engine start.
  */
 export function buildMerkleProofSiblings(leaves: readonly bigint[], commitment: bigint): bigint[] {
-  const group = new Group(leaves.map(value => BigInt(value)));
-  const memberIndex = group.indexOf(commitment);
+  if (leaves.length === 0) {
+    throw new Error("cannot build a Merkle proof from an empty leaf set");
+  }
+
+  const tree = new LeanIMT<bigint>(
+    (a, b) => poseidon2([a, b]),
+    leaves.map(value => BigInt(value)),
+  );
+  const memberIndex = tree.indexOf(BigInt(commitment));
   if (memberIndex < 0) {
     throw new Error(`commitment ${commitment.toString()} is missing from the on-chain leaves`);
   }
-  return group.generateMerkleProof(memberIndex).siblings.map(value => BigInt(value));
+  return tree.generateProof(memberIndex).siblings.map(value => BigInt(value));
 }
 
 function readUint256Array(
@@ -246,14 +260,16 @@ export const onCronTrigger = (
   runtime: Runtime<Config>,
   _payload: CronPayload,
 ): string => {
+  // The CRE WASM runtime has no Node `process` global, so read overrides
+  // defensively: in production the values come from config.json.
+  const env: Record<string, string | undefined> =
+    typeof process !== "undefined" && process.env ? process.env : {};
+
   const cfg: Config = {
     ...runtime.config,
-    sanctionsApiUrl:
-      process.env.SANCTIONS_API_URL ?? runtime.config.sanctionsApiUrl,
-    chainSelectorName:
-      process.env.CHAIN_SELECTOR_NAME ?? runtime.config.chainSelectorName,
-    complianceGateAddress:
-      process.env.COMPLIANCE_GATE_ADDRESS ?? runtime.config.complianceGateAddress,
+    sanctionsApiUrl: env.SANCTIONS_API_URL ?? runtime.config.sanctionsApiUrl,
+    chainSelectorName: env.CHAIN_SELECTOR_NAME ?? runtime.config.chainSelectorName,
+    complianceGateAddress: env.COMPLIANCE_GATE_ADDRESS ?? runtime.config.complianceGateAddress,
   };
   return runComplianceCheck(runtime, cfg);
 };

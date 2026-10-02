@@ -8765,7 +8765,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@zk-kit/lean-imt@npm:2.2.5":
+"@zk-kit/lean-imt@npm:2.2.5, @zk-kit/lean-imt@npm:^2.2.5":
   version: 2.2.5
   resolution: "@zk-kit/lean-imt@npm:2.2.5"
   dependencies:
@@ -10641,10 +10641,11 @@ __metadata:
   resolution: "compliance-lifecycle@workspace:workflows/compliance-lifecycle"
   dependencies:
     "@chainlink/cre-sdk": "npm:^1.16.0"
-    "@semaphore-protocol/group": "npm:^4.14.2"
     "@types/jest": "npm:^29.5.11"
     "@types/node": "npm:^22.0.0"
+    "@zk-kit/lean-imt": "npm:^2.2.5"
     jest: "npm:^29.7.0"
+    poseidon-lite: "npm:^0.3.0"
     ts-jest: "npm:^29.1.1"
     typescript: "npm:^5.0.0"
   languageName: unknown
@@ -18949,7 +18950,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"poseidon-lite@npm:0.3.0":
+"poseidon-lite@npm:0.3.0, poseidon-lite@npm:^0.3.0":
   version: 0.3.0
   resolution: "poseidon-lite@npm:0.3.0"
   checksum: 10/1e7294f7fed91e1cdc3aee7bd0380461bfdba74ba34d100c2fc4e3d5434d09af0644f6c889b749b9511fd3867216a1aa6d575f070b716c6756b1f56c0067b71d

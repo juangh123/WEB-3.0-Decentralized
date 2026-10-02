@@ -47,11 +47,14 @@ bounty: https://dorahacks.io/hackathon/bounty/1362)
 Bounty evidence summary to paste alongside (hard requirement: a successful CRE
 CLI simulation or a live CRE-network deployment):
 
-- `cre workflow build compliance-lifecycle -T staging-settings` passes with the
-  official CRE CLI v1.36.0; raw output in
-  `workflows/compliance-lifecycle/evidence/cre-simulate-20261002-192709.log`.
-- `cre workflow simulate` output is attached as soon as the Chainlink CRE
-  account credential is available; until then this document does not claim it.
+- The official CRE CLI **v1.36.0** both builds and simulates this workflow. Raw
+  output: `workflows/compliance-lifecycle/evidence/cre-simulate-20261002-215452.log`.
+- `cre workflow simulate` ran the full orchestration for real: DON-consensus HTTP
+  fetch of the sanctions list, `getMembers()` / `getLeaves()` reads against the
+  Sepolia deployment, Semaphore-tree rebuild with real Merkle siblings, and the
+  revoke branch — result `{"status":"revoked","revokedCount":1}`.
+- Docker-free reproduction from a clean checkout: `cd zk-cid/workflows`,
+  `cre login` (or `CRE_API_KEY`), `./run-cre-simulate.ps1`.
 
 **Short Description**
 
@@ -156,21 +159,27 @@ Invoke-RestMethod -Uri 'https://mock-api-topaz-zeta.vercel.app/api/admin' `
 - Official CRE CLI v1.36.0 `cre workflow build compliance-lifecycle -T staging-settings`
   succeeds (verified 2026-10-02 on a copy of the workflow placed on a
   space-free path; the CLI fails on Windows paths containing spaces). Binary
-  hash with bun 1.2.21:
-  `482ea06d8a701e60b8149e1bea2f7ad7f53c14b85e8c2598575decafe0f9e31a`
-  (hash varies with the bun version). The repo ships the official
+  hash with bun 1.2.21: `d1246a6f879aa78eea039961a77f2fe201fde9b4cf6420a3ba346755e812626c`.
+  The repo ships the official
   `workflows/project.yaml` + `workflow.yaml` schema the CLI requires.
+- **Official `cre workflow simulate` executed end-to-end** (2026-10-02, CLI
+  v1.36.0). Log: `workflows/compliance-lifecycle/evidence/cre-simulate-20261002-215452.log`.
+  Verified chain: sanctions API fetch → `getMembers()` = 1 → `getLeaves()` = 2
+  (1 active) → Merkle proof generated (`siblingCount=1`, siblings `["0"]`) →
+  revoke branch → `{"status":"revoked","revokedCount":1}`. `txHashes` is empty
+  because simulate does not broadcast, which is the documented boundary.
 - End-to-end SDK simulation executed with the real CRE SDK TestRuntime
-  (`yarn workspace compliance-lifecycle test:sim`): 3/3 tests pass. The
+  (`yarn workspace compliance-lifecycle test:sim`): 6/6 tests pass (3 flow +
+  3 Poseidon compatibility vectors). The
   workflow fetches the sanctions API, reads on-chain `getMembers()` and
   `getLeaves()`, computes the intersection, rebuilds the Semaphore tree,
   generates a CRE report, and writes a tree-level revoke transaction — see
   `workflows/compliance-lifecycle/test/compliance-lifecycle.sim.test.ts`.
-- Full `cre workflow simulate` (CRE CLI, DON network-level) has not been
-  executed because it requires a Chainlink CRE account credential (`cre login`
-  or `CRE_API_KEY` from https://app.chain.link); the CLI itself is installed
-  and compiles the workflow. No CLI simulation output is fabricated. The
-  honest boundary is documented in
+- Getting simulate to run exposed and fixed three real defects: `poseidon-lite`
+  calls the browser global `atob()` (absent in the CRE WASM runtime) — replaced
+  with a local LeanIMT + inlined Poseidon(2); the workflow read `process.env`
+  which does not exist in that runtime; and a stale comment-only
+  `project.yaml` shadowed the real project settings. Details in
   `workflows/compliance-lifecycle/evidence/README.md`.
 
 ## Known Limitations
@@ -183,6 +192,11 @@ Invoke-RestMethod -Uri 'https://mock-api-topaz-zeta.vercel.app/api/admin' `
 - `creWorkflow` is currently set to the deployer wallet because the real CRE
   forwarder address has not been configured; issuer-manual/script revocation is
   used as the on-chain smoke-test evidence.
+- `cre workflow simulate` runs with broadcast disabled, so no transaction is
+  produced. A production write path additionally needs `ComplianceGate` to
+  implement `IReceiver`/`onReport` and accept reports from the CRE forwarder —
+  the simulation, the Merkle proof generation and the contract logic are all
+  verified, this last hop is the remaining engineering step.
 
 ## Submission Materials (ready-to-upload files)
 

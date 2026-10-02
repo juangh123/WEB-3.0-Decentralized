@@ -1,3 +1,0 @@
-# LEGACY(保留仅为兼容旧资料,保留不删)。
-# CRE CLI 的项目级配置已迁移到上一层:../project.yaml(官方 schema)。
-# 工作流级配置见同目录 workflow.yaml。

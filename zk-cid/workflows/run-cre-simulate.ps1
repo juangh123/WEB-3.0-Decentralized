@@ -72,11 +72,18 @@ function Add-BunToPath {
     if ($bun) { return $bun.Source }
     $cacheRoot = Join-Path $env:LOCALAPPDATA "npm-cache\_npx"
     if (Test-Path -LiteralPath $cacheRoot) {
-        $candidate = Get-ChildItem -LiteralPath $cacheRoot -Recurse -Filter "bun.exe" -ErrorAction SilentlyContinue |
-            Sort-Object FullName -Descending | Select-Object -First 1
-        if ($candidate) {
-            $env:PATH = "$($candidate.DirectoryName);$env:PATH"
-            return $candidate.FullName
+        # bun 1.1.x produces WASM that traps the CRE engine at startup
+        # (`wasm trap: unreachable`), so always prefer the newest bun available.
+        $best = Get-ChildItem -LiteralPath $cacheRoot -Recurse -Filter "bun.exe" -ErrorAction SilentlyContinue |
+            ForEach-Object {
+                $version = (& $_.FullName --version 2>$null) -join ""
+                [pscustomobject]@{ Path = $_.FullName; Dir = $_.DirectoryName; Version = $version }
+            } |
+            Sort-Object -Property @{ Expression = { try { [version]$_.Version } catch { [version]"0.0.0" } } } -Descending |
+            Select-Object -First 1
+        if ($best) {
+            $env:PATH = "$($best.Dir);$env:PATH"
+            return $best.Path
         }
     }
     throw "bun not found on PATH. Install it from https://bun.com/docs/installation (the CRE CLI needs it for TypeScript workflows)."
@@ -90,6 +97,13 @@ if (-not $SkipMirror) {
     $robocopyArgs = @($workflowDir, $mirror, "/MIR", "/NFL", "/NDL", "/NJH", "/NJS", "/NP", "/R:1", "/W:1")
     & robocopy @robocopyArgs | Out-Null
     if ($LASTEXITCODE -ge 8) { throw "robocopy failed with exit code $LASTEXITCODE" }
+    # Older revisions kept a legacy (comment-only) project.yaml inside the
+    # workflow folder. The CRE CLI reads that file in preference to the real
+    # project settings, which makes `simulate` report "no RPC URLs found".
+    $staleProjectSettings = Join-Path $mirror "project.yaml"
+    if (Test-Path -LiteralPath $staleProjectSettings) {
+        Remove-Item -LiteralPath $staleProjectSettings -Force
+    }
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot "project.yaml") -Destination (Join-Path $ScratchDir "project.yaml") -Force
     $envFile = @((Join-Path $PSScriptRoot ".env"), (Join-Path $workflowDir ".env")) |
         Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
@@ -138,7 +152,7 @@ try {
     }
 
     Write-Host "[3/3] cre workflow simulate compliance-lifecycle -T staging-settings"
-    & $cli workflow simulate compliance-lifecycle -T staging-settings @cliEnvArgs 2>&1 | Tee-Object -FilePath $logPath -Append
+    & $cli workflow simulate compliance-lifecycle -T staging-settings --non-interactive --trigger-index 0 @cliEnvArgs 2>&1 | Tee-Object -FilePath $logPath -Append
     if ($LASTEXITCODE -ne 0) { throw "cre workflow simulate failed with exit code $LASTEXITCODE" }
 } finally {
     Pop-Location
