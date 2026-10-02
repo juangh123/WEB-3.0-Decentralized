@@ -108,6 +108,25 @@ The `revoke` action now builds the Merkle siblings from `getLeaves()` and calls
 `revokeCredentialWithMerkleProof`. Use a temporary commitment when reproducing
 the tree-removal step, and keep the live demo commitment issued.
 
+### Restoring the demo state
+
+The live mock sanctions list currently flags the same commitment that is a
+member on-chain, so the moment a real CRE workflow (or a live DON deployment)
+executes, it legitimately revokes the demo credential and the `/zk-cid` page
+will show `链上成员数 0`. That is the intended behaviour, not a bug. Restore the
+demo in one command with the issuer wallet:
+
+```powershell
+cd zk-cid/packages/hardhat
+$env:DEPLOYER_PRIVATE_KEY = "<issuer-private-key>"
+.\node_modules\.bin\tsx.cmd scripts\sepoliaSmokeDemo.ts status   # inspect current state
+.\node_modules\.bin\tsx.cmd scripts\sepoliaSmokeDemo.ts issue    # re-issue the demo commitment
+```
+
+Alternatively, point the mock API at a different commitment
+(`SEED_SANCTIONED` on the mock-api Vercel project) so the live demo credential
+stays valid while a temporary commitment demonstrates the revocation path.
+
 | Step | Transaction |
 | --- | --- |
 | Issue live demo credential | `0x37e37f2a3cba81d6327bbfe0e7565649a51115771f0a1ad329ba788deef51dcf` |
