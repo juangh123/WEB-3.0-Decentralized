@@ -23,9 +23,22 @@
 
 ```powershell
 cd zk-cid\workflows
-$env:CRE_API_KEY = "<在 https://app.chain.link 创建的 key>"   # 或先执行 cre login
+.\run-cre-simulate.ps1          # 需要凭证,二选一见下
+```
+
+凭证有两种给法(都不是必须写进命令):
+
+```powershell
+# 方式 A:交互式登录(浏览器授权,一次性)
+cre login                        # 或直接运行仓库内的 cre_v1.36.0_windows_amd64.exe login
+
+# 方式 B:非交互 API key(适合 CI/自动化)
+Copy-Item .\compliance-lifecycle\.env.example .\compliance-lifecycle\.env
+# 编辑 .env,填入 CRE_API_KEY=<在 https://app.chain.link → Account Settings → API Keys 创建>
 .\run-cre-simulate.ps1
 ```
+
+脚本会自动加载 `workflows/.env` 或 `workflows/compliance-lifecycle/.env`(两者都被 gitignore)。
 
 只验证编译、不跑 simulate:`.\run-cre-simulate.ps1 -BuildOnly`
 

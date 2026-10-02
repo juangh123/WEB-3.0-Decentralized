@@ -91,8 +91,20 @@ if (-not $SkipMirror) {
     & robocopy @robocopyArgs | Out-Null
     if ($LASTEXITCODE -ge 8) { throw "robocopy failed with exit code $LASTEXITCODE" }
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot "project.yaml") -Destination (Join-Path $ScratchDir "project.yaml") -Force
+    $envFile = @((Join-Path $PSScriptRoot ".env"), (Join-Path $workflowDir ".env")) |
+        Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
+    if ($envFile) {
+        Copy-Item -LiteralPath $envFile -Destination (Join-Path $ScratchDir ".env") -Force
+        Write-Host "      loaded secrets from $envFile"
+    }
 } else {
     Write-Host "[1/3] Skipping mirror step (-SkipMirror)."
+}
+
+# The CRE CLI reads sensitive values (CRE_API_KEY, RPC URLs) from this file.
+$cliEnvArgs = @()
+if (Test-Path -LiteralPath (Join-Path $ScratchDir ".env")) {
+    $cliEnvArgs = @("-e", ".env")
 }
 
 $cli = Resolve-CreCli -Explicit $CliPath
@@ -108,7 +120,7 @@ Push-Location $ScratchDir
 try {
     if (-not $SkipBuild) {
         Write-Host "[2/3] cre workflow build compliance-lifecycle -T staging-settings"
-        & $cli workflow build compliance-lifecycle -T staging-settings 2>&1 | Tee-Object -FilePath $logPath
+        & $cli workflow build compliance-lifecycle -T staging-settings @cliEnvArgs 2>&1 | Tee-Object -FilePath $logPath
         if ($LASTEXITCODE -ne 0) { throw "cre workflow build failed with exit code $LASTEXITCODE" }
     } else {
         Write-Host "[2/3] Skipping build (-SkipBuild)."
@@ -126,7 +138,7 @@ try {
     }
 
     Write-Host "[3/3] cre workflow simulate compliance-lifecycle -T staging-settings"
-    & $cli workflow simulate compliance-lifecycle -T staging-settings 2>&1 | Tee-Object -FilePath $logPath -Append
+    & $cli workflow simulate compliance-lifecycle -T staging-settings @cliEnvArgs 2>&1 | Tee-Object -FilePath $logPath -Append
     if ($LASTEXITCODE -ne 0) { throw "cre workflow simulate failed with exit code $LASTEXITCODE" }
 } finally {
     Pop-Location
