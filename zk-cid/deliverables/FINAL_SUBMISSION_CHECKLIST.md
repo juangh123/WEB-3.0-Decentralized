@@ -61,11 +61,11 @@ Use this checklist immediately before submitting the DoraHacks BUIDL.
 
 ## DoraHacks Submission
 
-- [ ] Paste submission copy from `zk-cid/deliverables/DORA_SUBMISSION.md`
-- [ ] Confirm primary track: LegalTech & RegTech / Law-Finance-Compliance
-- [ ] Confirm bounty selection includes Chainlink CRE where available
-- [ ] Confirm live URLs, repo URL, video URL, and Sepolia tx links
-- [ ] Confirm Known Limitations section is visible to judges
+- [x] Submission published to `legal-hack-2026` (2026-10-02, status `Under Review`)
+- [x] Track confirmed: `All BUIDLs` (the only selectable track)
+- [x] Bounty confirmed selected on the form: `Best workflow with CRE - 2x $1,000` (Chainlink CRE, bounty 1362)
+- [x] Live URLs, repo URL, video URL and Sepolia tx links present on the BUIDL
+- [x] Known Limitations section visible on the BUIDL, updated 2026-10-02 with the executed CRE CLI simulation and the remaining broadcast/forwarder boundary
 
 ## Submission Materials (prepared 2026-09-09)
 
@@ -77,6 +77,6 @@ Use this checklist immediately before submitting the DoraHacks BUIDL.
 - [x] Screenshots gallery: `zk-cid/docs/assets/demo-00-landing.png`, `demo-01-comparison.png`, `demo-02-identity.png`, `demo-03-issued-success.png`, `demo-03-issued.png`
 - [x] Demo video (30 MB, 1080p 2:48, English voiceover + captions) tracked and live-hosted
 - [x] All live URLs re-verified 2026-09-15 (demo, /zk-cid, video, mock API, GitHub, Sepolia)
-- [ ] Upload logo, cover, screenshots and pitch deck PDF on the DoraHacks BUIDL form
-- [ ] Paste submission copy from `zk-cid/deliverables/DORA_SUBMISSION.md` (user action)
-- [ ] Confirm primary track selection and Chainlink CRE bounty on the form (user action)
+- [x] Submission copy, links, cover and video are attached to the BUIDL form
+- [x] CRE evidence paragraph on the BUIDL updated to the verified CLI simulation (2026-10-02)
+- [ ] Optional: upload the remaining pitch deck PDF / screenshot gallery files if the organizer asks for them explicitly
