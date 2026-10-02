@@ -31,7 +31,7 @@
 - **合约层**: Solidity ^0.8.23 (compiled with 0.8.28) + Hardhat
 - **前端展示**: Next.js (App Router) + Scaffold-ETH 2 + wagmi
 - **预言机编排层 (CRE Bounty)**: Chainlink CRE SDK (TypeScript) + Vercel (Mock API)
-- **测试网/环境**: Anvil Localnet 
+- **测试网/环境**: Sepolia 测试网(线上部署) + Anvil/Hardhat Localnet(本地端到端复现)
 
 ---
 

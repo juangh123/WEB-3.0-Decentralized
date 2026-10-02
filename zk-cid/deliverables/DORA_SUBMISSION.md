@@ -7,14 +7,19 @@ Hackathon: https://dorahacks.io/hackathon/legal-hack-2026
 Tracks: https://dorahacks.io/hackathon/legal-hack-2026/tracks
 Bounties: https://dorahacks.io/hackathon/legal-hack-2026/bounties
 
-Event facts (verified 2026-09-03, re-verified 2026-09-09):
+Event facts (verified 2026-09-03, re-verified 2026-09-09, API-checked 2026-10-02):
 
 - Organizer: Blockchain Legal Institute (BLI)
-- Submission opens: 2026/05/15 12:01 | Deadline: 2026/11/01 01:01
+- Submission opens: 2026/05/15 12:01 UTC | Deadline: 2026/11/01 01:01 UTC
+  (= 2026-11-01 09:01 Beijing time; the event page displays the raw UTC value)
 - Prize pool: 20,000 USD total (still developing, per event page)
-- Track chosen: LegalTech & RegTech / Law-Finance-Compliance
+- Track chosen: `All BUIDLs` (the only selectable track; the LegalTech & RegTech /
+  Law-Finance-Compliance wording is a category inside that track's description,
+  so keep it in the project description instead of the track field)
 - Bounty target: Chainlink CRE "Best workflow with CRE" (2x $1,000, https://dorahacks.io/hackathon/bounty/1362)
-- Second bounty available (optional): RYO-CHAN "Autonomous Agents" (6,000 USD, https://dorahacks.io/hackathon/bounty/1380)
+- Second bounty (RYO-CHAN "Autonomous Agents", 6,000 USD,
+  https://dorahacks.io/hackathon/bounty/1380) does **not** apply to ZK-CID —
+  it targets autonomous trading/market-evidence agents; do not tick it.
 
 ## Submission Fields
 
@@ -28,13 +33,25 @@ Prove you are compliant, protect who you are.
 
 **Primary Track**
 
-LegalTech & RegTech / Law, Finance & Compliance
+All BUIDLs
+
+Category (for the description / vision text): LegalTech & RegTech — Law, Finance
+& Compliance.
 
 **Relevant Bounty**
 
 Chainlink CRE — Best Workflow / Decentralized Compliance Automation
 (select this because the DoraHacks submission form lists the Chainlink CRE
 bounty: https://dorahacks.io/hackathon/bounty/1362)
+
+Bounty evidence summary to paste alongside (hard requirement: a successful CRE
+CLI simulation or a live CRE-network deployment):
+
+- `cre workflow build compliance-lifecycle -T staging-settings` passes with the
+  official CRE CLI v1.36.0; raw output in
+  `workflows/compliance-lifecycle/evidence/cre-simulate-20261002-192709.log`.
+- `cre workflow simulate` output is attached as soon as the Chainlink CRE
+  account credential is available; until then this document does not claim it.
 
 **Short Description**
 

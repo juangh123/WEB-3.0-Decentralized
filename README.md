@@ -9,6 +9,10 @@
 
 🎥 **Demo Video**: [Watch Demo](https://web-3-0-decentralized.vercel.app/demo/zk-cid-pitch-video-en.mp4)
 
+| Landing | Issuer (KYC → on-chain credential) | Verifier (ZK proof → AccessNFT) |
+| --- | --- | --- |
+| ![Landing](zk-cid/docs/assets/shot-01-landing.png) | ![Issuer flow](zk-cid/docs/assets/shot-05-tab2-issuer-flow.png) | ![Verifier flow](zk-cid/docs/assets/shot-06-tab3-verifier-flow.png) |
+
 ## Hackathon Submission
 
 - **Event**: [BLI Legal Tech Hackathon 2 (legal-hack-2026)](https://dorahacks.io/hackathon/legal-hack-2026)
