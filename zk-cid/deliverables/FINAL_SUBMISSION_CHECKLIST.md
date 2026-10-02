@@ -80,5 +80,5 @@ Use this checklist immediately before submitting the DoraHacks BUIDL.
 - [x] Demo video (30 MB, 1080p 2:48, English voiceover + captions) tracked and live-hosted
 - [x] All live URLs re-verified 2026-09-15 (demo, /zk-cid, video, mock API, GitHub, Sepolia)
 - [x] Submission copy, links, cover and video are attached to the BUIDL form
-- [x] CRE evidence paragraph on the BUIDL updated to the verified CLI simulation (2026-10-02)
+- [x] CRE evidence paragraph on the BUIDL updated twice: first to the executed CLI simulation (2026-10-02), then to the production-wired receiver adapter + the real broadcast revocation tx (2026-10-03, verified by reloading the live BUIDL page)
 - [ ] Optional: upload the remaining pitch deck PDF / screenshot gallery files if the organizer asks for them explicitly
