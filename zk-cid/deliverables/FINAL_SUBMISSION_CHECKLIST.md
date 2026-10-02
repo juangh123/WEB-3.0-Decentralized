@@ -41,7 +41,8 @@ Use this checklist immediately before submitting the DoraHacks BUIDL.
 - [x] yarn workspace compliance-lifecycle test:sim (CRE SDK TestRuntime end-to-end simulation, 3/3 pass)
 - [x] Official `cre workflow simulate` executed end-to-end with CLI v1.36.0 (log: `evidence/cre-simulate-20261002-232950.log`, receiver = `ComplianceGateReceiver`)
 - [x] CRE write path wired: `ComplianceGateReceiver` deployed + source-verified, `ComplianceGate.creWorkflow` points at it, report payload is `abi.encode(uint256, uint256[])`, 7 adapter tests passing
-- [ ] Blocked on Chainlink: a live `--broadcast` needs CRE-network deployment access (`cre account access`); local simulation signatures are rejected by the production forwarder
+- [x] Real broadcast rehearsal executed: tx `0xb64c050e37d7959951510eae66cc6994e11a7f640f8c4699f0d7e1050713e4d9` revoked the credential on Sepolia (via MockKeystoneForwarder; adapter switched back to the production forwarder afterwards)
+- [ ] Blocked on Chainlink: a production DON broadcast needs CRE-network deployment access (`cre account access`); local simulation signatures are rejected by the production forwarder
 
 ## Regression Gates
 

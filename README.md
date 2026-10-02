@@ -41,6 +41,13 @@ DON-consensus fetch of the sanctions API, `getMembers()`/`getLeaves()` reads
 against the Sepolia deployment, Semaphore-tree rebuild with real Merkle
 siblings, and the revoke branch (`{"status":"revoked","revokedCount":1}`).
 
+A real broadcast rehearsal produced an actual on-chain revocation:
+[tx `0xb64c050e…`](https://eth-sepolia.blockscout.com/tx/0xb64c050e37d7959951510eae66cc6994e11a7f640f8c4699f0d7e1050713e4d9)
+removed the credential from the live Semaphore tree
+(`getMembers()` went from one member to none). Caveats and the mock-vs-production
+forwarder setup are documented in
+[`cre-broadcast-evidence.md`](zk-cid/workflows/compliance-lifecycle/evidence/cre-broadcast-evidence.md).
+
 Sepolia deployment, transaction hashes and the CRE evidence chain are documented in
 [zk-cid/SEPOLIA_DEPLOYMENT.md](zk-cid/SEPOLIA_DEPLOYMENT.md) and
 [zk-cid/workflows/compliance-lifecycle/evidence/README.md](zk-cid/workflows/compliance-lifecycle/evidence/README.md).

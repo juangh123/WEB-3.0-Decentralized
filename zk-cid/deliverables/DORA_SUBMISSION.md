@@ -168,6 +168,13 @@ Invoke-RestMethod -Uri 'https://mock-api-topaz-zeta.vercel.app/api/admin' `
   (1 active) → Merkle proof generated (`siblingCount=1`, siblings `["0"]`) →
   revoke branch → `{"status":"revoked","revokedCount":1}`. `txHashes` is empty
   because simulate does not broadcast, which is the documented boundary.
+- **A real broadcast rehearsal produced an actual on-chain revocation**:
+  [tx `0xb64c050e…`](https://eth-sepolia.blockscout.com/tx/0xb64c050e37d7959951510eae66cc6994e11a7f640f8c4699f0d7e1050713e4d9)
+  (status success, 228k gas). After it, `getMembers()` was empty and
+  `hasBeenRevoked(commitment)` was true. It was delivered through the Sepolia
+  MockKeystoneForwarder (the adapter was pointed at it for the rehearsal and
+  switched back to the production Keystone forwarder afterwards); full caveats
+  in `workflows/compliance-lifecycle/evidence/cre-broadcast-evidence.md`.
 - End-to-end SDK simulation executed with the real CRE SDK TestRuntime
   (`yarn workspace compliance-lifecycle test:sim`): 6/6 tests pass (3 flow +
   3 Poseidon compatibility vectors). The

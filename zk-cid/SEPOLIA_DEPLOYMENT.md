@@ -83,6 +83,25 @@ The remaining step for a live broadcast is CRE-network deployment access
 (`cre account access`); local simulation cannot produce signatures that the
 production forwarder accepts.
 
+### Broadcast rehearsal (real transaction)
+
+A rehearsal with `--broadcast` produced a real revocation:
+
+| Item | Value |
+| --- | --- |
+| Broadcast tx | `0xb64c050e37d7959951510eae66cc6994e11a7f640f8c4699f0d7e1050713e4d9` |
+| Effect | `getMembers()` went from one member to none; `hasBeenRevoked(commitment) = true` |
+
+For the rehearsal the adapter temporarily trusted the Sepolia
+`MockKeystoneForwarder` (whose `report()` skips signature checks) and was then
+switched back to the production forwarder in transaction
+`0x70f56b5a4e97213a86e051e8bac74cde78f07ecc27d40b50803a7cab00ce02f0`.
+Two caveats are worth knowing before repeating it — the mock forwarder swallows
+receiver reverts (always verify state, not just the tx hash), and the workflow
+reads at the last finalized block, so a freshly re-issued credential is not yet
+visible. Details:
+`workflows/compliance-lifecycle/evidence/cre-broadcast-evidence.md`.
+
 ## Required Environment
 
 Create `packages/hardhat/.env`:

@@ -126,6 +126,9 @@ test\compliance-lifecycle.sim.test.ts:
 
 ## 官方 CRE CLI `workflow simulate` 实测结果(2026-10-02)
 
+> 真实广播演练(含第一笔链上撤销交易与踩到的坑)单独记录在
+> [`cre-broadcast-evidence.md`](./cre-broadcast-evidence.md)。
+
 `cre workflow simulate` 已用官方 CLI v1.36.0 在本机真实执行,完整日志见
 `cre-simulate-20261002-232950.log`(该次运行已把报告目标改为
 `ComplianceGateReceiver` 适配器)。运行命令:

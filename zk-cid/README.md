@@ -60,7 +60,7 @@ yarn start
 
 `workflows/compliance-lifecycle/` 为独立的 Chainlink CRE 工作流:Cron 定时拉取 Mock 制裁名单 API,读取链上 `getMembers()` 与 `getLeaves()` 求交集并重建 Semaphore 树,对命中者自动调用 `revokeCredentialWithMerkleProof` 完成树级撤销。代码按真实 `@chainlink/cre-sdk@1.16.0` API 编写,已通过 `tsc` 类型检查,并已用 `npx bun` 调用真实 `cre-compile` 生成 `dist/compliance-lifecycle.wasm`。
 
-> ✅ **实测声明**:官方 CRE CLI(v1.36.0)的 `cre workflow build` 与 `cre workflow simulate` **均已实测通过**(2026-10-02)。simulate 完整跑通「抓取制裁名单 → 读取 `getMembers()`/`getLeaves()` → 重建 Semaphore 树生成 Merkle siblings → 撤销命中成员」,原始日志见 `workflows/compliance-lifecycle/evidence/cre-simulate-20261002-232950.log`。真实广播路径已按官方模式落地(`ComplianceGateReceiver` 适配器 + Keystone forwarder,`ComplianceGate.creWorkflow` 已指向适配器),仅剩 CRE 网络的部署权限。核心命令:
+> ✅ **实测声明**:官方 CRE CLI(v1.36.0)的 `cre workflow build` 与 `cre workflow simulate` **均已实测通过**(2026-10-02),并且用 `--broadcast` 在 Sepolia 上产生过**真实撤销交易**:`0xb64c050e37d7959951510eae66cc6994e11a7f640f8c4699f0d7e1050713e4d9`(交易成功后 `getMembers()` 从 1 个成员变为 0)。simulate 日志见 `workflows/compliance-lifecycle/evidence/cre-simulate-20261002-232950.log`,广播演练与注意事项见 `workflows/compliance-lifecycle/evidence/cre-broadcast-evidence.md`。真实广播路径已按官方模式落地(`ComplianceGateReceiver` 适配器 + Keystone forwarder,`ComplianceGate.creWorkflow` 已指向适配器),仅剩 CRE 网络的部署权限。核心命令:
 
 ```bash
 # 需先安装 CRE CLI(参考 https://docs.chain.link/cre)与 bun

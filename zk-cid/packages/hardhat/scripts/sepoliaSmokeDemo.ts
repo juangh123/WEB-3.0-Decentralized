@@ -38,6 +38,10 @@ async function main() {
     );
     console.log("isMember(demo):", await gate.isMember(commitment));
     console.log("hasBeenRevoked(demo):", await gate.hasBeenRevoked(commitment));
+    console.log(
+      "leaves:",
+      (await gate.getLeaves()).map((value: bigint) => value.toString()),
+    );
 
     // CRE write-path adapter (ComplianceGateReceiver), when deployed.
     try {
