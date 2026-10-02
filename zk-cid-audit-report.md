@@ -121,7 +121,7 @@
 |------|------|------|
 | P0-1 仓库空壳 | ✅已修复 (`44e298e`) | 全部自研代码(合约/前端/workflows/mock-api/文档)已分模块提交入库,`git status` 干净。❌遗留: `origin` 仍指向 scaffold-eth-2 上游模板,团队 fork remote 待用户自行配置并推送(修复计划明确排除项)。 |
 | P0-2 ZK 验证 bypass | ✅已修复 (`a261fcd`) | `verifyCompliance` 引入 `demoMode` 开关: demo 模式走 Mock 路径,严格模式(`demoMode=false`)下 `validateProof` 失败必然 revert。测试 "reverts on an invalid proof" / "accepts a valid proof" 双向覆盖。 |
-| P0-3 撤销不防用 + CRE 未闭环 | ⚠️部分修复 | 合约侧✅(`a261fcd`): `verifyCompliance` 强制执行 `hasBeenRevoked` 检查,撤销立即生效,测试覆盖(撤销后验证被阻/双重撤销 revert/撤销后可重发证)。CRE 代码侧✅(`574f876`): 按真实 `@chainlink/cre-sdk` API 重写(cron 触发器 + handler + Runner 入口 + workflow.yaml + config.json),`tsc --noEmit` 0 错误。❌未实测: 本环境无 CRE CLI,`cre workflow simulate` 未运行,`evidence/` 仅有 README 诚实标注模拟方式。 |
+| P0-3 撤销不防用 + CRE 未闭环 | ✅已闭环 (2026-10-02: `19c12b9`) | 合约侧✅(`a261fcd`): `verifyCompliance` 强制执行 `hasBeenRevoked` 检查,撤销立即生效,测试覆盖(撤销后验证被阻/双重撤销 revert/撤销后可重发证)。CRE 代码侧✅(`574f876`): 按真实 `@chainlink/cre-sdk` API 重写。**后续闭环**: 官方 CRE CLI v1.36.0 `cre workflow build` + `cre workflow simulate` 均已实测通过,完整日志 `workflows/compliance-lifecycle/evidence/cre-simulate-20261002-215452.log`(制裁名单抓取 → `getMembers()`/`getLeaves()` → Merkle siblings → 撤销命中成员,`{"status":"revoked","revokedCount":1}`)。为跑通修复了三个真实缺陷: poseidon-lite 依赖 `atob`(CRE WASM 无此全局)、工作流访问不存在的 `process` 全局、工作流目录内遗留 `project.yaml` 遮蔽项目配置。 |
 | P0-4 前端 ABI 缺失 | ✅已修复 (`daa438f`) | `deployedContracts.ts` ABI 恢复,页面调用与合约对齐(单参 `verifyCompliance`、`hasMinted`)。本轮复验: `tsc --noEmit` 0 错误,`npm run build`(含 lint)通过,13 个静态页面全部生成。 |
 | P0-5 测试占位 | ✅已修复 (`a261fcd`) | 占位测试已删,15 条真实用例全部 passing(本轮复验 15 passing / 565ms);陈旧 `coverage/` 目录已删;CI(`.github/workflows/lint.yaml`)已含 `yarn hardhat:test` 门禁。 |
 | P1 地址三套漂移 | ⚠️部分修复 (`31ed5c7`) | README 链上证据表与 Known Limitations 已加诚实声明,明确"地址/tx 来自一次本地 Anvil 演示部署,以 `packages/hardhat/deployments/localhost/*.json` 为单一事实源"。字面地址仍不一致(README 历史记录 `0xe7f1.../0x9fE4...`、当前部署产物 `0x162A.../0x922D...`、workflow config `0x9A9f...`)——本地链重启后需重新部署并一次性回写,属演示性质遗留。 |
@@ -145,7 +145,7 @@
 1. 录制 2-3 分钟 demo 视频(按 DEMO_SUMMARY 录制方案)。
 2. 填写 PITCH_DECK 的 repo / live demo 链接占位符。
 3. 配置团队 fork remote 并推送(当前 origin 指向上游模板仓库)。
-4. 有 CRE CLI 环境后运行 `cre workflow simulate`,将证据落盘 `workflows/compliance-lifecycle/evidence/`。
+4. ~~有 CRE CLI 环境后运行 `cre workflow simulate`~~ ✅ 已完成(2026-10-02):官方 CLI v1.36.0 实测通过,证据 `workflows/compliance-lifecycle/evidence/cre-simulate-20261002-215452.log`。
 5. Sepolia 真实部署(需真实 Semaphore 部署 + `setDemoMode(false)` + 私钥/_RPC 凭证)。
 6. 本地链重启后: 重新部署 → 按 deployments/*.json 回写 README 证据表与 workflow config 地址。
 7. ~~预存类型错误(可选)~~ 已修复: `yarn workspace @se-2/hardhat check-types` 已零错误。

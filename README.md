@@ -33,10 +33,17 @@ yarn workspace compliance-lifecycle compile        # CRE workflow type check
 yarn workspace zk-cid-mock-sanctions-api test      # mock sanctions API
 ```
 
+The Chainlink CRE workflow is also verified with the official CLI — `cre workflow
+build` and `cre workflow simulate` both run end to end
+([raw log](zk-cid/workflows/compliance-lifecycle/evidence/cre-simulate-20261002-215452.log)):
+DON-consensus fetch of the sanctions API, `getMembers()`/`getLeaves()` reads
+against the Sepolia deployment, Semaphore-tree rebuild with real Merkle
+siblings, and the revoke branch (`{"status":"revoked","revokedCount":1}`).
+
 Sepolia deployment, transaction hashes and the CRE evidence chain are documented in
 [zk-cid/SEPOLIA_DEPLOYMENT.md](zk-cid/SEPOLIA_DEPLOYMENT.md) and
 [zk-cid/workflows/compliance-lifecycle/evidence/README.md](zk-cid/workflows/compliance-lifecycle/evidence/README.md).
-Known limitations (demo mode, CRE CLI simulate boundary) are listed in
+Known limitations (demo mode, broadcast boundary) are listed in
 [zk-cid/README.md](zk-cid/README.md).
 
 ## Live Deployment
