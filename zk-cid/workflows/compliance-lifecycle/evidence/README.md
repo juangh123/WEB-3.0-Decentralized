@@ -226,6 +226,10 @@ cre workflow simulate compliance-lifecycle -T staging-settings
    的调用)已部署到 Sepolia `0xB5ad6413a16efd82b76212830f908B2D67C20425`,
    且 `ComplianceGate.creWorkflow` 已指向该适配器;报告 payload 为
    `abi.encode(uint256 commitment, uint256[] siblings)`。
-   本地模拟的签名不会被生产 forwarder 接受,真正广播需要
-   `cre account access` 获得的部署权限。
+   本地模拟的签名不会被生产 forwarder 接受,生产广播需要 CRE 网络部署权限。
+   本组织(`org_Ny2pYrg6kUlxEU8h`)已于 2026-10-03 通过 `cre account access`
+   提交带完整用途说明的申请,当前 `cre whoami` 显示
+   `Deploy Access: Not enabled`(审核中);批准后执行
+   `cre workflow deploy compliance-lifecycle -T production-settings` 即可,
+   合约与工作流无需再改。
 

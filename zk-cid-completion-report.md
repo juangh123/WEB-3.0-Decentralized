@@ -1,6 +1,21 @@
 # ZK-CID 项目完成情况盘点记录
 时间：2026-07-26
 
+> **2026-10-03 更新（本文档是 2026-07-26 的历史快照，结论已过期）**
+>
+> 下文提到的三个遗留问题均已解决，且项目状态已远超当时的"演示级"：
+>
+> 1. **包管理器争议** —— 已统一为 Yarn 4 + workspace，`yarn install --immutable`、lint、类型检查在 CI 全绿。
+> 2. **测试脚手架残留** —— `workflows/compliance-lifecycle` 现有完整测试：SDK 流程测试 3 条 + Poseidon 兼容性向量 3 条（`test:sim`，6/6），合约测试 30/30（含 7 条 CRE receiver 用例）。
+> 3. **CRE 仅为模拟 SDK** —— 现已用官方 CRE CLI v1.36.0 完成 `cre workflow build` / `cre workflow simulate`，
+>    并部署了真实的写链适配器 `ComplianceGateReceiver`（Blockscout + Sourcify 已验证），
+>    还通过 `--broadcast` 在 Sepolia 上产生了真实撤销交易
+>    `0xb64c050e37d7959951510eae66cc6994e11a7f640f8c4699f0d7e1050713e4d9`。
+>    唯一剩余项是 Chainlink 的 CRE 网络部署权限（2026-10-03 已提交申请，审核中）。
+>
+> 最新状态请以 [README.md](./zk-cid/README.md)、[SEPOLIA_DEPLOYMENT.md](./zk-cid/SEPOLIA_DEPLOYMENT.md)
+> 与 [workflows/.../evidence/README.md](./zk-cid/workflows/compliance-lifecycle/evidence/README.md) 为准。
+
 ## 1. 代码质量与工程规范化扫描报告
 本项目基于先前的 `plan.md`，执行了以下补充修复和回归检查，确认项目在工程层面达到较高的完整度和稳健性：
 

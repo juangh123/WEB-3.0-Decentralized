@@ -79,9 +79,29 @@ cd zk-cid
 yarn hardhat:test        # includes 7 ComplianceGateReceiver tests
 ```
 
-The remaining step for a live broadcast is CRE-network deployment access
-(`cre account access`); local simulation cannot produce signatures that the
-production forwarder accepts.
+The remaining step for a production DON broadcast is CRE-network deployment
+access. The organization (`org_Ny2pYrg6kUlxEU8h`) submitted the access request on
+2026-10-03 through `cre account access` with this use case:
+
+> ZK-CID (hackathon project, DoraHacks BLI Legal Tech Hackathon 2 / Chainlink
+> Best Workflow with CRE bounty): a cron-triggered compliance workflow that
+> fetches an external sanctions list over HTTP with DON consensus, reads
+> Semaphore compliance-group membership from our Sepolia ComplianceGate
+> contract, rebuilds the Merkle tree, and writes a revocation report to our
+> ComplianceGateReceiver adapter which calls
+> `revokeCredentialWithMerkleProof` on-chain.
+
+`cre whoami` currently reports `Deploy Access: Not enabled` (request pending).
+Local simulation cannot produce signatures the production forwarder accepts, so
+once Chainlink approves the request the remaining command is:
+
+```powershell
+cd zk-cid/workflows
+cre workflow deploy compliance-lifecycle -T production-settings
+```
+
+No contract or workflow changes are needed for that step — the receiver adapter,
+forwarder allow-list and report payload are already wired and tested.
 
 ### Broadcast rehearsal (real transaction)
 
