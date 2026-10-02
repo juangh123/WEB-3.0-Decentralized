@@ -127,7 +127,8 @@ test\compliance-lifecycle.sim.test.ts:
 ## 官方 CRE CLI `workflow simulate` 实测结果(2026-10-02)
 
 `cre workflow simulate` 已用官方 CLI v1.36.0 在本机真实执行,完整日志见
-`cre-simulate-20261002-215452.log`。运行命令:
+`cre-simulate-20261002-232950.log`(该次运行已把报告目标改为
+`ComplianceGateReceiver` 适配器)。运行命令:
 
 ```powershell
 cd zk-cid/workflows
@@ -137,8 +138,8 @@ cd zk-cid/workflows
 关键输出(原始日志逐字摘录,未改写):
 
 ```text
-  Binary hash: d1246a6f879aa78eea039961a77f2fe201fde9b4cf6420a3ba346755e812626c
-  Config hash: 85fb3bf2fe8f28236020687885fa8784453d5a66b988096fe66fd7c68a4da494
+  Binary hash: f0edfaa2f665a7321258ff069c0af6e9adf01611ff997ce376799e0dce9ac15c
+  Config hash: d8f9534a03d44bd98eb6ef83d728aee28d4639d99b573ff0796a60d11802c096
 [SIMULATION] Simulator Initialized
 [SIMULATION] Running trigger trigger=cron-trigger@1.0.0
 [USER LOG] sanctions list fetched: 1 entries (source=Mock OFAC SDN Sanctions List (Demo))
@@ -149,7 +150,7 @@ cd zk-cid/workflows
 ✓ Workflow Simulation Result:
 "{\"status\": \"revoked\", \"revokedCount\": 1, \"revokedCommitments\": [\"1234…789\"],
   \"txHashes\": [\"\"], \"proofs\": [{\"commitment\": \"1234…789\", \"siblings\": [\"0\"]}],
-  \"source\": \"Mock OFAC SDN Sanctions List (Demo)\", \"executedAt\": \"2026-10-02T13:56:14.839Z\"}"
+  \"source\": \"Mock OFAC SDN Sanctions List (Demo)\", \"executedAt\": \"2026-10-02T15:30:52.254Z\"}"
 │ Simulation complete! Ready to deploy your workflow?  │
 ```
 
@@ -215,8 +216,13 @@ cre workflow simulate compliance-lifecycle -T staging-settings
 3. **Merkle siblings**:工作流已按合约的稳定 leaves 重建 Semaphore
    树并生成真实 siblings;Sepolia 实链验证中重建根与链上根一致,
    官方 CLI simulate 也已复现(见上文日志)。
-4. **真实广播仍需 forwarder**:`simulate` 未开启 `--broadcast`,所以没有
-   真实交易。要让 DON 签名的报告真正写进 `ComplianceGate`,合约还需要实现
-   `IReceiver`/`onReport` 并把 `creWorkflow` 指向 CRE forwarder —— 这是
-   当前唯一保留的"模拟 → 生产"边界,已在 README 与提交文案中如实标注。
+4. **真实广播路径已落地,只差 CRE 网络部署权限**:`simulate` 未开启
+   `--broadcast`,所以日志里没有真实交易。写链合约侧已按官方模式完成:
+   `ComplianceGateReceiver`(`contracts/cre/`,官方 `ReceiverTemplate` 模式,
+   只接受 Keystone forwarder `0xF8344CFd5c43616a4366C34E3EEE75af79a74482`
+   的调用)已部署到 Sepolia `0xB5ad6413a16efd82b76212830f908B2D67C20425`,
+   且 `ComplianceGate.creWorkflow` 已指向该适配器;报告 payload 为
+   `abi.encode(uint256 commitment, uint256[] siblings)`。
+   本地模拟的签名不会被生产 forwarder 接受,真正广播需要
+   `cre account access` 获得的部署权限。
 

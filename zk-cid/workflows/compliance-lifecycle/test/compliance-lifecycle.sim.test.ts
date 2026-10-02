@@ -39,6 +39,7 @@ const CFG: Config = {
   sanctionsApiUrl: "https://mock-api-topaz-zeta.vercel.app/api/sanctions-list",
   chainSelectorName: "ethereum-testnet-sepolia",
   complianceGateAddress: "0x1b8ae78C37c3E29DFcB0236E1c562b3CCFA44F70",
+  receiverAddress: "0xB5ad6413a16efd82b76212830f908B2D67C20425",
   gasLimit: "500000",
 };
 

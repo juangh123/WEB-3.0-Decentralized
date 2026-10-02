@@ -8,6 +8,7 @@ This document records the live Sepolia deployment and the exact commands used to
 | --- | --- | --- |
 | ComplianceGate v2.2 | `0x1b8ae78C37c3E29DFcB0236E1c562b3CCFA44F70` | `0xfe593613bab81860bdddc54e3dde59d16b97ad8c83f2620a1dd587360b858635` |
 | AccessNFT | `0x5e7140b8c967440A5B7Db15a4B82F4e4428cCc32` | `0x066fd2f47ec73da2bb42cee93713730fd762de4e7fc7668986d06015bc7fd5c0` |
+| ComplianceGateReceiver (CRE write path) | `0xB5ad6413a16efd82b76212830f908B2D67C20425` | `0x01cc9b0ea19bcab37af0cd0960d940a50965b1801ab4eea72fed92c0f6e48020` |
 
 External dependency:
 
@@ -38,11 +39,49 @@ yarn workspace @se-2/hardhat hardhat-verify --network sepolia `
   0x1b8ae78C37c3E29DFcB0236E1c562b3CCFA44F70 0x8A1fd199516489B0Fb7153EB5f075cDAC83c693D
 yarn workspace @se-2/hardhat hardhat-verify --network sepolia `
   0x5e7140b8c967440A5B7Db15a4B82F4e4428cCc32 0x1b8ae78C37c3E29DFcB0236E1c562b3CCFA44F70
+yarn workspace @se-2/hardhat hardhat-verify --network sepolia `
+  0xB5ad6413a16efd82b76212830f908B2D67C20425 0xF8344CFd5c43616a4366C34E3EEE75af79a74482 0x1b8ae78C37c3E29DFcB0236E1c562b3CCFA44F70
 ```
+
+All three contracts are verified on Blockscout and Sourcify.
 
 Etherscan Sepolia still shows "Verify and Publish" because that explorer needs a
 separate `ETHERSCAN_API_KEY`; set one and run
 `yarn verify --network sepolia etherscan` to cover that explorer too.
+
+## CRE Write Path (real broadcast wiring)
+
+The original `ComplianceGate` predates CRE: its `creWorkflow` slot only accepts
+an EOA, so a DON-signed report could never reach it. Instead of redeploying the
+verified gate (which would change its address and invalidate the whole evidence
+chain), the write path is a separate adapter:
+
+```
+CRE workflow --writeReport--> Chainlink KeystoneForwarder
+            --> ComplianceGateReceiver.onReport(metadata, report)
+            --> ComplianceGate.revokeCredentialWithMerkleProof(commitment, siblings)
+```
+
+| Setting | Value |
+| --- | --- |
+| Keystone forwarder (Sepolia) | `0xF8344CFd5c43616a4366C34E3EEE75af79a74482` |
+| Adapter owner | `0x951c41D827d0A6F5b9ef4C44943E3Feb25E51348` |
+| `ComplianceGate.creWorkflow` | `0xB5ad6413a16efd82b76212830f908B2D67C20425` (the adapter) |
+| Report payload | `abi.encode(uint256 commitment, uint256[] merkleProofSiblings)` |
+
+Wiring transaction (`setWorkflow`):
+`0xfcc7ce701d7fdbcca9f21b0987f4db0271198e027a5af5e0f2c3d1fc7101b8cc`
+
+Reproduce the local proof (adapter → gate revocation, forwarder-only access):
+
+```powershell
+cd zk-cid
+yarn hardhat:test        # includes 7 ComplianceGateReceiver tests
+```
+
+The remaining step for a live broadcast is CRE-network deployment access
+(`cre account access`); local simulation cannot produce signatures that the
+production forwarder accepts.
 
 ## Required Environment
 
@@ -223,11 +262,11 @@ path contains spaces). Binary hash with bun 1.2.21:
 changes with the bun version (bun 1.1.42 produced `5d914691…c67a`).
 `cre workflow simulate` has also been executed successfully (2026-10-02) with
 the official CLI v1.36.0; the raw log lives in
-`workflows/compliance-lifecycle/evidence/cre-simulate-20261002-215452.log`.
+`workflows/compliance-lifecycle/evidence/cre-simulate-20261002-232950.log`.
 
 ## Known Production Gaps
 
 - `demoMode` remains `true`; strict Semaphore validation should only be enabled after real proof generation is wired into the frontend.
-- Broadcast is off by default in `cre workflow simulate`, so the simulated revoke produced no transaction (`txHashes: [""]`). Writing a DON-signed report on-chain requires `ComplianceGate` to implement `IReceiver`/`onReport` and `creWorkflow` to point at the CRE forwarder.
-- `creWorkflow` is currently the deployer; update it to the CRE workflow address before production use.
+- Broadcast is off by default in `cre workflow simulate`, so a local run produces no transaction (`txHashes: [""]`): the local simulation signer is not accepted by the production Keystone forwarder. A live broadcast needs CRE-network deployment access (`cre account access`).
+- The contract side of that write path is done: `ComplianceGateReceiver` (`0xB5ad6413a16efd82b76212830f908B2D67C20425`, Blockscout + Sourcify verified) implements the official `ReceiverTemplate` pattern, only accepts reports from the Sepolia Keystone forwarder `0xF8344CFd5c43616a4366C34E3EEE75af79a74482`, and `ComplianceGate.creWorkflow` now points at the adapter instead of the deployer wallet.
 - The live sanctions list must be seeded with the same commitment that is currently a member of the new `ComplianceGate` group; otherwise the CRE revocation demo has no intersection.

@@ -48,7 +48,7 @@ Bounty evidence summary to paste alongside (hard requirement: a successful CRE
 CLI simulation or a live CRE-network deployment):
 
 - The official CRE CLI **v1.36.0** both builds and simulates this workflow. Raw
-  output: `workflows/compliance-lifecycle/evidence/cre-simulate-20261002-215452.log`.
+  output: `workflows/compliance-lifecycle/evidence/cre-simulate-20261002-232950.log`.
 - `cre workflow simulate` ran the full orchestration for real: DON-consensus HTTP
   fetch of the sanctions list, `getMembers()` / `getLeaves()` reads against the
   Sepolia deployment, Semaphore-tree rebuild with real Merkle siblings, and the
@@ -163,7 +163,7 @@ Invoke-RestMethod -Uri 'https://mock-api-topaz-zeta.vercel.app/api/admin' `
   The repo ships the official
   `workflows/project.yaml` + `workflow.yaml` schema the CLI requires.
 - **Official `cre workflow simulate` executed end-to-end** (2026-10-02, CLI
-  v1.36.0). Log: `workflows/compliance-lifecycle/evidence/cre-simulate-20261002-215452.log`.
+  v1.36.0). Log: `workflows/compliance-lifecycle/evidence/cre-simulate-20261002-232950.log`.
   Verified chain: sanctions API fetch → `getMembers()` = 1 → `getLeaves()` = 2
   (1 active) → Merkle proof generated (`siblingCount=1`, siblings `["0"]`) →
   revoke branch → `{"status":"revoked","revokedCount":1}`. `txHashes` is empty
@@ -189,14 +189,18 @@ Invoke-RestMethod -Uri 'https://mock-api-topaz-zeta.vercel.app/api/admin' `
 - On-tree revocation is production-wired: the CRE workflow rebuilds the
   Semaphore tree from the contract's stable leaves and supplies real Merkle
   siblings to `revokeCredentialWithMerkleProof`.
-- `creWorkflow` is currently set to the deployer wallet because the real CRE
-  forwarder address has not been configured; issuer-manual/script revocation is
-  used as the on-chain smoke-test evidence.
-- `cre workflow simulate` runs with broadcast disabled, so no transaction is
-  produced. A production write path additionally needs `ComplianceGate` to
-  implement `IReceiver`/`onReport` and accept reports from the CRE forwarder —
-  the simulation, the Merkle proof generation and the contract logic are all
-  verified, this last hop is the remaining engineering step.
+- The CRE write path is wired for real broadcasts:
+  `ComplianceGateReceiver` = `0xB5ad6413a16efd82b76212830f908B2D67C20425`
+  (source-verified on Blockscout + Sourcify) implements the official
+  `ReceiverTemplate` pattern, accepts reports only from the Sepolia Keystone
+  forwarder `0xF8344CFd5c43616a4366C34E3EEE75af79a74482`, and
+  `ComplianceGate.creWorkflow` now points at that adapter instead of the
+  deployer wallet.
+- `cre workflow simulate` runs with broadcast disabled, so local runs produce no
+  transaction: signatures from a local simulation are not accepted by the
+  production forwarder. A live broadcast therefore needs CRE-network deployment
+  access (`cre account access`). The contract side is complete and covered by 7
+  dedicated tests (forwarder-only access control + real revocation flow).
 
 ## Submission Materials (ready-to-upload files)
 

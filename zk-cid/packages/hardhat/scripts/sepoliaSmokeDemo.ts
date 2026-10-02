@@ -31,12 +31,27 @@ async function main() {
     const commitment = BigInt(DEMO_COMMITMENT);
     console.log("ComplianceGate:", GATE_ADDRESS);
     console.log("groupId:", (await gate.groupId()).toString());
+    console.log("creWorkflow:", await gate.creWorkflow());
     console.log(
       "members:",
       members.map((value: bigint) => value.toString()),
     );
     console.log("isMember(demo):", await gate.isMember(commitment));
     console.log("hasBeenRevoked(demo):", await gate.hasBeenRevoked(commitment));
+
+    // CRE write-path adapter (ComplianceGateReceiver), when deployed.
+    try {
+      const receiverDeployment = JSON.parse(
+        readFileSync(join(__dirname, "..", "deployments", "sepolia", "ComplianceGateReceiver.json"), "utf8"),
+      );
+      const receiver = new ethers.Contract(receiverDeployment.address, receiverDeployment.abi, provider);
+      console.log("ComplianceGateReceiver:", receiverDeployment.address);
+      console.log("  trusted forwarder:", await receiver.getForwarderAddress());
+      console.log("  complianceGate   :", await receiver.complianceGate());
+      console.log("  owner            :", await receiver.owner());
+    } catch {
+      console.log("ComplianceGateReceiver: not recorded in deployments/sepolia");
+    }
     return;
   }
 

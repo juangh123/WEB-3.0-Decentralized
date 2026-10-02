@@ -36,7 +36,7 @@ yarn workspace zk-cid-mock-sanctions-api test      # mock sanctions API
 
 The Chainlink CRE workflow is also verified with the official CLI — `cre workflow
 build` and `cre workflow simulate` both run end to end
-([raw log](zk-cid/workflows/compliance-lifecycle/evidence/cre-simulate-20261002-215452.log)):
+([raw log](zk-cid/workflows/compliance-lifecycle/evidence/cre-simulate-20261002-232950.log)):
 DON-consensus fetch of the sanctions API, `getMembers()`/`getLeaves()` reads
 against the Sepolia deployment, Semaphore-tree rebuild with real Merkle
 siblings, and the revoke branch (`{"status":"revoked","revokedCount":1}`).
@@ -53,6 +53,7 @@ Known limitations (demo mode, broadcast boundary) are listed in
 - **AccessNFT (Sepolia)**: `0x5e7140b8c967440A5B7Db15a4B82F4e4428cCc32`
 - **Mock sanctions API**: [https://mock-api-topaz-zeta.vercel.app/api/sanctions-list](https://mock-api-topaz-zeta.vercel.app/api/sanctions-list)
 - **Verified source**: [ComplianceGate](https://eth-sepolia.blockscout.com/address/0x1b8ae78C37c3E29DFcB0236E1c562b3CCFA44F70#code) · [AccessNFT](https://eth-sepolia.blockscout.com/address/0x5e7140b8c967440A5B7Db15a4B82F4e4428cCc32#code) (Blockscout + Sourcify)
+- **CRE write path**: [ComplianceGateReceiver](https://eth-sepolia.blockscout.com/address/0xB5ad6413a16efd82b76212830f908B2D67C20425#code) `0xB5ad6413a16efd82b76212830f908B2D67C20425` — accepts DON reports from the Sepolia Keystone forwarder and forwards them to the gate; `ComplianceGate.creWorkflow` points at it
 
 ## Quick Overview
 

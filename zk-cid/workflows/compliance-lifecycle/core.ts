@@ -4,7 +4,9 @@
  * 流程:Cron 定时触发 -> DON 各节点拉取 Mock 制裁名单 API(共识聚合)
  *      -> EVMClient.callContract 读取 getMembers()/getLeaves()
  *      -> 对命中者生成 CRE 签名报告,经 EVMClient.writeReport
- *         调用 ComplianceGate.revokeCredentialWithMerkleProof 完成树级撤销
+ *         投递给 ComplianceGateReceiver 适配器,由它调用
+ *         ComplianceGate.revokeCredentialWithMerkleProof 完成树级撤销
+ *         (已部署的 gate 只授权 EOA,适配器是它的 onReport 写链入口)
  */
 import {
   CronCapability,
@@ -30,6 +32,7 @@ import { LeanIMT } from "@zk-kit/lean-imt";
 import {
   decodeFunctionResult,
   encodeFunctionData,
+  encodeAbiParameters,
   parseAbi,
   zeroAddress,
   type Address,
@@ -46,6 +49,12 @@ export type Config = {
   chainSelectorName: string;
   /** ComplianceGate 合约地址 */
   complianceGateAddress: string;
+  /**
+   * CRE 报告接收合约(ComplianceGateReceiver 适配器)。
+   * `EVMClient.writeReport` 把 DON 签名的报告投递给它,由它调用 ComplianceGate
+   * 的撤销入口——已部署的 gate 只认 EOA,所以需要这一层适配器。
+   */
+  receiverAddress: string;
   /** writeReport 的 gasLimit(字符串,避免 JSON 精度问题) */
   gasLimit: string;
 };
@@ -209,16 +218,17 @@ export function runComplianceCheck(
     runtime.log(
       `merkle proof generated commitment=${commitment.toString()} siblingCount=${merkleProofSiblings.length}`,
     );
-    const callData = encodeFunctionData({
-      abi: GATE_ABI,
-      functionName: "revokeCredentialWithMerkleProof",
-      args: [commitment, merkleProofSiblings],
-    });
+    // The receiver adapter decodes `(uint256 commitment, uint256[] siblings)`,
+    // so the report payload is a plain ABI encoding rather than call data.
+    const payload = encodeAbiParameters(
+      [{ type: "uint256" }, { type: "uint256[]" }],
+      [commitment, merkleProofSiblings],
+    );
 
-    const report = runtime.report(prepareReportRequest(callData)).result();
+    const report = runtime.report(prepareReportRequest(payload)).result();
     const writeReply = evmClient
       .writeReport(runtime, {
-        receiver: cfg.complianceGateAddress,
+        receiver: cfg.receiverAddress,
         report,
         gasConfig: { gasLimit: cfg.gasLimit },
       })
@@ -270,6 +280,7 @@ export const onCronTrigger = (
     sanctionsApiUrl: env.SANCTIONS_API_URL ?? runtime.config.sanctionsApiUrl,
     chainSelectorName: env.CHAIN_SELECTOR_NAME ?? runtime.config.chainSelectorName,
     complianceGateAddress: env.COMPLIANCE_GATE_ADDRESS ?? runtime.config.complianceGateAddress,
+    receiverAddress: env.RECEIVER_ADDRESS ?? runtime.config.receiverAddress,
   };
   return runComplianceCheck(runtime, cfg);
 };

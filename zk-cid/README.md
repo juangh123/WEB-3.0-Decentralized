@@ -60,7 +60,7 @@ yarn start
 
 `workflows/compliance-lifecycle/` 为独立的 Chainlink CRE 工作流:Cron 定时拉取 Mock 制裁名单 API,读取链上 `getMembers()` 与 `getLeaves()` 求交集并重建 Semaphore 树,对命中者自动调用 `revokeCredentialWithMerkleProof` 完成树级撤销。代码按真实 `@chainlink/cre-sdk@1.16.0` API 编写,已通过 `tsc` 类型检查,并已用 `npx bun` 调用真实 `cre-compile` 生成 `dist/compliance-lifecycle.wasm`。
 
-> ✅ **实测声明**:官方 CRE CLI(v1.36.0)的 `cre workflow build` 与 `cre workflow simulate` **均已实测通过**(2026-10-02)。simulate 完整跑通「抓取制裁名单 → 读取 `getMembers()`/`getLeaves()` → 重建 Semaphore 树生成 Merkle siblings → 撤销命中成员」,原始日志见 `workflows/compliance-lifecycle/evidence/cre-simulate-20261002-215452.log`。唯一保留的边界是:simulate 未开 `--broadcast`,真实写链仍需合约实现 `IReceiver`/`onReport` 并接入 CRE forwarder。核心命令:
+> ✅ **实测声明**:官方 CRE CLI(v1.36.0)的 `cre workflow build` 与 `cre workflow simulate` **均已实测通过**(2026-10-02)。simulate 完整跑通「抓取制裁名单 → 读取 `getMembers()`/`getLeaves()` → 重建 Semaphore 树生成 Merkle siblings → 撤销命中成员」,原始日志见 `workflows/compliance-lifecycle/evidence/cre-simulate-20261002-232950.log`。真实广播路径已按官方模式落地(`ComplianceGateReceiver` 适配器 + Keystone forwarder,`ComplianceGate.creWorkflow` 已指向适配器),仅剩 CRE 网络的部署权限。核心命令:
 
 ```bash
 # 需先安装 CRE CLI(参考 https://docs.chain.link/cre)与 bun
@@ -134,8 +134,8 @@ ZK-CID 提供了一种**可插拔、无需信任的合规中间件**。对于 De
 
 - **Demo Mode 默认开启**：`ComplianceGate` 以 `demoMode = true` 部署，本地演示使用 MockSemaphore 校验路径；严格模式需由 issuer 调用 `setDemoMode(false)` 并配置真实的 Semaphore 部署（demoMode 关闭后，`validateProof` 失败必然 revert）。
 - **撤销的 Merkle 语义**：CRE 工作流读取 `getLeaves()`，按链上稳定叶子重建 Semaphore 树并生成真实 siblings，再调用 `revokeCredentialWithMerkleProof` 从树中移除成员；`hasBeenRevoked` 保留为纵深防御标记。
-- **CRE 编译与 simulate 均已实测**：工作流通过 `tsc` 类型检查，WASM 由 `cre-compile` 生成，官方 CLI `cre workflow simulate` 已端到端跑通（日志见 `workflows/compliance-lifecycle/evidence/cre-simulate-20261002-215452.log`）。为此修复了三个真实缺陷：`poseidon-lite` 依赖 `atob`（改用本地 Poseidon(2)）、工作流访问不存在的 `process` 全局、以及工作流目录里冲突的旧 `project.yaml`。
-- **真实广播尚未开启**：simulate 默认不广播，`txHashes` 为空符合预期。要让 DON 签名报告真正写进 `ComplianceGate`，合约还需实现 `IReceiver`/`onReport` 并把 `creWorkflow` 指向 CRE forwarder——这是当前"模拟 → 生产"的分界线。
+- **CRE 编译与 simulate 均已实测**：工作流通过 `tsc` 类型检查，WASM 由 `cre-compile` 生成，官方 CLI `cre workflow simulate` 已端到端跑通（日志见 `workflows/compliance-lifecycle/evidence/cre-simulate-20261002-232950.log`，报告目标为 `ComplianceGateReceiver` 适配器）。为此修复了三个真实缺陷：`poseidon-lite` 依赖 `atob`（改用本地 Poseidon(2)）、工作流访问不存在的 `process` 全局、以及工作流目录里冲突的旧 `project.yaml`。
+- **真实广播路径已落地，只差 CRE 网络部署权限**：新增 `contracts/cre/ComplianceGateReceiver.sol`（官方 `ReceiverTemplate` 模式：只接受 Keystone forwarder 调用，可选校验 workflow owner/name/id），已部署到 Sepolia 并把 `ComplianceGate.creWorkflow` 指向它；工作流报告 payload 改为 `abi.encode(uint256 commitment, uint256[] siblings)`。合约侧 7 条测试覆盖 forwarder-only 访问控制与真实撤销流程（`Hardhat contract tests: 30/30`）。由于本地模拟产生的签名不会被生产 forwarder 接受，真正的链上广播需要 `cre account access` 获得的 CRE 网络部署权限。
 - **文档中的链上地址**：README / DEMO_SUMMARY 中的地址与交易哈希来自 2026-07-19 本地完整重部署（最新证据），链重启/重部署后以 `packages/hardhat/deployments/localhost/*.json` 为准。
 
 ---

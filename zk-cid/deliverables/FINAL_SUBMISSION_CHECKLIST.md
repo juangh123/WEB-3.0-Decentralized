@@ -39,8 +39,9 @@ Use this checklist immediately before submitting the DoraHacks BUIDL.
 - [x] Official CRE CLI v1.36.0 `cre workflow build compliance-lifecycle -T staging-settings` succeeds
   (run from a space-free path copy; bun 1.2.21 → binary hash `482ea06d...`)
 - [x] yarn workspace compliance-lifecycle test:sim (CRE SDK TestRuntime end-to-end simulation, 3/3 pass)
-- [x] Official `cre workflow simulate` executed end-to-end with CLI v1.36.0 (log: `evidence/cre-simulate-20261002-215452.log`)
-- [ ] Optional: run `cre workflow simulate --broadcast` after `ComplianceGate` implements `IReceiver`/`onReport` and `creWorkflow` points at the CRE forwarder
+- [x] Official `cre workflow simulate` executed end-to-end with CLI v1.36.0 (log: `evidence/cre-simulate-20261002-232950.log`, receiver = `ComplianceGateReceiver`)
+- [x] CRE write path wired: `ComplianceGateReceiver` deployed + source-verified, `ComplianceGate.creWorkflow` points at it, report payload is `abi.encode(uint256, uint256[])`, 7 adapter tests passing
+- [ ] Blocked on Chainlink: a live `--broadcast` needs CRE-network deployment access (`cre account access`); local simulation signatures are rejected by the production forwarder
 
 ## Regression Gates
 
