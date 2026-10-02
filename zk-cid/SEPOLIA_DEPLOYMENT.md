@@ -91,9 +91,16 @@ access. The organization (`org_Ny2pYrg6kUlxEU8h`) submitted the access request o
 > ComplianceGateReceiver adapter which calls
 > `revokeCredentialWithMerkleProof` on-chain.
 
-`cre whoami` currently reports `Deploy Access: Not enabled` (request pending).
-Local simulation cannot produce signatures the production forwarder accepts, so
-once Chainlink approves the request the remaining command is:
+Chainlink replied on 2026-10-03: local simulation is fully supported (and this
+repository already does it end-to-end), while deploying a workflow to a DON on
+testnet or mainnet requires **scheduling a commercial call and signing an MNDA**
+— it is a business step rather than a purely technical approval:
+
+- Call: https://calendar.google.com/appointments/schedules/AcZssZ1KnJdaS-P0dvq742t4A5ZYkkRb_GOzYfWQR7Wq2t0j-zXZWNvdyhBCDIw93I8iaVKMU4lqfJUz
+- MNDA: https://ironcladapp.com/public-launch/670833888cd0f7e7d88ecd55
+
+`cre whoami` still reports `Deploy Access: Not enabled`. Once the commercial
+agreement is in place the remaining command is:
 
 ```powershell
 cd zk-cid/workflows
@@ -101,7 +108,16 @@ cre workflow deploy compliance-lifecycle -T production-settings
 ```
 
 No contract or workflow changes are needed for that step — the receiver adapter,
-forwarder allow-list and report payload are already wired and tested.
+forwarder allow-list and report payload are already wired, source-verified and
+tested, and the broadcast path has been proven with a real Sepolia transaction
+through the testnet mock forwarder (see `cre-broadcast-evidence.md`).
+
+For the hackathon submission the honest position is therefore: CRE workflow
+build + simulate verified with the official CLI, the on-chain write path built
+and exercised for real, and DON deployment pending a commercial agreement with
+Chainlink. The official CRE agent skill
+(`npx skills add smartcontractkit/chainlink-agent-skills --skill chainlink-cre-skill`)
+is the recommended starting point for any follow-up work.
 
 ### Broadcast rehearsal (real transaction)
 

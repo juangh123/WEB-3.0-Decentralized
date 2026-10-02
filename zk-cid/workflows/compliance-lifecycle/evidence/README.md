@@ -227,9 +227,10 @@ cre workflow simulate compliance-lifecycle -T staging-settings
    且 `ComplianceGate.creWorkflow` 已指向该适配器;报告 payload 为
    `abi.encode(uint256 commitment, uint256[] siblings)`。
    本地模拟的签名不会被生产 forwarder 接受,生产广播需要 CRE 网络部署权限。
-   本组织(`org_Ny2pYrg6kUlxEU8h`)已于 2026-10-03 通过 `cre account access`
-   提交带完整用途说明的申请,当前 `cre whoami` 显示
-   `Deploy Access: Not enabled`(审核中);批准后执行
+   本组织(`org_Ny2pYrg6kUlxEU8h`)已于 2026-10-03 提交带完整用途说明的申请。
+   Chainlink 回复:本地 simulate 完全支持(本仓库已跑通),但**测试网/主网 DON
+   部署需要预约商务洽谈并签署 MNDA**(商业步骤,非技术阻塞)。完成后再执行
    `cre workflow deploy compliance-lifecycle -T production-settings` 即可,
-   合约与工作流无需再改。
+   合约与工作流无需再改;写链路径已用真实交易演练过(见
+   `cre-broadcast-evidence.md`)。
 
