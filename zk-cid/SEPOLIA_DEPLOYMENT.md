@@ -19,6 +19,31 @@ Deployer:
 
 `0x951c41D827d0A6F5b9ef4C44943E3Feb25E51348`
 
+## Verified Source Code
+
+Both contracts are source-verified (2026-10-02) on Blockscout and Sourcify, so
+reviewers can read the exact deployed code without trusting this repository:
+
+| Contract | Blockscout | Sourcify |
+| --- | --- | --- |
+| ComplianceGate | https://eth-sepolia.blockscout.com/address/0x1b8ae78C37c3E29DFcB0236E1c562b3CCFA44F70#code | https://sourcify.dev/server/repo-ui/11155111/0x1b8ae78C37c3E29DFcB0236E1c562b3CCFA44F70 |
+| AccessNFT | https://eth-sepolia.blockscout.com/address/0x5e7140b8c967440A5B7Db15a4B82F4e4428cCc32#code | https://sourcify.dev/server/repo-ui/11155111/0x5e7140b8c967440A5B7Db15a4B82F4e4428cCc32 |
+
+Reproduce the verification (no Etherscan API key required; the Blockscout and
+Sourcify verifiers are built into `hardhat-verify` v3):
+
+```powershell
+cd zk-cid
+yarn workspace @se-2/hardhat hardhat-verify --network sepolia `
+  0x1b8ae78C37c3E29DFcB0236E1c562b3CCFA44F70 0x8A1fd199516489B0Fb7153EB5f075cDAC83c693D
+yarn workspace @se-2/hardhat hardhat-verify --network sepolia `
+  0x5e7140b8c967440A5B7Db15a4B82F4e4428cCc32 0x1b8ae78C37c3E29DFcB0236E1c562b3CCFA44F70
+```
+
+Etherscan Sepolia still shows "Verify and Publish" because that explorer needs a
+separate `ETHERSCAN_API_KEY`; set one and run
+`yarn verify --network sepolia etherscan` to cover that explorer too.
+
 ## Required Environment
 
 Create `packages/hardhat/.env`:

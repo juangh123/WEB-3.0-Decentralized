@@ -28,7 +28,7 @@
 
 ## 🛠 技术栈
 - **核心逻辑 & ZKP**: Semaphore v4 Protocol
-- **合约层**: Solidity 0.8.23 + Hardhat
+- **合约层**: Solidity ^0.8.23 (compiled with 0.8.28) + Hardhat
 - **前端展示**: Next.js (App Router) + Scaffold-ETH 2 + wagmi
 - **预言机编排层 (CRE Bounty)**: Chainlink CRE SDK (TypeScript) + Vercel (Mock API)
 - **测试网/环境**: Anvil Localnet 

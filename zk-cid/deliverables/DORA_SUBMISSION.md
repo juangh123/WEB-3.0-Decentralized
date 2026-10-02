@@ -68,7 +68,7 @@ ZK-CID separates "prove compliance" from "reveal identity":
 ## Architecture
 
 - **ZKP**: Semaphore v4
-- **Smart contracts**: Solidity 0.8.23, Hardhat, deployed on Sepolia
+- **Smart contracts**: Solidity ^0.8.23 (compiled with 0.8.28), Hardhat, deployed on Sepolia
 - **Frontend**: Next.js App Router, Scaffold-ETH 2, wagmi, viem
 - **Automation**: Chainlink CRE SDK 1.16.0, TypeScript serverless workflow
 - **Off-chain data**: Vercel mock sanctions API, unified JSON schema
@@ -86,6 +86,9 @@ ZK-CID separates "prove compliance" from "reveal identity":
 
 - `ComplianceGate`: `0x1b8ae78C37c3E29DFcB0236E1c562b3CCFA44F70`
 - `AccessNFT`: `0x5e7140b8c967440A5B7Db15a4B82F4e4428cCc32`
+- Source-verified on Blockscout and Sourcify (2026-10-02):
+  - https://eth-sepolia.blockscout.com/address/0x1b8ae78C37c3E29DFcB0236E1c562b3CCFA44F70#code
+  - https://eth-sepolia.blockscout.com/address/0x5e7140b8c967440A5B7Db15a4B82F4e4428cCc32#code
 - Semaphore v4 dependency: `0x8A1fd199516489B0Fb7153EB5f075cDAC83c693D`
 - Deployer/issuer wallet: `0x951c41D827d0A6F5b9ef4C44943E3Feb25E51348`
 - Current live commitment: `123456789012345678901234567890123456789`

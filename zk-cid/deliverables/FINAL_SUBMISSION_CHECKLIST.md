@@ -27,6 +27,8 @@ Use this checklist immediately before submitting the DoraHacks BUIDL.
   `0x37e37f2a3cba81d6327bbfe0e7565649a51115771f0a1ad329ba788deef51dcf`
 - [x] Sepolia on-tree removal verified:
   `0x8f0cb9341d4cf108101fb07a835c334c39f23ca9994bb26acc4497ee9e829ee0`
+- [x] Both contracts source-verified on Blockscout + Sourcify (2026-10-02)
+- [ ] Optional: verify on Etherscan Sepolia once `ETHERSCAN_API_KEY` is available
 
 ## CRE Workflow
 

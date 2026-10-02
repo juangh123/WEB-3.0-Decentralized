@@ -630,6 +630,31 @@ export default function ZKCIDDemo() {
             <span className="font-mono">{groupId?.toString() ?? "加载中..."}</span>
           </div>
           <div className="flex justify-between gap-3">
+            <span className="opacity-70">源码验证 / Verified</span>
+            {gateContract ? (
+              <span className="flex gap-2 font-mono">
+                <a
+                  className="link"
+                  href={`https://eth-sepolia.blockscout.com/address/${gateContract.address}#code`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Blockscout
+                </a>
+                <a
+                  className="link"
+                  href={`https://sourcify.dev/server/repo-ui/11155111/${gateContract.address}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Sourcify
+                </a>
+              </span>
+            ) : (
+              <span className="font-mono">加载中...</span>
+            )}
+          </div>
+          <div className="flex justify-between gap-3">
             <span className="opacity-70">链上成员数</span>
             <span className="font-mono">{isMembersLoading ? "加载中..." : groupMembers.length}</span>
           </div>
