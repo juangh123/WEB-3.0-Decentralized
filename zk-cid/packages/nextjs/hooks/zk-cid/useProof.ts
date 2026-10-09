@@ -10,22 +10,22 @@ export const useProof = () => {
   /**
    * 生成 ZK 证明
    * @param identity 用户的 Semaphore 身份
-   * @param groupMembers 链上或者后端的群组成员（Identity Commitments）
+   * @param leaves 链上稳定的 Semaphore leaves（被撤销的叶子为 0，不能压缩）
    * @param groupId 群组ID (Scope)
    * @param userAddress 用户的以太坊地址 (作为 message, 防抢跑)
    */
   const generateZkProof = async (
     identity: Identity,
-    groupMembers: string[],
+    leaves: string[],
     groupId: bigint | string,
     userAddress: string,
   ) => {
     setIsGenerating(true);
     setError(null);
     try {
-      // 1. 重建包含所有成员的群组
+      // 1. 重建与链上完全一致的群组。零值叶子必须保留，否则撤销后根会漂移。
       const { Group } = await import("@semaphore-protocol/group");
-      const group = new Group(groupMembers);
+      const group = new Group(leaves);
 
       // 2. 将目标用户的以太坊地址作为 Message，绑定此证明只能由该地址提交
       // 需要将 address 转换为数字形式 (bigint/string) 以符合 Semaphore Message 格式

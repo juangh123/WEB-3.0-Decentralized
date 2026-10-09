@@ -45,15 +45,25 @@ const CFG: Config = {
 
 /** 当前 Sepolia 实况成员(与 mock-api seed、合约 getMembers 一致) */
 const LIVE_MEMBER = 123456789012345678901234567890123456789n;
+/** BN254 标量域上界(应当被工作流判为非法 commitment) */
+const SNARK_SCALAR_FIELD = "21888242871839275222246405745257275088548364400416034343698204186575808495617";
 
 /** 注册 HTTP + EVM 能力 Mock,并返回调用计数以便断言 */
 function registerMocks(opts: {
   sanctioned: string[];
   members: bigint[];
   leaves?: bigint[];
+  /** 模拟真实链上状态变化:每次成功的 writeReport 移除下一个命中成员 */
+  applyRevocations?: boolean;
+  /** 前 N 次 writeReport 直接失败(模拟交易 revert) */
+  failFirstWrites?: number;
 }) {
   const selector = getNetwork({ chainSelectorName: CFG.chainSelectorName })!
     .chainSelector.selector;
+
+  let membersState = [...opts.members];
+  let leavesState = [...(opts.leaves ?? opts.members)];
+  let failuresRemaining = opts.failFirstWrites ?? 0;
 
   registerTestCapability("http-actions@1.0.0-alpha", (req) => {
     if (req.method !== "SendRequest") {
@@ -89,7 +99,7 @@ function registerMocks(opts: {
       const encoded = encodeFunctionResult({
         abi: GATE_ABI,
         functionName: decoded.functionName,
-        result: decoded.functionName === "getLeaves" ? (opts.leaves ?? opts.members) : opts.members,
+        result: decoded.functionName === "getLeaves" ? leavesState : membersState,
       });
       const reply = create(EVM_PB.CallContractReplySchema, {
         data: hexToBytes(encoded),
@@ -101,6 +111,28 @@ function registerMocks(opts: {
     if (req.method === "WriteReport") {
       anyUnpack(req.payload, EVM_PB.WriteReportRequestSchema);
       calls.writeReport += 1;
+
+      if (failuresRemaining > 0) {
+        failuresRemaining -= 1;
+        const failedReply = create(EVM_PB.WriteReportReplySchema, {
+          txStatus: EVM_PB.TxStatus.REVERTED,
+          errorMessage: "simulated revert",
+        });
+        return {
+          response: { case: "payload", value: anyPack(EVM_PB.WriteReportReplySchema, failedReply) },
+        };
+      }
+
+      if (opts.applyRevocations) {
+        const sanctioned = new Set(opts.sanctioned);
+        const index = membersState.findIndex((member) => sanctioned.has(member.toString()));
+        if (index >= 0) {
+          const revoked = membersState[index];
+          membersState = membersState.filter((member) => member !== revoked);
+          leavesState = leavesState.map((leaf) => (leaf === revoked ? 0n : leaf));
+        }
+      }
+
       const reply = create(EVM_PB.WriteReportReplySchema, {
         txStatus: EVM_PB.TxStatus.SUCCESS,
         txHash: hexToBytes("0xdeadbeefcafebabe"),
@@ -205,5 +237,99 @@ test("sanctioned list has no on-chain match -> no writeReport (false positive gu
   }
   if (calls.writeReport !== 0) {
     throw new Error(`expected 0 writeReport, got ${calls.writeReport}`);
+  }
+});
+
+test("multiple sanctioned members -> state is re-read between writes and the whole batch is revoked", () => {
+  const runtime = newTestRuntime();
+  const members = [LIVE_MEMBER, 9999999999999999999n, 7777777777777777777n];
+  const calls = registerMocks({
+    sanctioned: members.map((member) => member.toString()),
+    members,
+    applyRevocations: true,
+  });
+
+  const parsed = JSON.parse(runComplianceCheck(runtime, CFG)) as {
+    status: string;
+    revokedCount: number;
+    failedCount: number;
+    revokedCommitments: string[];
+  };
+
+  if (parsed.status !== "revoked") {
+    throw new Error(`expected status "revoked", got "${parsed.status}"`);
+  }
+  if (parsed.revokedCount !== 3) {
+    throw new Error(`expected 3 revoked, got ${parsed.revokedCount}`);
+  }
+  if (parsed.failedCount !== 0) {
+    throw new Error(`expected 0 failed, got ${parsed.failedCount}`);
+  }
+  if (calls.writeReport !== 3) {
+    throw new Error(`expected 3 writeReport, got ${calls.writeReport}`);
+  }
+  // initial getMembers + getLeaves, then a (getMembers + getLeaves) refresh after each of the
+  // first two writes before the final one -> 2 + 2 * 2 = 6 reads
+  if (calls.callContract !== 6) {
+    throw new Error(`expected 6 callContract reads, got ${calls.callContract}`);
+  }
+});
+
+test("invalid sanction entries are skipped without aborting the run", () => {
+  const runtime = newTestRuntime();
+  const calls = registerMocks({
+    sanctioned: ["not-a-number", "0", "-5", SNARK_SCALAR_FIELD, LIVE_MEMBER.toString()],
+    members: [LIVE_MEMBER],
+    applyRevocations: true,
+  });
+
+  const parsed = JSON.parse(runComplianceCheck(runtime, CFG)) as {
+    status: string;
+    revokedCount: number;
+    invalidEntries: string[];
+  };
+
+  if (parsed.status !== "revoked") {
+    throw new Error(`expected status "revoked", got "${parsed.status}"`);
+  }
+  if (parsed.revokedCount !== 1) {
+    throw new Error(`expected 1 revoked, got ${parsed.revokedCount}`);
+  }
+  if (parsed.invalidEntries.length !== 4) {
+    throw new Error(`expected 4 invalid entries, got ${parsed.invalidEntries.length}`);
+  }
+  if (calls.writeReport !== 1) {
+    throw new Error(`expected 1 writeReport, got ${calls.writeReport}`);
+  }
+});
+
+test("a failed on-chain write is reported as partial instead of a false success", () => {
+  const runtime = newTestRuntime();
+  const members = [LIVE_MEMBER, 9999999999999999999n];
+  const calls = registerMocks({
+    sanctioned: members.map((member) => member.toString()),
+    members,
+    applyRevocations: true,
+    failFirstWrites: 1,
+  });
+
+  const parsed = JSON.parse(runComplianceCheck(runtime, CFG)) as {
+    status: string;
+    revokedCount: number;
+    failedCount: number;
+    failed: Array<{ commitment: string; error: string }>;
+  };
+
+  if (parsed.status !== "partial") {
+    throw new Error(`expected status "partial", got "${parsed.status}"`);
+  }
+  if (parsed.revokedCount !== 1 || parsed.failedCount !== 1) {
+    throw new Error(`expected 1 revoked / 1 failed, got ${parsed.revokedCount} / ${parsed.failedCount}`);
+  }
+  if (parsed.failed[0]?.error !== "simulated revert") {
+    throw new Error(`unexpected failure reason: ${JSON.stringify(parsed.failed)}`);
+  }
+  if (calls.writeReport !== 2) {
+    throw new Error(`expected 2 writeReport, got ${calls.writeReport}`);
   }
 });

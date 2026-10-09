@@ -23,7 +23,21 @@ export const useIdentity = () => {
     }
     setIsLoading(true);
     try {
-      const message = `Sign this message to generate your ZK-CID Anonymous Identity.\n\nNonce: 1`;
+      // Domain-separated, wallet-bound and stable: the same wallet always derives the same
+      // identity for this app + chain, while a generic "sign in" message from another site
+      // cannot reproduce it. Changing this template invalidates previously derived identities.
+      const domain = typeof window !== "undefined" ? window.location.host : "zk-cid.local";
+      const message = [
+        "ZK-CID Anonymous Identity",
+        "",
+        "Sign this message to derive your Semaphore identity locally.",
+        "This signature never leaves your device and cannot move funds.",
+        "",
+        `Domain: ${domain}`,
+        "Chain ID: 11155111",
+        `Wallet: ${address.toLowerCase()}`,
+        "Version: 1",
+      ].join("\n");
       const signature = await signMessageAsync({ message });
 
       // Use the signature as entropy to generate a deterministic identity

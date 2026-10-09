@@ -80,6 +80,13 @@ async function main() {
   await tx.wait();
   console.log("CRE Workflow set to (deployer):", deployerAddress);
 
+  // Local demo uses MockSemaphore, whose `validateProof` simulates a passing ZK verifier.
+  // Keep demoMode off even locally so the flag can never silently mask stale-root proofs
+  // when this wiring is copied to a real network.
+  const txDemoMode = await gate.setDemoMode(false);
+  await txDemoMode.wait();
+  console.log("demoMode disabled (strict mode; MockSemaphore simulates ZK validation)");
+
   // Save addresses for the other scripts
   saveDeployment("MockSemaphore", semaphoreAddress);
   saveDeployment("ComplianceGate", complianceGateAddress);

@@ -49,7 +49,7 @@ describe("ComplianceGate and AccessNFT", function () {
     it("sets issuer, groupId, demoMode and registers the NFT as verifier", async function () {
       expect(await gate.issuer()).to.equal(issuer.address);
       expect(await gate.groupId()).to.equal(1n); // first group created on the mock
-      expect(await gate.demoMode()).to.equal(true);
+      expect(await gate.demoMode()).to.equal(false);
       expect(await gate.verifiers(await nft.getAddress())).to.equal(true);
     });
   });
@@ -137,6 +137,13 @@ describe("ComplianceGate and AccessNFT", function () {
         nft.connect(user1).mint(makeProof(NULLIFIER_1, COMMITMENT_1, BigInt(user2.address))),
       ).to.be.revertedWith("Message must bind sender");
     });
+
+    it("rejects a proof built against an unknown/stale tree root", async function () {
+      await gate.issueCredential(COMMITMENT_1);
+      await expect(nft.connect(user1).mint(makeProof(NULLIFIER_1, 424242n, BigInt(user1.address)))).to.be.revertedWith(
+        "Stale or unknown tree root",
+      );
+    });
   });
 
   describe("revocation", function () {
@@ -150,7 +157,7 @@ describe("ComplianceGate and AccessNFT", function () {
       // The demo group is a single-member tree, so proof.merkleTreeRoot == commitment.
       await expect(
         nft.connect(user1).mint(makeProof(NULLIFIER_1, COMMITMENT_1, BigInt(user1.address))),
-      ).to.be.revertedWith("Credential revoked");
+      ).to.be.revertedWith("Stale or unknown tree root");
 
       await expect(gate.revokeCredential(COMMITMENT_1, [])).to.be.revertedWith("Already revoked");
     });
@@ -213,14 +220,49 @@ describe("ComplianceGate and AccessNFT", function () {
 
   describe("verifier management", function () {
     it("allows issuer to add and remove verifiers", async function () {
-      await gate.setVerifier(attacker.address, true);
+      await expect(gate.setVerifier(attacker.address, true))
+        .to.emit(gate, "VerifierUpdated")
+        .withArgs(attacker.address, true);
       expect(await gate.verifiers(attacker.address)).to.equal(true);
-      await gate.setVerifier(attacker.address, false);
+      await expect(gate.setVerifier(attacker.address, false))
+        .to.emit(gate, "VerifierUpdated")
+        .withArgs(attacker.address, false);
       expect(await gate.verifiers(attacker.address)).to.equal(false);
     });
 
     it("blocks non-issuer from managing verifiers", async function () {
       await expect(gate.connect(attacker).setVerifier(attacker.address, true)).to.be.revertedWith("Not issuer");
+    });
+  });
+
+  describe("access revocation", function () {
+    beforeEach(async function () {
+      await gate.issueCredential(COMMITMENT_1);
+      await nft.connect(user1).mint(makeProof(NULLIFIER_1, COMMITMENT_1, BigInt(user1.address)));
+    });
+
+    it("lets the issuer revoke and restore an account's access pass", async function () {
+      expect(await nft.isValid(user1.address)).to.equal(true);
+
+      await expect(nft.revokeAccess(user1.address)).to.emit(nft, "AccessRevoked").withArgs(user1.address);
+      expect(await nft.isValid(user1.address)).to.equal(false);
+      // The token is intentionally not burned; only `isValid` flips.
+      expect(await nft.ownerOf(0n)).to.equal(user1.address);
+
+      await expect(nft.restoreAccess(user1.address)).to.emit(nft, "AccessRestored").withArgs(user1.address);
+      expect(await nft.isValid(user1.address)).to.equal(true);
+    });
+
+    it("blocks a revoked account from transferring the token away", async function () {
+      await nft.revokeAccess(user1.address);
+      await expect(nft.connect(user1).transferFrom(user1.address, user2.address, 0n))
+        .to.be.revertedWithCustomError(nft, "TransferBlockedFromRevokedAccount")
+        .withArgs(user1.address);
+    });
+
+    it("blocks non-issuer callers from revoking access", async function () {
+      await expect(nft.connect(attacker).revokeAccess(user1.address)).to.be.revertedWithCustomError(nft, "NotIssuer");
+      expect(await nft.isValid(user1.address)).to.equal(true);
     });
   });
 

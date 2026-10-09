@@ -79,6 +79,21 @@ cd zk-cid
 yarn hardhat:test        # includes 7 ComplianceGateReceiver tests
 ```
 
+To remediate the already-deployed contracts after finishing the frontend review:
+
+```powershell
+cd zk-cid
+
+# Requires the issuer key in DEPLOYER_PRIVATE_KEY.
+yarn hardhat:set-strict-mode
+
+# Requires the Receiver owner key plus the real workflow identity.
+$env:EXPECTED_WORKFLOW_AUTHOR = "0x..."
+$env:EXPECTED_WORKFLOW_ID = "0x..."
+$env:EXPECTED_WORKFLOW_NAME = "compliance-lifecycle-production" # optional
+yarn hardhat:configure:receiver
+```
+
 The remaining step for a production DON broadcast is CRE-network deployment
 access. The organization (`org_Ny2pYrg6kUlxEU8h`) submitted the access request on
 2026-10-03 through `cre account access` with this use case:
@@ -235,7 +250,9 @@ Current live demo state after re-issuing a fresh commitment:
 Verified state:
 
 - `ComplianceGate.groupId = 712`
-- `ComplianceGate.demoMode = true`
+- `ComplianceGate.demoMode = true` on the currently deployed Sepolia contract; new code
+  defaults to strict mode, but this live contract still needs an issuer
+  `setDemoMode(false)` transaction after the frontend fix is deployed.
 - `ComplianceGate.getMembers() = [123456789012345678901234567890123456789]`
 - `ComplianceGate.getLeaves() = [123456789012345678901234567890123456789, 0]`
 - Rebuilt Semaphore root equals on-chain `getMerkleTreeRoot(712)`
@@ -321,7 +338,13 @@ the official CLI v1.36.0; the raw log lives in
 
 ## Known Production Gaps
 
-- `demoMode` remains `true`; strict Semaphore validation should only be enabled after real proof generation is wired into the frontend.
+- The live Sepolia contract still has `demoMode = true`. The frontend now rebuilds proofs
+  from `getLeaves()`, and the deployment scripts default to strict mode, but an issuer
+  transaction is still required to switch this already-deployed instance off.
+- The live `ComplianceGateReceiver` has `expectedAuthor / expectedWorkflowId` unset. The
+  deployment script now refuses to create an unpinned receiver unless the explicit
+  `ALLOW_UNPINNED_RECEIVER=true` escape hatch is used; the existing live receiver must be
+  reconfigured with the real CRE workflow author and workflow ID.
 - Broadcast is off by default in `cre workflow simulate`, so a local run produces no transaction (`txHashes: [""]`): the local simulation signer is not accepted by the production Keystone forwarder. A live broadcast needs CRE-network deployment access (`cre account access`).
 - The contract side of that write path is done: `ComplianceGateReceiver` (`0xB5ad6413a16efd82b76212830f908B2D67C20425`, Blockscout + Sourcify verified) implements the official `ReceiverTemplate` pattern, only accepts reports from the Sepolia Keystone forwarder `0xF8344CFd5c43616a4366C34E3EEE75af79a74482`, and `ComplianceGate.creWorkflow` now points at the adapter instead of the deployer wallet.
 - The live sanctions list must be seeded with the same commitment that is currently a member of the new `ComplianceGate` group; otherwise the CRE revocation demo has no intersection.

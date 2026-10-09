@@ -3,10 +3,19 @@ import { Wallet } from "ethers";
 import { spawn } from "child_process";
 
 /**
+ * @deprecated Do not use: this legacy wrapper hardcoded the public Anvil deployer key and
+ * always deployed to `localhost` regardless of the requested network. Use
+ * `yarn hardhat:deploy` (local) or `yarn hardhat:deploy:sepolia` (testnet) instead.
+ *
  * Unencrypts the private key and runs the hardhat deploy command,
  * then generates TypeScript ABIs for the frontend.
  */
 async function main() {
+  throw new Error(
+    "runHardhatDeployWithPK.ts is deprecated: it hardcoded a public Anvil private key and always " +
+      "targeted localhost. Use `yarn hardhat:deploy` (local) or `yarn hardhat:deploy:sepolia` (testnet).",
+  );
+
   const networkIndex = process.argv.indexOf("--network");
   const networkName = networkIndex !== -1 ? process.argv[networkIndex + 1] : "default";
 

@@ -26,7 +26,19 @@ Vercel 部署时在项目环境变量中设置 `ADMIN_TOKEN`(以及可选的 `SE
 | GET | `/api/sanctions-list` | 无 | 返回统一 schema:`{ sanctioned: string[], source: string, updatedAt: string }` |
 | POST | `/api/admin/sanction`(Vercel 为 `/api/admin`;Express 两个路径都支持) | `x-admin-token` 头 | body:`{ action, commitment? }`,`action ∈ add \| remove \| clear \| status`,返回 `{ ok: true, data: <同上的统一 schema> }` |
 
-鉴权 token 从环境变量 `ADMIN_TOKEN` 读取,默认 `dev-token`(仅本地演示用)。
+鉴权 token 从环境变量 `ADMIN_TOKEN` 读取。**生产环境（`NODE_ENV=production` 或
+`VERCEL_ENV=production`）必须显式配置非默认 token**：否则 admin 请求会被拒绝（500），
+不再回退到公开的 `dev-token`。CORS 可用 `CORS_ORIGINS` 配置白名单（生产未配置时仅允许同源）；
+admin 端点带有每 IP 每分钟 30 次的内存级限流（`ADMIN_RATE_LIMIT` 可调，多实例下不精确）。
+
+### 输入校验与存储边界
+
+- `add` / `remove` 的 `commitment` 必须是 1~78 位十进制且严格小于 BN254 标量域的字段元素；
+  非法输入返回 400。CRE 工作流会跳过名单里的非法条目并在返回值中计入 `invalidEntries`，
+  单条脏数据不会中断整轮合规检查。
+- `SEED_SANCTIONED` / `seed.json` 中的非法条目在启动时会被丢弃。
+- 存储仍是进程内 `globalThis`（演示用途）：Vercel 多实例与冷启动之间不共享。生产化前应
+  替换为 Vercel KV/Redis 或构建期静态名单。
 
 ## 与 CRE workflow 的对接
 

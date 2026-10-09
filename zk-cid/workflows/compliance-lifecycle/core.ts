@@ -73,6 +73,63 @@ type SanctionsResponse = {
   updatedAt?: string;
 };
 
+/** BN254 scalar field size: identity commitments must be strictly below this value. */
+const SNARK_SCALAR_FIELD = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
+/** Defensive caps for the external sanctions feed. */
+const MAX_SANCTIONS_ENTRIES = 5000;
+const MAX_SANCTIONS_ENTRY_LENGTH = 78;
+
+export type SanctionsParseResult = {
+  entries: string[];
+  invalidEntries: string[];
+};
+
+/**
+ * Validates and normalizes the sanctions feed.
+ *
+ * A single malformed entry must never abort the whole compliance run (that would turn any
+ * write access to the feed into a denial-of-service switch), so invalid entries are dropped
+ * and reported instead of throwing. Duplicates are collapsed, and values outside the BN254
+ * scalar field are rejected because they can never be valid Semaphore commitments.
+ */
+export function parseSanctionedEntries(raw: readonly unknown[]): SanctionsParseResult {
+  const entries: string[] = [];
+  const invalidEntries: string[] = [];
+  const seen = new Set<string>();
+
+  for (const item of raw.slice(0, MAX_SANCTIONS_ENTRIES)) {
+    const textValue = typeof item === "string" || typeof item === "number" ? String(item).trim() : "";
+    if (
+      textValue.length === 0 ||
+      textValue.length > MAX_SANCTIONS_ENTRY_LENGTH ||
+      !/^[0-9]+$/.test(textValue)
+    ) {
+      invalidEntries.push((textValue || String(item)).slice(0, 32));
+      continue;
+    }
+
+    let parsed: bigint;
+    try {
+      parsed = BigInt(textValue);
+    } catch {
+      invalidEntries.push(textValue.slice(0, 32));
+      continue;
+    }
+
+    if (parsed <= 0n || parsed >= SNARK_SCALAR_FIELD) {
+      invalidEntries.push(textValue.slice(0, 32));
+      continue;
+    }
+
+    const normalized = parsed.toString();
+    if (seen.has(normalized)) continue;
+    seen.add(normalized);
+    entries.push(normalized);
+  }
+
+  return { entries, invalidEntries };
+}
+
 /**
  * Rebuilds the exact Semaphore tree as represented by the contract's stable leaves.
  * Revoked leaves are zero and stay in place, which is the same semantic used by
@@ -161,9 +218,11 @@ export function runComplianceCheck(
     .result();
 
   const sanctionsData = JSON.parse(body) as SanctionsResponse;
-  const sanctionedList = sanctionsData.sanctioned ?? [];
+  const rawSanctioned = Array.isArray(sanctionsData.sanctioned) ? sanctionsData.sanctioned : [];
+  const { entries: sanctionedList, invalidEntries } = parseSanctionedEntries(rawSanctioned);
   runtime.log(
-    `sanctions list fetched: ${sanctionedList.length} entries (source=${sanctionsData.source ?? "unknown"})`,
+    `sanctions list fetched: ${sanctionedList.length} valid entries ` +
+      `(skipped ${invalidEntries.length} invalid, source=${sanctionsData.source ?? "unknown"})`,
   );
 
   // ---------- 2. EVM 读:获取链上当前全部成员 ----------
@@ -201,8 +260,12 @@ export function runComplianceCheck(
   if (toRevoke.length === 0) {
     return safeJsonStringify({
       status: "ok",
-      message: "No sanctioned members found. All credentials remain valid.",
+      message:
+        invalidEntries.length > 0
+          ? `No sanctioned members found (${invalidEntries.length} invalid sanction entries were skipped).`
+          : "No sanctioned members found. All credentials remain valid.",
       checkedMembers: members.length,
+      invalidEntries,
       checkedAt: runtime.now().toISOString(),
     });
   }
@@ -211,13 +274,39 @@ export function runComplianceCheck(
   // CRE 写链的真实方式是 runtime.report() 产出 DON 签名报告,
   // 再由 EVMClient.writeReport 递交给目标链。
   const revokedList: string[] = [];
+  const failedList: Array<{ commitment: string; error: string }> = [];
   const txHashes: string[] = [];
   const proofs: Array<{ commitment: string; siblings: string[] }> = [];
-  for (const commitment of toRevoke) {
-    const merkleProofSiblings = buildMerkleProofSiblings(leaves, commitment);
-    runtime.log(
-      `merkle proof generated commitment=${commitment.toString()} siblingCount=${merkleProofSiblings.length}`,
-    );
+
+  // Every successful revocation rewrites one leaf and therefore changes the group root, which
+  // invalidates sibling paths computed from the previous snapshot. Re-read on-chain state
+  // between writes instead of reusing a single `leaves` snapshot for the whole batch —
+  // otherwise only the first member of a multi-hit batch can be revoked.
+  let currentLeaves = leaves;
+  let currentMembers = members;
+
+  for (let index = 0; index < toRevoke.length; index += 1) {
+    const commitment = toRevoke[index];
+    const commitmentStr = commitment.toString();
+
+    if (!currentMembers.some(member => member === commitment)) {
+      // Contract already removed this member (issuer or a previous run) — nothing left to do.
+      runtime.log(`revoke skipped commitment=${commitmentStr} reason=no-longer-a-member`);
+      continue;
+    }
+
+    let merkleProofSiblings: bigint[];
+    try {
+      merkleProofSiblings = buildMerkleProofSiblings(currentLeaves, commitment);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      failedList.push({ commitment: commitmentStr, error: `merkle proof failed: ${message}` });
+      runtime.log(`revoke failed commitment=${commitmentStr} error=${message}`);
+      continue;
+    }
+
+    runtime.log(`merkle proof generated commitment=${commitmentStr} siblingCount=${merkleProofSiblings.length}`);
+
     // The receiver adapter decodes `(uint256 commitment, uint256[] siblings)`,
     // so the report payload is a plain ABI encoding rather than call data.
     const payload = encodeAbiParameters(
@@ -235,25 +324,38 @@ export function runComplianceCheck(
       .result();
 
     if (writeReply.txStatus === TxStatus.SUCCESS) {
-      revokedList.push(commitment.toString());
+      revokedList.push(commitmentStr);
       proofs.push({
-        commitment: commitment.toString(),
+        commitment: commitmentStr,
         siblings: merkleProofSiblings.map(value => value.toString()),
       });
-      txHashes.push(
-        writeReply.txHash ? bytesToHex(writeReply.txHash) : "",
-      );
-      runtime.log(`revoked commitment=${commitment.toString()}`);
+      txHashes.push(writeReply.txHash ? bytesToHex(writeReply.txHash) : "");
+      runtime.log(`revoked commitment=${commitmentStr}`);
     } else {
-      runtime.log(
-        `revoke failed commitment=${commitment.toString()} status=${writeReply.txStatus} error=${writeReply.errorMessage ?? ""}`,
-      );
+      const error = writeReply.errorMessage ?? `tx status ${writeReply.txStatus}`;
+      failedList.push({ commitment: commitmentStr, error });
+      runtime.log(`revoke failed commitment=${commitmentStr} error=${error}`);
+    }
+
+    // Refresh the snapshot for the next write. A failed write may also mean a concurrent
+    // change (issuer revocation), so re-read in both cases.
+    if (index < toRevoke.length - 1) {
+      currentMembers = readUint256Array(evmClient, runtime, cfg, "getMembers");
+      currentLeaves = readUint256Array(evmClient, runtime, cfg, "getLeaves");
     }
   }
 
+  const status = failedList.length === 0 ? "revoked" : revokedList.length > 0 ? "partial" : "failed";
+  if (failedList.length > 0) {
+    runtime.log(`revocation finished with failures: revoked=${revokedList.length} failed=${failedList.length}`);
+  }
+
   return safeJsonStringify({
-    status: "revoked",
+    status,
     revokedCount: revokedList.length,
+    failedCount: failedList.length,
+    failed: failedList,
+    invalidEntries,
     revokedCommitments: revokedList,
     txHashes,
     proofs,

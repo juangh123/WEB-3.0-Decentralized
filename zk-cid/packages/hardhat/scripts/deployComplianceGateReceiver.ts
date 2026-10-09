@@ -37,6 +37,21 @@ async function main() {
   const provider = new ethers.JsonRpcProvider(rpcUrl);
   const wallet = new ethers.Wallet(process.env.DEPLOYER_PRIVATE_KEY, provider);
 
+  const expectedAuthor = process.env.EXPECTED_WORKFLOW_AUTHOR ?? "";
+  const expectedWorkflowId = process.env.EXPECTED_WORKFLOW_ID ?? "";
+  const expectedWorkflowName = process.env.EXPECTED_WORKFLOW_NAME ?? "";
+  const allowUnpinned = process.env.ALLOW_UNPINNED_RECEIVER === "true";
+
+  // Fail before deploying anything if the workflow identity is not pinned. A receiver that
+  // accepts every report from the shared Keystone forwarder can be abused to revoke arbitrary
+  // credentials, so an explicit opt-out is required for disposable local experiments.
+  if ((!expectedAuthor || !expectedWorkflowId) && !allowUnpinned) {
+    throw new Error(
+      "EXPECTED_WORKFLOW_AUTHOR and EXPECTED_WORKFLOW_ID are required. " +
+        "Set ALLOW_UNPINNED_RECEIVER=true only for a local/disposable testnet experiment.",
+    );
+  }
+
   const gateDeployment = JSON.parse(
     readFileSync(join(__dirname, "..", "deployments", "sepolia", "ComplianceGate.json"), "utf8"),
   );
@@ -79,12 +94,51 @@ async function main() {
     console.log("creWorkflow already points at the adapter");
   }
 
+  // Pin the adapter to the unique CRE workflow allowed to revoke credentials. Without this,
+  // ANY workflow routed through the shared Keystone forwarder could trigger a revocation.
+  // Cast to `any`: the vendored artifact ABI is parsed from JSON, so ethers cannot infer the
+  // inherited ReceiverTemplate methods at compile time.
+  const receiverContract = new ethers.Contract(receiverAddress, artifact.abi, wallet) as any;
+
+  if (expectedAuthor) {
+    const tx = await receiverContract.setExpectedAuthor(expectedAuthor);
+    console.log("setExpectedAuthor tx:", tx.hash);
+    await tx.wait();
+  }
+  if (expectedWorkflowId) {
+    const tx = await receiverContract.setExpectedWorkflowId(expectedWorkflowId);
+    console.log("setExpectedWorkflowId tx:", tx.hash);
+    await tx.wait();
+  }
+  if (expectedWorkflowName) {
+    const tx = await receiverContract.setExpectedWorkflowName(expectedWorkflowName);
+    console.log("setExpectedWorkflowName tx:", tx.hash);
+    await tx.wait();
+  }
+
+  const [pinnedAuthor, pinnedWorkflowId, pinnedWorkflowName] = await Promise.all([
+    receiverContract.getExpectedAuthor(),
+    receiverContract.getExpectedWorkflowId(),
+    receiverContract.getExpectedWorkflowName(),
+  ]);
+  if (allowUnpinned && (!expectedAuthor || !expectedWorkflowId)) {
+    console.warn(
+      "WARNING: workflow identity is NOT pinned — the adapter accepts reports from any " +
+        "workflow routed through the Keystone forwarder. Set EXPECTED_WORKFLOW_AUTHOR + " +
+        "EXPECTED_WORKFLOW_ID and redeploy/reconfigure.",
+    );
+  }
+  console.log("pinned author:", pinnedAuthor, "workflowId:", pinnedWorkflowId, "name:", pinnedWorkflowName);
+
   const record = {
     address: receiverAddress,
     deployer: wallet.address,
     deploymentTransaction: deployTx?.hash ?? null,
     forwarder: SEPOLIA_KEYSTONE_FORWARDER,
     complianceGate: gateDeployment.address,
+    expectedWorkflowAuthor: pinnedAuthor,
+    expectedWorkflowId: pinnedWorkflowId,
+    expectedWorkflowName: pinnedWorkflowName,
     abi: artifact.abi,
   };
   const outPath = join(__dirname, "..", "deployments", "sepolia", "ComplianceGateReceiver.json");

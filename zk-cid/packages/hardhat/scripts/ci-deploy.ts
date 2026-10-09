@@ -24,9 +24,13 @@ async function main() {
   console.log("AccessNFT 部署地址:", await nft.getAddress());
 
   // 4. Wire them together (O(1) Role Binding)
-  const tx = await gate.setVerifier(await nft.getAddress(), true);
-  await tx.wait();
-  console.log("✔ 已配置 AccessNFT 为 ComplianceGate 的 Verifier 角色！");
+  const nftAddress = await nft.getAddress();
+  await (await gate.setAccessNFT(nftAddress)).wait();
+  await (await gate.setVerifier(nftAddress, true)).wait();
+  // 5. Strict mode: the mock only simulates validation, demoMode must stay off so a copied
+  //    deployment can never silently skip proof checks.
+  await (await gate.setDemoMode(false)).wait();
+  console.log("✔ 已配置 AccessNFT 为 Verifier，并关闭 demoMode（严格模式 + Mock 校验）");
 }
 
 main().catch(error => {

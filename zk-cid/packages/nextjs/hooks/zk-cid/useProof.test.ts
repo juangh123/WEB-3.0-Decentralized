@@ -5,9 +5,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // Mock Semaphore v4 protocol modules — we test the hook's state machine,
 // not the actual ZK proof generation.
 vi.mock("@semaphore-protocol/group", () => ({
-  Group: vi.fn().mockImplementation((members: string[]) => ({
-    members,
-  })),
+  // Vitest 4 requires a function/class implementation for constructor mocks.
+  Group: vi.fn(function (this: { members: string[] }, members: string[]) {
+    this.members = members;
+  }),
 }));
 
 vi.mock("@semaphore-protocol/identity", () => ({
@@ -61,7 +62,7 @@ describe("useProof", () => {
     const identity = { getCommitment: () => "0x123" } as any;
 
     await act(async () => {
-      await result.current.generateZkProof(identity, ["0x1"], "1", "0xabc");
+      await result.current.generateZkProof(identity, ["0x0", "0x1"], "1", "0xabc");
     });
 
     expect(result.current.proof).not.toBeNull();
@@ -82,11 +83,33 @@ describe("useProof", () => {
     const identity = { getCommitment: () => "0x123" } as any;
 
     await act(async () => {
-      await result.current.generateZkProof(identity, ["0x1"], "1", "0xabc");
+      await result.current.generateZkProof(identity, ["0x0", "0x1"], "1", "0xabc");
     });
 
     expect(result.current.error).toBe("ZK generation failed");
     expect(result.current.proof).toBeNull();
     expect(result.current.isGenerating).toBe(false);
+  });
+
+  it("preserves zero leaves when rebuilding the on-chain tree", async () => {
+    const { generateProof } = await import("@semaphore-protocol/proof");
+    const { Group } = await import("@semaphore-protocol/group");
+    (generateProof as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      merkleTreeDepth: 2,
+      merkleTreeRoot: 0n,
+      nullifier: 0n,
+      message: 0n,
+      scope: 0n,
+      points: [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n],
+    });
+
+    const { result } = renderHook(() => useProof());
+    const identity = { getCommitment: () => "0x123" } as any;
+
+    await act(async () => {
+      await result.current.generateZkProof(identity, ["0", "123"], "1", "0xabc");
+    });
+
+    expect(Group).toHaveBeenCalledWith(["0", "123"]);
   });
 });

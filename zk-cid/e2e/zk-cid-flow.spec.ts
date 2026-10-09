@@ -19,21 +19,31 @@ test.describe("ZK-CID E2E Flow", () => {
     await expect(page.locator("h1, h2").first()).toBeVisible();
 
     // Verify the page is interactive (no crash)
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+  });
+
+  test("generates a local Semaphore identity without a wallet", async ({ page }) => {
+    await page.goto("/zk-cid");
+
+    // The random-identity path is purely client-side and must work before any wallet connects.
+    await page.getByRole("button", { name: "生成随机匿名身份" }).click();
+
+    await expect(page.getByText("当前本地身份已就绪")).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText("Identity Commitment (公钥哈希):")).toBeVisible();
   });
 
   test("privacy comparison page loads", async ({ page }) => {
     await page.goto("/demo");
 
     await expect(page.locator("h1, h2").first()).toBeVisible();
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
   });
 
   test("debug contracts page loads", async ({ page }) => {
     await page.goto("/debug");
 
     await expect(page.locator("h1, h2").first()).toBeVisible();
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
   });
 
   test("header navigation contains only active pages", async ({ page }) => {

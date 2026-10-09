@@ -38,8 +38,10 @@
 **评委潜台词**：NFT 是不是多此一举？
 **回答策略**：解释可组合性（Composability）。
 **话术**：
-> "在我们的实现里，AccessNFT 不是可选项，而是唯一的验证入口——`ComplianceGate.verifyCompliance` 有 `onlyAccessNFT` 限制，外部 EOA 无法直调，用户必须走 `AccessNFT.mint` 完成 ZK 校验，验证与授权原子完成。
+> "在我们的实现里，AccessNFT 不是可选项，而是默认的验证入口——`ComplianceGate.verifyCompliance` 通过 `verifiers` 白名单（`onlyVerifier`）只允许注册过的验证合约调用，外部 EOA 无法直调；用户必须走 `AccessNFT.mint` 完成 ZK 校验，验证与授权原子完成。
 > 更重要的是**可组合性（Composability）**：一旦用户通过 ZK 验证获得这个 NFT（可以设置为不可转让的 Soulbound Token），其他任何第三方 DeFi 协议都不需要再集成复杂的 Semaphore 验证逻辑了。他们只需要简单地检查 `balanceOf(user) > 0` 就可以放行。这就把零知识证明的复杂性封装了起来，极大地降低了生态接入的门槛。"
+
+> 补充：撤销凭证不会销毁已铸造的 token，因此第三方协议应检查 `AccessNFT.isValid(user)`（组合 `hasMinted` 与 `accessRevoked`），而不是只看 `balanceOf`。
 
 ### Q6. 如果我把我的私钥或者生成的证明发给别人，别人是不是就可以冒充我了？
 **评委潜台词**：如何防止身份借用或买卖？

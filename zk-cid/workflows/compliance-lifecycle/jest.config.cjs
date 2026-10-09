@@ -1,7 +1,21 @@
 /** @type {import('jest').Config} */
 module.exports = {
-  // The CRE simulation test runs under bun (`yarn test:sim`), not jest.
-  // jest has no tests in this workspace; keep it green and out of the way.
+  testEnvironment: "node",
+  // The CRE simulation test needs the bun runtime (`yarn test:sim`) because it drives the
+  // real @chainlink/cre-sdk TestRuntime; jest covers the pure-TS units (poseidon2-lite).
   testPathIgnorePatterns: ["/node_modules/", "/test/compliance-lifecycle.sim.test.ts"],
-  passWithNoTests: true,
+  transform: {
+    "^.+\\.ts$": [
+      "ts-jest",
+      {
+        tsconfig: {
+          module: "CommonJS",
+          target: "ES2022",
+          esModuleInterop: true,
+          resolveJsonModule: true,
+          types: ["jest", "node"],
+        },
+      },
+    ],
+  },
 };

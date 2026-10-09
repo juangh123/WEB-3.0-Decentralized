@@ -17,6 +17,9 @@ contract MockSemaphore is ISemaphore {
     mapping(uint256 => address) public groupAdmins;
     /// @dev groupId -> identityCommitment -> index, enabling O(1) removal per group.
     mapping(uint256 => mapping(uint256 => uint256)) public memberIndices;
+    /// @dev groupId -> mock Merkle root. Mirrors the real Semaphore `getMerkleTreeRoot` so
+    /// ComplianceGate can enforce "proof root == current root" in demo mode.
+    mapping(uint256 => uint256) public groupRoots;
 
     /// @dev Testing hook: when false, `validateProof` reverts and `verifyProof` returns false,
     /// simulating an invalid ZK proof. Defaults to true (every proof passes).
@@ -58,6 +61,7 @@ contract MockSemaphore is ISemaphore {
     function addMember(uint256 groupId, uint256 identityCommitment) external {
         memberIndices[groupId][identityCommitment] = groups[groupId].length;
         groups[groupId].push(identityCommitment);
+        _syncRoot(groupId);
     }
 
     function addMembers(uint256 groupId, uint256[] calldata identityCommitments) external {
@@ -66,6 +70,7 @@ contract MockSemaphore is ISemaphore {
             memberIndices[groupId][identityCommitments[i]] = startIdx + i;
             groups[groupId].push(identityCommitments[i]);
         }
+        _syncRoot(groupId);
     }
 
     function updateMember(
@@ -78,6 +83,7 @@ contract MockSemaphore is ISemaphore {
         groups[groupId][idx] = newIdentityCommitment;
         memberIndices[groupId][newIdentityCommitment] = idx;
         delete memberIndices[groupId][identityCommitment];
+        _syncRoot(groupId);
     }
 
     function removeMember(
@@ -95,6 +101,26 @@ contract MockSemaphore is ISemaphore {
         }
         membersArr.pop();
         delete memberIndices[groupId][identityCommitment];
+        _syncRoot(groupId);
+    }
+
+    /// @dev Mock root rule: empty tree -> 0, single leaf -> the leaf itself (matching the
+    /// real LeanIMT root for one member), otherwise a hash of the ordered member list.
+    function _syncRoot(uint256 groupId) internal {
+        uint256[] storage membersArr = groups[groupId];
+        if (membersArr.length == 0) {
+            groupRoots[groupId] = 0;
+        } else if (membersArr.length == 1) {
+            groupRoots[groupId] = membersArr[0];
+        } else {
+            uint256[] memory snapshot = membersArr;
+            groupRoots[groupId] = uint256(keccak256(abi.encodePacked(snapshot)));
+        }
+    }
+
+    /// @notice Mirrors `ISemaphoreGroups.getMerkleTreeRoot`.
+    function getMerkleTreeRoot(uint256 groupId) external view returns (uint256) {
+        return groupRoots[groupId];
     }
 
     function validateProof(uint256 groupId, SemaphoreProof calldata proof) external view {

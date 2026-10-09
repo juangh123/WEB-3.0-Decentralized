@@ -1,0 +1,28 @@
+version: 2
+updates:
+  # The Yarn workspace lives in /zk-cid, so Dependabot points at that directory.
+  - package-ecosystem: "npm"
+    directory: "/zk-cid"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      nextjs:
+        patterns:
+          - "next"
+          - "eslint-config-next"
+          - "react"
+          - "react-dom"
+      hardhat:
+        patterns:
+          - "hardhat*"
+          - "@nomicfoundation/*"
+      semaphore:
+        patterns:
+          - "@semaphore-protocol/*"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5

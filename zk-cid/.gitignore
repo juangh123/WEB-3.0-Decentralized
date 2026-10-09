@@ -27,6 +27,10 @@ dist
 # build artifacts
 typechain-types/
 coverage/
+# playwright
+test-results/
+playwright-report/
+blob-report/
 
 # agent/tooling local state
 .workbuddy/
@@ -34,6 +38,9 @@ coverage/
 .cursor/
 .mcp.json
 opencode.json
+# Next.js 16 regenerates these on `next dev`; they are local tooling artifacts, not source
+packages/nextjs/AGENTS.md
+packages/nextjs/CLAUDE.md
 
 hardhat-chain.log*
 .vercel

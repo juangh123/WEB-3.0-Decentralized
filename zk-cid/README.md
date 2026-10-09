@@ -130,12 +130,15 @@ ZK-CID 提供了一种**可插拔、无需信任的合规中间件**。对于 De
 
 ## ⚠️ Known Limitations / Demo Mode
 
-为在黑客松期间可重复演示，当前版本存在以下已知限制（均已在代码中显式标注，不回避）：
+当前版本的边界与修复状态（均已在代码中显式标注，不回避）：
 
-- **Demo Mode 默认开启**：`ComplianceGate` 以 `demoMode = true` 部署，本地演示使用 MockSemaphore 校验路径；严格模式需由 issuer 调用 `setDemoMode(false)` 并配置真实的 Semaphore 部署（demoMode 关闭后，`validateProof` 失败必然 revert）。
-- **撤销的 Merkle 语义**：CRE 工作流读取 `getLeaves()`，按链上稳定叶子重建 Semaphore 树并生成真实 siblings，再调用 `revokeCredentialWithMerkleProof` 从树中移除成员；`hasBeenRevoked` 保留为纵深防御标记。
+- **严格模式为部署默认**：`ComplianceGate` 构造函数即 `demoMode = false`；`deploySepolia.ts` / `deployDirect.ts` / `ci-deploy.ts` / `hardhat-deploy` 部署后还会断言严格模式。只有显式 `DEMO_MODE=true`（会高声告警）或 issuer 主动调用 `setDemoMode(true)` 才能打开演示模式。`verifyCompliance` 无论 demo 与否都要求 `proof.merkleTreeRoot == 当前组根`，撤销后的旧证明因此失效。
+- **撤销的 Merkle 语义**：CRE 工作流读取 `getLeaves()`，按链上稳定叶子重建 Semaphore 树并生成真实 siblings，再调用 `revokeCredentialWithMerkleProof` 从树中移除成员。批量撤销时每笔写入后都会重新读取 `getMembers()/getLeaves()` 再计算下一笔 siblings；写链失败不再静默，会以 `status: partial/failed` + `failedCount/failed[]` 上报。
+- **制裁名单输入校验**：工作流只接受 1~78 位十进制、且小于 BN254 标量域的 commitment；非法条目被跳过并计入 `invalidEntries`，不会中断整轮合规检查。
+- **访问凭据可撤销**：`AccessNFT.revokeAccess / restoreAccess / isValid`（仅 issuer 可调用）。被撤销的地址不能转移 token；消费方应检查 `AccessNFT.isValid(account)` 而不是 `balanceOf`（撤销不销毁 token 是有意设计，便于申诉后恢复）。
+- **演示私钥不再进入浏览器**：`NEXT_PUBLIC_DEMO_ISSUER_KEY` 已移除，改为服务端 `/api/demo-issue`（`DEMO_ISSUER_KEY`，仅暴露 `issueCredential`，带限流与 on-chain issuer 匹配校验），默认关闭。
 - **CRE 编译与 simulate 均已实测**：工作流通过 `tsc` 类型检查，WASM 由 `cre-compile` 生成，官方 CLI `cre workflow simulate` 已端到端跑通（日志见 `workflows/compliance-lifecycle/evidence/cre-simulate-20261002-232950.log`，报告目标为 `ComplianceGateReceiver` 适配器）。为此修复了三个真实缺陷：`poseidon-lite` 依赖 `atob`（改用本地 Poseidon(2)）、工作流访问不存在的 `process` 全局、以及工作流目录里冲突的旧 `project.yaml`。
-- **真实广播路径已落地，只差 CRE 网络部署权限**：新增 `contracts/cre/ComplianceGateReceiver.sol`（官方 `ReceiverTemplate` 模式：只接受 Keystone forwarder 调用，可选校验 workflow owner/name/id），已部署到 Sepolia 并把 `ComplianceGate.creWorkflow` 指向它；工作流报告 payload 改为 `abi.encode(uint256 commitment, uint256[] siblings)`。合约侧 7 条测试覆盖 forwarder-only 访问控制与真实撤销流程（`Hardhat contract tests: 30/30`）。由于本地模拟产生的签名不会被生产 forwarder 接受，真正的链上广播需要 `cre account access` 获得的 CRE 网络部署权限。
+- **真实广播路径已落地，只差 CRE 网络部署权限**：新增 `contracts/cre/ComplianceGateReceiver.sol`（官方 `ReceiverTemplate` 模式：只接受 Keystone forwarder 调用；部署脚本默认要求固定 workflow owner/id，未固定时必须显式使用 `ALLOW_UNPINNED_RECEIVER=true`），已部署到 Sepolia 并把 `ComplianceGate.creWorkflow` 指向它；工作流报告 payload 改为 `abi.encode(uint256 commitment, uint256[] siblings)`。合约侧现有 34 条测试覆盖 forwarder-only 访问控制、身份固定接口与真实撤销流程（`Hardhat contract tests: 34/34`）。由于本地模拟产生的签名不会被生产 forwarder 接受，真正的链上广播需要 `cre account access` 获得的 CRE 网络部署权限。
 - **文档中的链上地址**：README / DEMO_SUMMARY 中的地址与交易哈希来自 2026-07-19 本地完整重部署（最新证据），链重启/重部署后以 `packages/hardhat/deployments/localhost/*.json` 为准。
 
 ---

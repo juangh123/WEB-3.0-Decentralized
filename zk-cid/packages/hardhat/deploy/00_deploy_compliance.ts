@@ -92,13 +92,29 @@ const deployContracts: DeployFunction = async function (hreArg: any) {
     autoMine: true,
   });
 
-  // Wire ComplianceGate -> AccessNFT so only the NFT contract can trigger proof verification
-  // (ComplianceGate.verifyCompliance reverts for any other caller).
-  // We skip setting verifier dynamically here to avoid prompt-hang.
-  // Configure AccessNFT as verifier manually via UI or script when needed.
-  console.log(
-    `[Note] Please manually call setVerifier(${accessNFT.address}, true) on ComplianceGate ${complianceGate.address}`,
-  );
+  // Wire ComplianceGate -> AccessNFT and switch to strict mode automatically. Requiring a
+  // manual setVerifier() call is exactly how a deployment ends up half-configured (AccessNFT
+  // cannot verify proofs, or demoMode stays on and ZK validation is skipped).
+  if (hreArg.ethers) {
+    const gateContract = await hreArg.ethers.getContractAt("ComplianceGate", complianceGate.address);
+    await (await gateContract.setAccessNFT(accessNFT.address)).wait();
+    await (await gateContract.setVerifier(accessNFT.address, true)).wait();
+    if (process.env.DEMO_MODE === "true") {
+      await (await gateContract.setDemoMode(true)).wait();
+      console.warn("[WARN] DEMO_MODE=true — on-chain ZK validation is disabled on this deployment.");
+    } else {
+      await (await gateContract.setDemoMode(false)).wait();
+      if (await gateContract.demoMode()) {
+        throw new Error("ComplianceGate.demoMode must be false after deployment");
+      }
+    }
+    console.log(`✔ AccessNFT ${accessNFT.address} wired as verifier on ComplianceGate ${complianceGate.address}`);
+  } else {
+    console.warn(
+      `[Manual step required] call setAccessNFT(${accessNFT.address}) + setVerifier(${accessNFT.address}, true) ` +
+        `+ setDemoMode(false) on ComplianceGate ${complianceGate.address}`,
+    );
+  }
 };
 
 export default deployContracts;

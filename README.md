@@ -28,10 +28,12 @@
 ```bash
 cd zk-cid
 yarn install --immutable
-yarn hardhat:test                                  # contract tests
+yarn test                                          # contracts + frontend unit + CRE jest + mock API
+yarn workspace compliance-lifecycle test:sim       # CRE workflow simulation (bun)
 yarn next:build                                    # frontend production build
-yarn workspace compliance-lifecycle compile        # CRE workflow type check
-yarn workspace zk-cid-mock-sanctions-api test      # mock sanctions API
+yarn e2e:install                                   # one-time Chromium download
+yarn e2e                                           # Playwright E2E (uses the build above)
+yarn npm audit -A --severity high                  # dependency gate (must be clean)
 ```
 
 The Chainlink CRE workflow is also verified with the official CLI — `cre workflow

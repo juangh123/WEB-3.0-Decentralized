@@ -1,3 +1,5 @@
+import { validateCommitment } from "./validate";
+
 export interface SanctionsData {
   source: string;
   updatedAt: string;
@@ -26,11 +28,17 @@ function init(): SanctionsData {
   return {
     source: "Mock OFAC SDN Sanctions List (Demo)",
     updatedAt: new Date().toISOString(),
-    // Seed via SEED_SANCTIONED env var (comma-separated); default: empty list.
+    // Seed via SEED_SANCTIONED env var (comma-separated); default: empty list. Entries that
+    // are not valid decimal commitments are dropped: the CRE workflow would otherwise abort
+    // the whole run on a single malformed seed value.
     sanctionedCommitments: (process.env.SEED_SANCTIONED ?? "")
       .split(",")
       .map((s) => s.trim())
-      .filter(Boolean),
+      .filter(Boolean)
+      .flatMap((entry) => {
+        const validated = validateCommitment(entry);
+        return validated.ok ? [validated.value] : [];
+      }),
   };
 }
 

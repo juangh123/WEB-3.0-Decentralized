@@ -13,6 +13,7 @@
     "compile": "hardhat compile",
     "deploy": "hardhat compile && tsx scripts/deployDirect.ts && tsx scripts/generateTsAbis.ts",
     "deploy:sepolia": "hardhat compile && tsx scripts/deploySepolia.ts && tsx scripts/generateTsAbis.ts",
+    "configure:receiver": "tsx scripts/configureReceiverIdentity.ts",
     "flatten": "hardhat flatten",
     "fork": "MAINNET_FORKING_ENABLED=true hardhat node --network hardhat",
     "format": "prettier --write './**/*.(ts|sol)'",
@@ -21,6 +22,7 @@
     "lint": "eslint",
     "lint-staged": "eslint",
     "test": "hardhat test --network hardhat --gas-stats",
+    "set-strict-mode": "tsx scripts/setStrictMode.ts",
     "verify": "tsx scripts/runVerify.ts"
   },
   "devDependencies": {

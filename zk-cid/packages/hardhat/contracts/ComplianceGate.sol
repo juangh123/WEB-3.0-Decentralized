@@ -2,6 +2,7 @@
 pragma solidity ^0.8.23;
 
 import "@semaphore-protocol/contracts/interfaces/ISemaphore.sol";
+import "@semaphore-protocol/contracts/interfaces/ISemaphoreGroups.sol";
 
 /// @title ComplianceGate v2.2
 /// @notice Issues, verifies and revokes ZK compliance credentials on top of a Semaphore group.
@@ -10,9 +11,9 @@ import "@semaphore-protocol/contracts/interfaces/ISemaphore.sol";
 /// can later be revoked on-chain by the Issuer / CRE workflow.
 ///
 /// Known Limitations / Demo Mode:
-/// - `demoMode` (default: true) skips the on-chain Semaphore ZK validation so mocked proofs can
-///   drive local demos end to end. The issuer can switch it off with `setDemoMode(false)`; in
-///   strict mode any invalid proof reverts inside `semaphore.validateProof` and is never swallowed.
+/// - `demoMode` (default: false) enables strict on-chain Semaphore ZK validation. A demo
+///   deployment must explicitly call `setDemoMode(true)`; invalid proofs are never silently
+///   accepted unless that opt-in is visible on-chain.
 /// - Revocation can be final only after the commitment is removed from the Semaphore tree. This
 ///   contract keeps a stable `leaves` array (removed leaves become zero) so off-chain clients can
 ///   rebuild the exact tree and calculate `merkleProofSiblings`. Both revocation entry points
@@ -44,6 +45,7 @@ contract ComplianceGate {
     event ComplianceVerified(uint256 indexed nullifier);
     event WorkflowUpdated(address indexed workflow);
     event AccessNFTUpdated(address indexed accessNFT);
+    event VerifierUpdated(address indexed verifier, bool status);
     event DemoModeUpdated(bool demoMode);
     event DemoProofAccepted(uint256 indexed nullifier);
 
@@ -69,7 +71,7 @@ contract ComplianceGate {
         require(_semaphore != address(0), "Semaphore address required");
         semaphore = ISemaphore(_semaphore);
         issuer = msg.sender;
-        demoMode = true;
+        demoMode = false;
 
         // Create a dedicated Semaphore group administrated by this contract at deploy time
         // instead of relying on a hard-coded group id.
@@ -89,6 +91,7 @@ contract ComplianceGate {
     /// @notice Register or remove a verifier contract (e.g. AccessNFT) that may call `verifyCompliance`.
     function setVerifier(address _verifier, bool _status) external onlyIssuer {
         verifiers[_verifier] = _status;
+        emit VerifierUpdated(_verifier, _status);
     }
 
     function setDemoMode(bool _demoMode) external onlyIssuer {
@@ -155,15 +158,20 @@ contract ComplianceGate {
     }
 
     /// @notice Verify a Semaphore proof. Callable only by registered verifier contracts.
+    /// @dev The proof must always be built against the CURRENT group root. Any issuance or
+    /// revocation changes the root, so stale proofs (including proofs from revoked members)
+    /// are rejected even in demo mode, where the ZK proof itself is not validated on-chain.
     function verifyCompliance(ISemaphore.SemaphoreProof calldata proof) external onlyVerifier {
         require(!verifiedNullifiers[proof.nullifier], "Replay detected");
-        // Defense in depth for legacy/demo roots. Production revocation removes the member
-        // from the Semaphore tree, so stale proofs fail `validateProof` in strict mode.
-        require(!hasBeenRevoked[proof.merkleTreeRoot], "Credential revoked");
+        require(
+            proof.merkleTreeRoot == ISemaphoreGroups(address(semaphore)).getMerkleTreeRoot(groupId),
+            "Stale or unknown tree root"
+        );
 
         if (demoMode) {
-            // Demo Mode: accept the proof without on-chain ZK validation so mock proofs can
-            // drive the demo. The acceptance is explicit and observable via DemoProofAccepted.
+            // Demo Mode: the ZK proof itself is not validated on-chain (only the root above),
+            // so mocked proofs can drive the demo. The acceptance is explicit and observable
+            // via DemoProofAccepted. Never leave this enabled on a production deployment.
             emit DemoProofAccepted(proof.nullifier);
         } else {
             // Strict Mode: a failing Semaphore validation MUST revert. No try/catch swallowing.

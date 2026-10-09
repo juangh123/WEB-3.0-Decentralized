@@ -85,6 +85,22 @@ async function main() {
   await tx3.wait();
   console.log("setWorkflow done:", deployerAddress);
 
+  // Production default: strict on-chain ZK validation. DEMO_MODE=true is an explicit,
+  // loudly-warned escape hatch for hackathon demo deployments and must never be used
+  // for a production compliance deployment.
+  if (process.env.DEMO_MODE === "true") {
+    const txDemoMode = await gateContract.setDemoMode(true);
+    await txDemoMode.wait();
+    console.warn("WARNING: DEMO_MODE=true — ComplianceGate.verifyCompliance will NOT validate ZK proofs on-chain.");
+  } else {
+    const tx4 = await gateContract.setDemoMode(false);
+    await tx4.wait();
+    if (await gateContract.demoMode()) {
+      throw new Error("ComplianceGate.demoMode must be false after deployment");
+    }
+    console.log("setDemoMode(false) done: strict on-chain ZK validation enabled");
+  }
+
   saveDeployment(Number(chainId), "ComplianceGate", gateAddress, gateReceipt);
   saveDeployment(Number(chainId), "AccessNFT", nftAddress, nftReceipt);
 

@@ -1,19 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { createWalletClient, encodeFunctionData, http } from "viem";
-import { privateKeyToAccount } from "viem/accounts";
-import { sepolia } from "viem/chains";
 import { useAccount } from "wagmi";
-import {
-  useDeployedContractInfo,
-  useScaffoldReadContract,
-  useScaffoldWriteContract,
-  useTransactor,
-} from "~~/hooks/scaffold-eth";
+import { useDeployedContractInfo, useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { useIdentity } from "~~/hooks/zk-cid/useIdentity";
 import { useProof } from "~~/hooks/zk-cid/useProof";
-import { getAlchemyHttpUrl, notification } from "~~/utils/scaffold-eth";
+import { notification } from "~~/utils/scaffold-eth";
 
 type SanctionsPayload = {
   sanctioned: string[];
@@ -44,15 +36,31 @@ export default function ZKCIDDemo() {
   // Read the live member set straight from the contract. Event-history reads start at
   // block 0 on Sepolia, which public RPC endpoints reject or time out, so the demo used
   // to render "0 members" even though the on-chain group already had entries.
-  const { data: onChainMembers, isLoading: isMembersLoading } = useScaffoldReadContract({
+  const {
+    data: onChainMembers,
+    isLoading: isMembersLoading,
+    refetch: refetchMembers,
+  } = useScaffoldReadContract({
     contractName: "ComplianceGate",
     functionName: "getMembers",
+  });
+
+  // Semaphore trees retain revoked leaves as zero values. Reading getMembers() would
+  // rebuild a compact tree with different indices and a different root after any
+  // revocation, so proof generation must use the stable on-chain leaves instead.
+  const { data: onChainLeaves, refetch: refetchLeaves } = useScaffoldReadContract({
+    contractName: "ComplianceGate",
+    functionName: "getLeaves",
   });
 
   const groupMembers = useMemo(() => {
     if (!onChainMembers) return [];
     return (onChainMembers as readonly bigint[]).map(member => member.toString());
   }, [onChainMembers]);
+  const merkleLeaves = useMemo(() => {
+    if (!onChainLeaves) return [];
+    return (onChainLeaves as readonly bigint[]).map(leaf => leaf.toString());
+  }, [onChainLeaves]);
   const { data: gateContract } = useDeployedContractInfo({ contractName: "ComplianceGate" });
   const { data: issuerAddress } = useScaffoldReadContract({
     contractName: "ComplianceGate",
@@ -67,24 +75,24 @@ export default function ZKCIDDemo() {
     functionName: "creWorkflow",
   });
 
-  // Optional demo issuer. When NEXT_PUBLIC_DEMO_ISSUER_KEY is set, visitors can walk the
-  // full issue -> prove -> mint flow without holding the issuer wallet. Leave it unset to
-  // require the real issuer (default). The key is a testnet-only credential and is exposed
-  // to the browser by design, so never point this at a wallet holding real value.
-  const demoIssuerKey = process.env.NEXT_PUBLIC_DEMO_ISSUER_KEY as `0x${string}` | undefined;
-  const demoIssuerWallet = useMemo(() => {
-    if (!demoIssuerKey || !demoIssuerKey.startsWith("0x")) return undefined;
-    try {
-      return createWalletClient({
-        account: privateKeyToAccount(demoIssuerKey),
-        chain: sepolia,
-        transport: http(getAlchemyHttpUrl(sepolia.id)),
+  // The demo issuer key is server-only: /api/demo-issue holds it and exposes just
+  // `issueCredential`. The browser only learns whether the bridge is enabled.
+  const [demoIssuerEnabled, setDemoIssuerEnabled] = useState(false);
+  const [isDemoIssuing, setIsDemoIssuing] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/demo-issue", { cache: "no-store" })
+      .then(response => (response.ok ? response.json() : { enabled: false }))
+      .then((payload: { enabled?: boolean }) => {
+        if (!cancelled) setDemoIssuerEnabled(Boolean(payload?.enabled));
+      })
+      .catch(() => {
+        if (!cancelled) setDemoIssuerEnabled(false);
       });
-    } catch {
-      return undefined;
-    }
-  }, [demoIssuerKey]);
-  const demoTransactor = useTransactor(demoIssuerWallet);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const isIssuerWallet =
     !!address && !!issuerAddress && address.toLowerCase() === (issuerAddress as string).toLowerCase();
@@ -170,20 +178,24 @@ export default function ZKCIDDemo() {
       setActiveTab("user");
       return;
     }
-    if (!demoIssuerWallet || !gateContract) return;
+    if (!demoIssuerEnabled || isDemoIssuing) return;
+    setIsDemoIssuing(true);
     try {
-      await demoTransactor({
-        to: gateContract.address,
-        data: encodeFunctionData({
-          abi: gateContract.abi,
-          functionName: "issueCredential",
-          args: [BigInt(identity.commitment.toString())],
-        }),
+      const response = await fetch("/api/demo-issue", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ commitment: identity.commitment.toString() }),
       });
+      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+      if (!response.ok) throw new Error(payload.error || `HTTP ${response.status}`);
+
       notification.success("演示机构已发证上链（Demo Issuer）。");
+      await Promise.all([refetchMembers(), refetchLeaves()]);
     } catch (e: any) {
       console.error(e);
-      notification.error(e?.message || "演示机构发证失败，请检查 RPC 与演示私钥配置。");
+      notification.error(e?.message || "演示机构发证失败，请检查服务端 Demo Issuer 配置。");
+    } finally {
+      setIsDemoIssuing(false);
     }
   };
 
@@ -197,7 +209,7 @@ export default function ZKCIDDemo() {
     if (groupId === undefined) {
       return notification.error("合约 Group ID 加载中，请稍候...");
     }
-    if (groupMembers.length === 0) {
+    if (merkleLeaves.length === 0) {
       notification.error("链上群组暂无任何成员！请先前往 Tab 2 进行 KYC 发证。");
       setActiveTab("issuer");
       return;
@@ -209,7 +221,7 @@ export default function ZKCIDDemo() {
     }
 
     try {
-      const generated = await generateZkProof(identity, groupMembers, groupId, address);
+      const generated = await generateZkProof(identity, merkleLeaves, groupId, address);
       if (generated) {
         notification.success("零知识证明生成成功！现可前往 Tab 3 进行链上验证与铸造。");
       }
@@ -469,10 +481,10 @@ export default function ZKCIDDemo() {
               <div className={`alert text-xs py-2 shadow-sm ${isIssuerWallet ? "alert-success" : "alert-info"}`}>
                 {isIssuerWallet ? (
                   <span>当前钱包即为发证机构，可直接为本 Commitment 发证上链。</span>
-                ) : demoIssuerWallet ? (
+                ) : demoIssuerEnabled ? (
                   <span>
-                    当前钱包不是发证机构。合约仅允许 Issuer 发证，可点击下方「演示机构发证」用内置 Demo Issuer
-                    完成上链（测试网演示专用）。
+                    当前钱包不是发证机构。合约仅允许 Issuer 发证，可点击下方「演示机构发证」由服务端 Demo Issuer
+                    代为上链（私钥不进入浏览器，测试网演示专用）。
                   </span>
                 ) : (
                   <span>
@@ -501,9 +513,19 @@ export default function ZKCIDDemo() {
               )}
             </button>
 
-            {demoIssuerWallet && !isMemberInGroup && identity && (
-              <button className="btn btn-outline btn-secondary w-full" onClick={handleDemoIssue}>
-                演示机构发证（Demo Issuer / 测试网专用）
+            {demoIssuerEnabled && !isMemberInGroup && identity && (
+              <button
+                className="btn btn-outline btn-secondary w-full"
+                onClick={handleDemoIssue}
+                disabled={isDemoIssuing}
+              >
+                {isDemoIssuing ? (
+                  <>
+                    <span className="loading loading-spinner"></span> 演示机构发证中（等待链上确认）...
+                  </>
+                ) : (
+                  "演示机构发证（Demo Issuer / 测试网专用）"
+                )}
               </button>
             )}
 
