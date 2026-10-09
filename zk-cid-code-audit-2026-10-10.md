@@ -356,7 +356,7 @@ Mock API: 无 token / dev-token 均 401
 
 | 编号 | 修复内容 | 关键改动 | 验证 |
 | --- | --- | --- | --- |
-| H1 | `ComplianceGate` 构造默认 `demoMode = false`（严格模式），只有部署脚本显式 `DEMO_MODE=true` 或 issuer 主动调用才能打开；demo 模式也强制 `proof.merkleTreeRoot == 当前组根`；删除 `hasBeenRevoked[proof.merkleTreeRoot]` 误用；`setVerifier` 新增 `VerifierUpdated` 事件 | `ComplianceGate.sol`、`MockSemaphore.sol`、`deploySepolia.ts`、`deployDirect.ts`、`ci-deploy.ts`、`deploy/00_deploy_compliance.ts` | 合约测试 34 passing |
+| H1 | `ComplianceGate` 构造默认 `demoMode = false`（严格模式），只有部署脚本显式 `DEMO_MODE=true` 或 issuer 主动调用才能打开；demo 模式也强制 `proof.merkleTreeRoot == 当前组根`；删除 `hasBeenRevoked[proof.merkleTreeRoot]` 误用；`setVerifier` 新增 `VerifierUpdated` 事件。**线上 Sepolia 已执行 `setDemoMode(false)`（2026-10-10，tx `0xaab09625…ca2f`，独立 RPC 复核实测 `demoMode=false`）** | `ComplianceGate.sol`、`MockSemaphore.sol`、部署脚本、`scripts/setStrictMode.ts` | 合约测试 34 passing + 线上复核 |
 | H2 | 前端改用 `getLeaves()`（含置零稳定叶子）重建 Merkle 树，并加链上根回归测试 | `app/zk-cid/page.tsx`、`hooks/zk-cid/useProof.ts`、`utils/zk-cid/groupRoot.test.ts` | 根快照测试（`[0,0,c]` 重建根 == 链上根） |
 | H3 | CRE 批量撤销每笔写入后重读 `getMembers()/getLeaves()`；失败以 `partial/failed + failedCount/failed[]` 上报 | `workflows/compliance-lifecycle/core.ts`、`test/compliance-lifecycle.sim.test.ts` | bun 仿真 9 passing（含 3 成员批量、写失败部分成功） |
 | H4 | Receiver 部署脚本在未设置 `EXPECTED_WORKFLOW_AUTHOR + EXPECTED_WORKFLOW_ID` 时拒绝部署（`ALLOW_UNPINNED_RECEIVER=true` 为显式逃生口） | `deployComplianceGateReceiver.ts`、`hardhat/.env.example`、`SEPOLIA_DEPLOYMENT.md` | hardhat check-types 0 错误 |
@@ -376,7 +376,7 @@ Mock API: 无 token / dev-token 均 401
 **仍需人工/线上执行（代码无法代替）**
 
 1. 轮换 Vercel Token（`.vercel/.env`）与 issuer 私钥；如按"已泄露"处理，需要新部署并迁移 `creWorkflow` / verifier / 前端地址。
-2. 对已部署的 Sepolia `ComplianceGate` 执行 `yarn hardhat:set-strict-mode`；对已部署的 `ComplianceGateReceiver` 设置 `EXPECTED_WORKFLOW_AUTHOR` + `EXPECTED_WORKFLOW_ID` 后执行 `yarn hardhat:configure:receiver`（前端树重建修复已就绪，建议先部署前端再关闭 demoMode）。
-3. 把修复后的前端/服务端部署到 Vercel，并在服务端配置 `DEMO_ISSUER_KEY`（如需演示发证）。
+2. ~~对已部署的 Sepolia `ComplianceGate` 执行 `setDemoMode(false)`~~ 已完成（2026-10-10，tx `0xaab09625…ca2f`）。剩余：对已部署的 `ComplianceGateReceiver` 设置 `EXPECTED_WORKFLOW_AUTHOR` + `EXPECTED_WORKFLOW_ID` 后执行 `yarn hardhat:configure:receiver`。
+3. ~~把修复后的前端/服务端部署到 Vercel~~ 已完成（`main` → 生产部署 READY，线上 `/zk-cid`、`/api/sanctions` 正常，前端 bundle 不含私钥）。剩余：如需开放访客「发证 → 证明 → mint」演示，需显式批准在 Vercel 配置服务端 `DEMO_ISSUER_KEY`。
 4. 将 CRE 工作流部署到 CRE 网络（当前仅有本地 simulate 证据）。
 5. 重新生成 `packages/nextjs/contracts/deployedContracts.ts`，让前端可用 `AccessNFT` 的新接口（当前页面未调用，非阻塞）。

@@ -250,9 +250,9 @@ Current live demo state after re-issuing a fresh commitment:
 Verified state:
 
 - `ComplianceGate.groupId = 712`
-- `ComplianceGate.demoMode = true` on the currently deployed Sepolia contract; new code
-  defaults to strict mode, but this live contract still needs an issuer
-  `setDemoMode(false)` transaction after the frontend fix is deployed.
+- `ComplianceGate.demoMode = false` (strict mode) since 2026-10-10, tx
+  `0xaab0962578786f644c6b1d39a5bb2a643c7ebdd2e20c1ea60647b447e57eca2f`. The fixed frontend
+  (rebuilt from stable `getLeaves()`) is live at the production URL.
 - `ComplianceGate.getMembers() = [123456789012345678901234567890123456789]`
 - `ComplianceGate.getLeaves() = [123456789012345678901234567890123456789, 0]`
 - Rebuilt Semaphore root equals on-chain `getMerkleTreeRoot(712)`
@@ -338,9 +338,12 @@ the official CLI v1.36.0; the raw log lives in
 
 ## Known Production Gaps
 
-- The live Sepolia contract still has `demoMode = true`. The frontend now rebuilds proofs
-  from `getLeaves()`, and the deployment scripts default to strict mode, but an issuer
-  transaction is still required to switch this already-deployed instance off.
+- ~~Live contract still in demo mode~~ Resolved 2026-10-10: the live Sepolia
+  `ComplianceGate` is now in strict mode (tx `0xaab09625…ca2f`), and the deployment scripts
+  default to strict mode for any new deployment. The server-side `/api/demo-issue` bridge
+  intentionally stays disabled until a `DEMO_ISSUER_KEY` is configured (uploading the issuer
+  key to the hosting provider requires explicit approval), so the public "issue → prove →
+  mint" walkthrough only works for wallets that already hold a credential.
 - The live `ComplianceGateReceiver` has `expectedAuthor / expectedWorkflowId` unset. The
   deployment script now refuses to create an unpinned receiver unless the explicit
   `ALLOW_UNPINNED_RECEIVER=true` escape hatch is used; the existing live receiver must be
