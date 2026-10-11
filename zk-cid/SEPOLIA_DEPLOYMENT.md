@@ -340,10 +340,12 @@ the official CLI v1.36.0; the raw log lives in
 
 - ~~Live contract still in demo mode~~ Resolved 2026-10-10: the live Sepolia
   `ComplianceGate` is now in strict mode (tx `0xaab09625…ca2f`), and the deployment scripts
-  default to strict mode for any new deployment. The server-side `/api/demo-issue` bridge
-  intentionally stays disabled until a `DEMO_ISSUER_KEY` is configured (uploading the issuer
-  key to the hosting provider requires explicit approval), so the public "issue → prove →
-  mint" walkthrough only works for wallets that already hold a credential.
+  default to strict mode for any new deployment.
+- ~~Demo issuer bridge disabled~~ Resolved 2026-10-11: production Vercel env now carries
+  `DEMO_ISSUER_KEY` (production only) + `DEMO_ISSUER_RPC_URL`; `/api/demo-issue` reports
+  `enabled: true` and the public "issue → prove → mint" walkthrough is available. The path was
+  verified with real transactions: server-side issuance `0x6206c00f…` (issued a throwaway
+  identity, then revoked it with `0x5d04c889…` to restore the group).
 - The live `ComplianceGateReceiver` has `expectedAuthor / expectedWorkflowId` unset. The
   deployment script now refuses to create an unpinned receiver unless the explicit
   `ALLOW_UNPINNED_RECEIVER=true` escape hatch is used; the existing live receiver must be

@@ -377,6 +377,6 @@ Mock API: 无 token / dev-token 均 401
 
 1. 轮换 Vercel Token（`.vercel/.env`）与 issuer 私钥；如按"已泄露"处理，需要新部署并迁移 `creWorkflow` / verifier / 前端地址。
 2. ~~对已部署的 Sepolia `ComplianceGate` 执行 `setDemoMode(false)`~~ 已完成（2026-10-10，tx `0xaab09625…ca2f`）。剩余：对已部署的 `ComplianceGateReceiver` 设置 `EXPECTED_WORKFLOW_AUTHOR` + `EXPECTED_WORKFLOW_ID` 后执行 `yarn hardhat:configure:receiver`。
-3. ~~把修复后的前端/服务端部署到 Vercel~~ 已完成（`main` → 生产部署 READY，线上 `/zk-cid`、`/api/sanctions` 正常，前端 bundle 不含私钥）。剩余：如需开放访客「发证 → 证明 → mint」演示，需显式批准在 Vercel 配置服务端 `DEMO_ISSUER_KEY`。
+3. ~~把修复后的前端/服务端部署到 Vercel~~ 已完成（`main` → 生产部署 READY，线上 `/zk-cid`、`/api/sanctions` 正常，前端 bundle 不含私钥）。~~服务端 `DEMO_ISSUER_KEY`~~ 也已完成（2026-10-11，仅 production 环境变量；`/api/demo-issue` 实测 `enabled:true` 且 issuer 与链上一致，真实发证 tx `0x6206c00f…` + 撤销 tx `0x5d04c889…`，生产 UI 冒烟通过）。
 4. 将 CRE 工作流部署到 CRE 网络（当前仅有本地 simulate 证据）。
 5. 重新生成 `packages/nextjs/contracts/deployedContracts.ts`，让前端可用 `AccessNFT` 的新接口（当前页面未调用，非阻塞）。

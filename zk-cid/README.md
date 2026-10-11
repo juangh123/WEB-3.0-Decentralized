@@ -133,7 +133,7 @@ ZK-CID 提供了一种**可插拔、无需信任的合规中间件**。对于 De
 当前版本的边界与修复状态（均已在代码中显式标注，不回避）：
 
 - **严格模式为部署默认**：`ComplianceGate` 构造函数即 `demoMode = false`；`deploySepolia.ts` / `deployDirect.ts` / `ci-deploy.ts` / `hardhat-deploy` 部署后还会断言严格模式。只有显式 `DEMO_MODE=true`（会高声告警）或 issuer 主动调用 `setDemoMode(true)` 才能打开演示模式。`verifyCompliance` 无论 demo 与否都要求 `proof.merkleTreeRoot == 当前组根`，撤销后的旧证明因此失效。
-- **线上 Sepolia 已切换严格模式**（2026-10-10，tx `0xaab09625…ca2f`）。服务端 Demo Issuer（`/api/demo-issue`）默认关闭：访客要完整走通「发证 → 证明 → mint」需要部署时配置 `DEMO_ISSUER_KEY`（该操作会把 issuer 私钥上传到托管平台，需显式批准）；未配置时演示仅对已持有凭证的钱包可用。
+- **线上 Sepolia 已切换严格模式**（2026-10-10，tx `0xaab09625…ca2f`）。生产环境已配置服务端 Demo Issuer：`DEMO_ISSUER_KEY` 仅存放于 Vercel production 环境变量，`/api/demo-issue` 只暴露 `issueCredential`，带限流与链上 issuer 匹配校验；访客可完整走通「生成身份 → 演示发证 → 生成证明 → mint」。2026-10-11 已用真实交易验证发证与撤销路径（发证 tx `0x6206c00f…`，撤销 tx `0x5d04c889…`）。
 - **撤销的 Merkle 语义**：CRE 工作流读取 `getLeaves()`，按链上稳定叶子重建 Semaphore 树并生成真实 siblings，再调用 `revokeCredentialWithMerkleProof` 从树中移除成员。批量撤销时每笔写入后都会重新读取 `getMembers()/getLeaves()` 再计算下一笔 siblings；写链失败不再静默，会以 `status: partial/failed` + `failedCount/failed[]` 上报。
 - **制裁名单输入校验**：工作流只接受 1~78 位十进制、且小于 BN254 标量域的 commitment；非法条目被跳过并计入 `invalidEntries`，不会中断整轮合规检查。
 - **访问凭据可撤销**：`AccessNFT.revokeAccess / restoreAccess / isValid`（仅 issuer 可调用）。被撤销的地址不能转移 token；消费方应检查 `AccessNFT.isValid(account)` 而不是 `balanceOf`（撤销不销毁 token 是有意设计，便于申诉后恢复）。
