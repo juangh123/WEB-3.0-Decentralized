@@ -344,6 +344,26 @@ the official CLI v1.36.0; the raw log lives in
 
 ## Known Production Gaps
 
+### Issuer Key Rotation (prepared, not executed)
+
+The gate's `issuer` is fixed at construction, so rotating the issuer key means deploying a new
+contract set. All ops scripts already accept the encrypted keystore
+(`DEPLOYER_PRIVATE_KEY_ENCRYPTED`, unlocked with a password prompt), so the plaintext key can be
+removed first:
+
+1. `cd zk-cid && yarn account:generate` (fresh key) or `yarn account:import` (existing key,
+   interactive) — both write `DEPLOYER_PRIVATE_KEY_ENCRYPTED` into `packages/hardhat/.env`.
+2. Delete the plaintext `DEPLOYER_PRIVATE_KEY` line and fund the new address with Sepolia ETH.
+3. `yarn hardhat:deploy:sepolia` — deploys a new ComplianceGate + AccessNFT (the script asserts
+   strict mode).
+4. `yarn hardhat:configure:receiver` with `EXPECTED_WORKFLOW_AUTHOR` / `EXPECTED_WORKFLOW_ID` to
+   wire and pin the CRE write path.
+5. `yarn check:addresses`, then update `workflows/compliance-lifecycle/config.json`,
+   `SEPOLIA_DEPLOYMENT.md`, the root README and the deliverables with the new addresses.
+6. Replace `DEMO_ISSUER_KEY` in the Vercel production environment, redeploy, and verify
+   `/api/demo-issue` reports the new issuer address.
+7. The old gate/NFT stay on-chain as historical artifacts; stop referencing them anywhere.
+
 - ~~Live contract still in demo mode~~ Resolved 2026-10-10: the live Sepolia
   `ComplianceGate` is now in strict mode (tx `0xaab09625…ca2f`), and the deployment scripts
   default to strict mode for any new deployment.

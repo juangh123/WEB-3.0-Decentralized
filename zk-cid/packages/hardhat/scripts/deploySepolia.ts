@@ -3,12 +3,16 @@ import { ethers } from "ethers";
 import { readFileSync, writeFileSync, mkdirSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
+import { getDeployerWallet } from "./deployerWallet.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const ALCHEMY_API_KEY = process.env.ALCHEMY_API_KEY ?? "";
-const DEPLOYER_PRIVATE_KEY = process.env.DEPLOYER_PRIVATE_KEY ?? "";
-const SEPOLIA_RPC_URL = `https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}`;
+const SEPOLIA_RPC_URL =
+  process.env.SEPOLIA_RPC_URL ??
+  (ALCHEMY_API_KEY
+    ? `https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}`
+    : "https://ethereum-sepolia-rpc.publicnode.com");
 const SEPOLIA_SEMAPHORE = "0x8A1fd199516489B0Fb7153EB5f075cDAC83c693D";
 
 function loadArtifact(name: string) {
@@ -41,13 +45,8 @@ function saveDeployment(
 }
 
 async function main() {
-  if (!ALCHEMY_API_KEY || !DEPLOYER_PRIVATE_KEY) {
-    throw new Error("Missing ALCHEMY_API_KEY or DEPLOYER_PRIVATE_KEY in packages/hardhat/.env");
-  }
-
   const provider = new ethers.JsonRpcProvider(SEPOLIA_RPC_URL);
-  const rawWallet = new ethers.Wallet(DEPLOYER_PRIVATE_KEY, provider);
-  const deployer = new ethers.NonceManager(rawWallet);
+  const deployer = new ethers.NonceManager(await getDeployerWallet(provider, "Sepolia deploy"));
   const deployerAddress = await deployer.getAddress();
   const chainId = (await provider.getNetwork()).chainId;
 

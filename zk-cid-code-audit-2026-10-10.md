@@ -419,3 +419,9 @@ Mock API: 无 token / dev-token 均 401
 - `next build`、`hardhat:check-types`、`next:check-types`、`next:lint --max-warnings=0`、`workflow tsc`、`mock-api tsc` 全部 0 错误
 - `yarn check:addresses` 通过；`yarn npm audit -A --severity high` → No audit suggestions
 - 生产站点实测：`/zk-cid` 200、`/api/demo-issue` → `enabled:true` + issuer 与链上一致、`/api/sanctions` 200、新「链上撤销记录」面板渲染正常、部署产物包含 v2 AccessNFT 地址 `0x7A52…`（Playwright 生产冒烟通过）
+
+**第三轮补充（2026-10-11）**
+
+- **CRE 部署权限复查（实测）**：`cre account access` 仍返回 "Deployment access is not yet enabled for your organization."，未重复提交申请。H4 的线上 Receiver 身份固定继续等待 Chainlink 审批，拿到 `EXPECTED_WORKFLOW_AUTHOR/ID` 后一条命令即可完成。
+- **生产控制台噪音修复**：wagmi 回退链此前把 viem 内置的 Sepolia 默认端点（浏览器端间歇性 CORS 失败）排在最前，导致每次读取先报错再回退；现在显式、CORS 友好的公共 RPC（publicnode）排在其前面，生产冒烟实测控制台错误清零。
+- **H7 预置完成**：`deploySepolia` / `deployComplianceGateReceiver` / `setStrictMode` / `configureReceiverIdentity` / `replaceAccessNFT` 全部支持加密 keystore（`DEPLOYER_PRIVATE_KEY_ENCRYPTED` + 交互密码，`scripts/deployerWallet.ts`），并在 `SEPOLIA_DEPLOYMENT.md` 增加「Issuer Key Rotation」runbook——用户执行一次 `account:import`/`account:generate` 后即可安全删除明文私钥。

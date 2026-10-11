@@ -11,6 +11,7 @@ import { ethers } from "ethers";
 import { readFileSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
+import { getDeployerWallet } from "./deployerWallet.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -21,15 +22,11 @@ async function main() {
       ? `https://eth-sepolia.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`
       : "https://ethereum-sepolia-rpc.publicnode.com");
 
-  if (!process.env.DEPLOYER_PRIVATE_KEY) {
-    throw new Error("DEPLOYER_PRIVATE_KEY is required (must be the gate issuer)");
-  }
-
   const deployment = JSON.parse(
     readFileSync(join(__dirname, "..", "deployments", "sepolia", "ComplianceGate.json"), "utf8"),
   );
   const provider = new ethers.JsonRpcProvider(rpcUrl);
-  const wallet = new ethers.Wallet(process.env.DEPLOYER_PRIVATE_KEY, provider);
+  const wallet = await getDeployerWallet(provider, "set strict mode");
   const gate = new ethers.Contract(deployment.address, deployment.abi, wallet);
 
   const onChainIssuer = await gate.issuer();

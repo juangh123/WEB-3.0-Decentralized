@@ -12,6 +12,7 @@ import { ethers } from "ethers";
 import { readFileSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
+import { getDeployerWallet } from "./deployerWallet.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -21,10 +22,6 @@ async function main() {
     (process.env.ALCHEMY_API_KEY
       ? `https://eth-sepolia.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`
       : "https://ethereum-sepolia-rpc.publicnode.com");
-
-  if (!process.env.DEPLOYER_PRIVATE_KEY) {
-    throw new Error("DEPLOYER_PRIVATE_KEY is required (must be the Receiver owner)");
-  }
 
   const author = process.env.EXPECTED_WORKFLOW_AUTHOR?.trim() ?? "";
   const workflowId = process.env.EXPECTED_WORKFLOW_ID?.trim() ?? "";
@@ -41,7 +38,7 @@ async function main() {
     readFileSync(join(__dirname, "..", "deployments", "sepolia", "ComplianceGateReceiver.json"), "utf8"),
   );
   const provider = new ethers.JsonRpcProvider(rpcUrl);
-  const wallet = new ethers.Wallet(process.env.DEPLOYER_PRIVATE_KEY, provider);
+  const wallet = await getDeployerWallet(provider, "configure receiver");
   const receiver = new ethers.Contract(deployment.address, deployment.abi, wallet);
 
   const owner = await receiver.owner();
