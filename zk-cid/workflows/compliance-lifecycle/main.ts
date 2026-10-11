@@ -17,4 +17,7 @@ export async function main() {
   await runner.run(initWorkflow);
 }
 
-main();
+main().catch(error => {
+  console.error("compliance-lifecycle runner failed:", error);
+  process.exit(1);
+});

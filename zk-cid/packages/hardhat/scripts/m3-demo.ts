@@ -4,12 +4,9 @@ import { Group } from "@semaphore-protocol/group";
 import { readFileSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
+import { LOCAL_PRIVATE_KEY, LOCAL_RPC_URL } from "./localDev.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-
-// LOCAL USE ONLY: Anvil/Hardhat default account #0 private key. Never use on any live network.
-const LOCAL_PRIVATE_KEY = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
-const LOCAL_RPC_URL = "http://127.0.0.1:8545";
 
 // Resolve deployed contract addresses from deployments/localhost/*.json (written by the deploy scripts).
 function loadDeployedAddress(name: string): string {

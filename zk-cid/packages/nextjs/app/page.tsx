@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { NextPage } from "next";
-import { BeakerIcon, BugAntIcon, FingerPrintIcon, RocketLaunchIcon, ScaleIcon } from "@heroicons/react/24/outline";
+import { BeakerIcon, FingerPrintIcon, RocketLaunchIcon, ScaleIcon } from "@heroicons/react/24/outline";
 
 const entries = [
   {
@@ -21,12 +21,6 @@ const entries = [
     icon: <BeakerIcon className="h-8 w-8" />,
     title: "ZK Engine Test",
     desc: "Pure front-end Semaphore flow: identity → group → proof → verification.",
-  },
-  {
-    href: "/debug",
-    icon: <BugAntIcon className="h-8 w-8" />,
-    title: "Debug Contracts",
-    desc: "Inspect and call ComplianceGate & AccessNFT directly.",
   },
 ];
 

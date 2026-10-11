@@ -59,9 +59,9 @@ Known limitations (demo mode, broadcast boundary) are listed in
 ## Live Deployment
 
 - **ComplianceGate (Sepolia)**: `0x1b8ae78C37c3E29DFcB0236E1c562b3CCFA44F70`
-- **AccessNFT (Sepolia)**: `0x5e7140b8c967440A5B7Db15a4B82F4e4428cCc32`
+- **AccessNFT (Sepolia)**: `0x7A52459d8eEF432fa3F044c152dd36ba1F3F931f`
 - **Mock sanctions API**: [https://mock-api-topaz-zeta.vercel.app/api/sanctions-list](https://mock-api-topaz-zeta.vercel.app/api/sanctions-list)
-- **Verified source**: [ComplianceGate](https://eth-sepolia.blockscout.com/address/0x1b8ae78C37c3E29DFcB0236E1c562b3CCFA44F70#code) · [AccessNFT](https://eth-sepolia.blockscout.com/address/0x5e7140b8c967440A5B7Db15a4B82F4e4428cCc32#code) (Blockscout + Sourcify)
+- **Verified source**: [ComplianceGate](https://eth-sepolia.blockscout.com/address/0x1b8ae78C37c3E29DFcB0236E1c562b3CCFA44F70#code) · [AccessNFT](https://eth-sepolia.blockscout.com/address/0x7A52459d8eEF432fa3F044c152dd36ba1F3F931f#code) (Blockscout + Sourcify)
 - **CRE write path**: [ComplianceGateReceiver](https://eth-sepolia.blockscout.com/address/0xB5ad6413a16efd82b76212830f908B2D67C20425#code) `0xB5ad6413a16efd82b76212830f908B2D67C20425` — accepts DON reports from the Sepolia Keystone forwarder and forwards them to the gate; `ComplianceGate.creWorkflow` points at it
 
 ## Quick Overview

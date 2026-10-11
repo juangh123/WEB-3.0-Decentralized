@@ -139,6 +139,8 @@ ZK-CID 提供了一种**可插拔、无需信任的合规中间件**。对于 De
 - **访问凭据可撤销**：`AccessNFT.revokeAccess / restoreAccess / isValid`（仅 issuer 可调用）。被撤销的地址不能转移 token；消费方应检查 `AccessNFT.isValid(account)` 而不是 `balanceOf`（撤销不销毁 token 是有意设计，便于申诉后恢复）。
 - **演示私钥不再进入浏览器**：`NEXT_PUBLIC_DEMO_ISSUER_KEY` 已移除，改为服务端 `/api/demo-issue`（`DEMO_ISSUER_KEY`，仅暴露 `issueCredential`，带限流与 on-chain issuer 匹配校验），默认关闭。
 - **CRE 编译与 simulate 均已实测**：工作流通过 `tsc` 类型检查，WASM 由 `cre-compile` 生成，官方 CLI `cre workflow simulate` 已端到端跑通（日志见 `workflows/compliance-lifecycle/evidence/cre-simulate-20261002-232950.log`，报告目标为 `ComplianceGateReceiver` 适配器）。为此修复了三个真实缺陷：`poseidon-lite` 依赖 `atob`（改用本地 Poseidon(2)）、工作流访问不存在的 `process` 全局、以及工作流目录里冲突的旧 `project.yaml`。
+- **Scope 与 nullifier 限制**：前端以 `scope = groupId` 生成证明，Semaphore 的 nullifier 由 `(identity, scope)` 决定，因此同一身份在同一群组只能生成一次可用证明；扩展到多业务域时需要按业务定义 scope（当前演示只有一个业务域，未改协议）。
+- **模板默认 key**：`scaffold.config.ts` 中保留的 Alchemy / WalletConnect 默认值是 SE-2 模板的公共共享 key，仅够原型使用；生产部署应通过 `NEXT_PUBLIC_ALCHEMY_API_KEY` / `NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID` 配置自己的 key，避免限流影响演示。
 - **真实广播路径已落地，只差 CRE 网络部署权限**：新增 `contracts/cre/ComplianceGateReceiver.sol`（官方 `ReceiverTemplate` 模式：只接受 Keystone forwarder 调用；部署脚本默认要求固定 workflow owner/id，未固定时必须显式使用 `ALLOW_UNPINNED_RECEIVER=true`），已部署到 Sepolia 并把 `ComplianceGate.creWorkflow` 指向它；工作流报告 payload 改为 `abi.encode(uint256 commitment, uint256[] siblings)`。合约侧现有 34 条测试覆盖 forwarder-only 访问控制、身份固定接口与真实撤销流程（`Hardhat contract tests: 34/34`）。由于本地模拟产生的签名不会被生产 forwarder 接受，真正的链上广播需要 `cre account access` 获得的 CRE 网络部署权限。
 - **文档中的链上地址**：README / DEMO_SUMMARY 中的地址与交易哈希来自 2026-07-19 本地完整重部署（最新证据），链重启/重部署后以 `packages/hardhat/deployments/localhost/*.json` 为准。
 

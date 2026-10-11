@@ -379,4 +379,36 @@ Mock API: 无 token / dev-token 均 401
 2. ~~对已部署的 Sepolia `ComplianceGate` 执行 `setDemoMode(false)`~~ 已完成（2026-10-10，tx `0xaab09625…ca2f`）。剩余：对已部署的 `ComplianceGateReceiver` 设置 `EXPECTED_WORKFLOW_AUTHOR` + `EXPECTED_WORKFLOW_ID` 后执行 `yarn hardhat:configure:receiver`。
 3. ~~把修复后的前端/服务端部署到 Vercel~~ 已完成（`main` → 生产部署 READY，线上 `/zk-cid`、`/api/sanctions` 正常，前端 bundle 不含私钥）。~~服务端 `DEMO_ISSUER_KEY`~~ 也已完成（2026-10-11，仅 production 环境变量；`/api/demo-issue` 实测 `enabled:true` 且 issuer 与链上一致，真实发证 tx `0x6206c00f…` + 撤销 tx `0x5d04c889…`，生产 UI 冒烟通过）。
 4. 将 CRE 工作流部署到 CRE 网络（当前仅有本地 simulate 证据）。
-5. 重新生成 `packages/nextjs/contracts/deployedContracts.ts`，让前端可用 `AccessNFT` 的新接口（当前页面未调用，非阻塞）。
+5. ~~重新生成 `packages/nextjs/contracts/deployedContracts.ts`~~ 已完成（2026-10-11，指向 v2 `0x7A52…`）。
+
+---
+
+## 十一、第二轮闭环（2026-10-11）
+
+| 事项 | 处理 | 证据 |
+| --- | --- | --- |
+| H5 线上生效 | 线上 `AccessNFT` 替换为含 `revokeAccess / restoreAccess / isValid` 的 v2：`0x7A52459d8eEF432fa3F044c152dd36ba1F3F931f`（deploy tx `0x50fcc360…`）。`ComplianceGate.accessNFT` 与 verifier 注册均指向 v2，v1（`0x5e7140b8…`）已解绑；**线上字节码与本仓库编译产物 keccak 完全一致**；Blockscout + Sourcify 均已验证 | 链上读回、keccak 比对（`0x699b0e44…`）、`hardhat-verify` 输出 |
+| M9 | Hardhat 网络配置不再对所有网络回退公开 Anvil 私钥：仅本地 `default` 网络保留回退；远程网络缺少 `DEPLOYER_PRIVATE_KEY` 时不再注入签名者 | `hardhat.config.ts`（18 处替换）+ `hardhat:check-types` 0 错误 |
+| M11 | mock-api `tsconfig` 增加 `outDir/rootDir/include`，构建产物不再写入源码目录；删除未使用的 `@types/express` / `@types/cors`（Express 5 与 v4 类型错配问题随之消失） | `mock-api tsc --noEmit` 0 错误 |
+| M12 | `ignoreBuildErrors` 改用服务端变量 `IGNORE_BUILD_ERROR`（不再是 `NEXT_PUBLIC_`），并删除 `vercel:yolo` 脚本（nextjs 与根级） | `next build` 通过 |
+| M17 | 依赖声明收敛：`@types/node` 全仓统一 `^22.12.0`；`@semaphore-protocol/*` 统一 `^4.14.3`。`viem` 多副本来自上游精确 pin（cre-sdk 2.34.0 / walletconnect 2.23.2 / nextjs 2.39.0），强推单版本会破坏上游工具链，保留并记录 | `yarn why viem`、`yarn.lock` |
+| L3 | README 补充模板默认 key 说明（SE-2 公共共享 key，生产应自配） | `zk-cid/README.md` |
+| L4 | 生产导航与首页移除模板调试入口（`/debug` 路由保留、可直访）；`/zk-test` 作为独立演示页保留 | `Header.tsx`、`app/page.tsx` diff |
+| L5 | 前端新增「链上撤销记录（实时监听）」面板（监听 `CredentialRevokedFromTree`） | E2E 冒烟 |
+| L6 | 清理残留日志/pid（18 个未跟踪文件）；`zk-cid-audit-report.md`、`plan.md` 顶部加 SUPERSEDED 横幅 | `git status` |
+| L7 | workflow `main()` 顶层增加 `.catch` + `process.exit(1)` | workflow `tsc` 0 错误 |
+| L8 | 本地 Anvil 私钥集中到 `scripts/localDev.ts`（6 个脚本引用，标注 LOCAL USE ONLY） | hardhat check-types |
+| L10 | 新增 `tools/check-address-consistency.mjs`：deployment 记录 ↔ workflow 配置 ↔ 前端生成文件三方比对；接入 `yarn check:addresses` 与 CI | 实跑通过 |
+| 文档 | 根 README / SEPOLIA_DEPLOYMENT / DORA_SUBMISSION / FINAL_SUBMISSION_CHECKLIST 的 AccessNFT 地址统一为 v2 | 上述文件 |
+
+**保留决策（有意的 won't-fix，附原因）**
+
+- **M4** mock-api 进程内存储：读取路径已由 `SEED_SANCTIONED` 种子在冷启动时确定化，admin 写入仍是尽力而为；彻底修复需要引入外部 KV（Vercel KV/Redis），属基础设施决策，不在本次扩大范围。
+- **M14** 29 MB 演示视频：文件已在已发布的历史提交中，重写历史会失效外部引用（提交哈希、DoraHacks 链接），保留现状。
+- **L9** 本地 `tmp/` 与 `video-production/`（各约 1 GB，均未跟踪）：属本地素材，未清理。
+
+**当前剩余外部项（代码与脚本均已就绪，等待触发条件）**
+
+1. `yarn hardhat:configure:receiver`：等 CRE 网络部署权限批下来后，用真实的 `EXPECTED_WORKFLOW_AUTHOR` / `EXPECTED_WORKFLOW_ID` 执行。
+2. issuer 私钥轮换到硬件钱包/keystore（线下决定；轮换会改变 issuer 地址，需要重新部署并迁移）。
+3. 把 CRE 工作流部署到 CRE 网络（`cre workflow deploy compliance-lifecycle -T production-settings`）。

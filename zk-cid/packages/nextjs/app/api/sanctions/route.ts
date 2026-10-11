@@ -5,9 +5,7 @@ import { NextResponse } from "next/server";
 // upstream service sending CORS headers.
 const UPSTREAM = process.env.SANCTIONS_API_URL ?? "https://mock-api-topaz-zeta.vercel.app/api/sanctions-list";
 const RAW_TIMEOUT_MS = Number(process.env.SANCTIONS_API_TIMEOUT_MS ?? 6000);
-const UPSTREAM_TIMEOUT_MS = Number.isFinite(RAW_TIMEOUT_MS)
-  ? Math.min(30_000, Math.max(500, RAW_TIMEOUT_MS))
-  : 6000;
+const UPSTREAM_TIMEOUT_MS = Number.isFinite(RAW_TIMEOUT_MS) ? Math.min(30_000, Math.max(500, RAW_TIMEOUT_MS)) : 6000;
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -48,8 +46,7 @@ export async function GET() {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    const isTimeout =
-      error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError");
+    const isTimeout = error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError");
     return NextResponse.json(errorPayload(message), { status: isTimeout ? 504 : 500 });
   }
 }

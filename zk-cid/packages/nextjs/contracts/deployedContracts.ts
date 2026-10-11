@@ -1544,7 +1544,7 @@ const deployedContracts = {
   },
   11155111: {
     AccessNFT: {
-      address: "0x5e7140b8c967440A5B7Db15a4B82F4e4428cCc32",
+      address: "0x7A52459d8eEF432fa3F044c152dd36ba1F3F931f",
       abi: [
         {
           inputs: [
@@ -1661,6 +1661,48 @@ const deployedContracts = {
           type: "error",
         },
         {
+          inputs: [],
+          name: "NotIssuer",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "account",
+              type: "address",
+            },
+          ],
+          name: "TransferBlockedFromRevokedAccount",
+          type: "error",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "account",
+              type: "address",
+            },
+          ],
+          name: "AccessRestored",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "account",
+              type: "address",
+            },
+          ],
+          name: "AccessRevoked",
+          type: "event",
+        },
+        {
           anonymous: false,
           inputs: [
             {
@@ -1734,6 +1776,25 @@ const deployedContracts = {
           ],
           name: "Transfer",
           type: "event",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          name: "accessRevoked",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
         },
         {
           inputs: [
@@ -1850,6 +1911,25 @@ const deployedContracts = {
         {
           inputs: [
             {
+              internalType: "address",
+              name: "account",
+              type: "address",
+            },
+          ],
+          name: "isValid",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
               components: [
                 {
                   internalType: "uint256",
@@ -1935,6 +2015,32 @@ const deployedContracts = {
             },
           ],
           stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "account",
+              type: "address",
+            },
+          ],
+          name: "restoreAccess",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "account",
+              type: "address",
+            },
+          ],
+          name: "revokeAccess",
+          outputs: [],
+          stateMutability: "nonpayable",
           type: "function",
         },
         {
@@ -2101,7 +2207,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 11810362,
+      deployedOnBlock: 11889139,
     },
     ComplianceGate: {
       address: "0x1b8ae78C37c3E29DFcB0236E1c562b3CCFA44F70",
@@ -2637,6 +2743,448 @@ const deployedContracts = {
       ],
       inheritedFunctions: {},
       deployedOnBlock: 11810361,
+    },
+    ComplianceGateReceiver: {
+      address: "0xB5ad6413a16efd82b76212830f908B2D67C20425",
+      abi: [
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "forwarder",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "gate",
+              type: "address",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "constructor",
+        },
+        {
+          inputs: [],
+          name: "EmptyReport",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "received",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "expected",
+              type: "address",
+            },
+          ],
+          name: "InvalidAuthor",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "InvalidComplianceGate",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "InvalidForwarderAddress",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "sender",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "expected",
+              type: "address",
+            },
+          ],
+          name: "InvalidSender",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "bytes32",
+              name: "received",
+              type: "bytes32",
+            },
+            {
+              internalType: "bytes32",
+              name: "expected",
+              type: "bytes32",
+            },
+          ],
+          name: "InvalidWorkflowId",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "bytes10",
+              name: "received",
+              type: "bytes10",
+            },
+            {
+              internalType: "bytes10",
+              name: "expected",
+              type: "bytes10",
+            },
+          ],
+          name: "InvalidWorkflowName",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "owner",
+              type: "address",
+            },
+          ],
+          name: "OwnableInvalidOwner",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "account",
+              type: "address",
+            },
+          ],
+          name: "OwnableUnauthorizedAccount",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "WorkflowNameRequiresAuthorValidation",
+          type: "error",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "previousAuthor",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "newAuthor",
+              type: "address",
+            },
+          ],
+          name: "ExpectedAuthorUpdated",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "bytes32",
+              name: "previousId",
+              type: "bytes32",
+            },
+            {
+              indexed: true,
+              internalType: "bytes32",
+              name: "newId",
+              type: "bytes32",
+            },
+          ],
+          name: "ExpectedWorkflowIdUpdated",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "bytes10",
+              name: "previousName",
+              type: "bytes10",
+            },
+            {
+              indexed: true,
+              internalType: "bytes10",
+              name: "newName",
+              type: "bytes10",
+            },
+          ],
+          name: "ExpectedWorkflowNameUpdated",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "previousForwarder",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "newForwarder",
+              type: "address",
+            },
+          ],
+          name: "ForwarderAddressUpdated",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "previousOwner",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "newOwner",
+              type: "address",
+            },
+          ],
+          name: "OwnershipTransferred",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "commitment",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "siblingCount",
+              type: "uint256",
+            },
+          ],
+          name: "RevocationForwarded",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: false,
+              internalType: "string",
+              name: "message",
+              type: "string",
+            },
+          ],
+          name: "SecurityWarning",
+          type: "event",
+        },
+        {
+          inputs: [],
+          name: "complianceGate",
+          outputs: [
+            {
+              internalType: "contract IComplianceGateRevoker",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getExpectedAuthor",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getExpectedWorkflowId",
+          outputs: [
+            {
+              internalType: "bytes32",
+              name: "",
+              type: "bytes32",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getExpectedWorkflowName",
+          outputs: [
+            {
+              internalType: "bytes10",
+              name: "",
+              type: "bytes10",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getForwarderAddress",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "bytes",
+              name: "metadata",
+              type: "bytes",
+            },
+            {
+              internalType: "bytes",
+              name: "report",
+              type: "bytes",
+            },
+          ],
+          name: "onReport",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "owner",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "renounceOwnership",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_author",
+              type: "address",
+            },
+          ],
+          name: "setExpectedAuthor",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "bytes32",
+              name: "_id",
+              type: "bytes32",
+            },
+          ],
+          name: "setExpectedWorkflowId",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "string",
+              name: "_name",
+              type: "string",
+            },
+          ],
+          name: "setExpectedWorkflowName",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_forwarder",
+              type: "address",
+            },
+          ],
+          name: "setForwarderAddress",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "bytes4",
+              name: "interfaceId",
+              type: "bytes4",
+            },
+          ],
+          name: "supportsInterface",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "newOwner",
+              type: "address",
+            },
+          ],
+          name: "transferOwnership",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+      ],
+      inheritedFunctions: {},
     },
   },
 } as const;

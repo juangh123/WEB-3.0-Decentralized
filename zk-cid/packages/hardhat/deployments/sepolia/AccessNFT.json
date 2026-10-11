@@ -1,5 +1,5 @@
 {
-  "address": "0x5e7140b8c967440A5B7Db15a4B82F4e4428cCc32",
+  "address": "0x7A52459d8eEF432fa3F044c152dd36ba1F3F931f",
   "abi": [
     {
       "inputs": [
@@ -116,6 +116,48 @@
       "type": "error"
     },
     {
+      "inputs": [],
+      "name": "NotIssuer",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "TransferBlockedFromRevokedAccount",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "AccessRestored",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "AccessRevoked",
+      "type": "event"
+    },
+    {
       "anonymous": false,
       "inputs": [
         {
@@ -189,6 +231,25 @@
       ],
       "name": "Transfer",
       "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "accessRevoked",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
     },
     {
       "inputs": [
@@ -305,6 +366,25 @@
     {
       "inputs": [
         {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "isValid",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
           "components": [
             {
               "internalType": "uint256",
@@ -390,6 +470,32 @@
         }
       ],
       "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "restoreAccess",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "revokeAccess",
+      "outputs": [],
+      "stateMutability": "nonpayable",
       "type": "function"
     },
     {
@@ -556,7 +662,7 @@
     }
   ],
   "receipt": {
-    "blockNumber": 11810362,
-    "transactionHash": "0x066fd2f47ec73da2bb42cee93713730fd762de4e7fc7668986d06015bc7fd5c0"
+    "blockNumber": 11889139,
+    "transactionHash": "0x50fcc360d274d7b976fa49b79f3e4f48cff8ad3d5d7e87fdadb383ba8c5f169e"
   }
 }

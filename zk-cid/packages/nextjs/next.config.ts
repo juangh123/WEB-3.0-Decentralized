@@ -4,7 +4,9 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   devIndicators: false,
   typescript: {
-    ignoreBuildErrors: process.env.NEXT_PUBLIC_IGNORE_BUILD_ERROR === "true",
+    // Server-side-only escape hatch. Deliberately not NEXT_PUBLIC_ so the flag can never be
+    // inlined into the client bundle.
+    ignoreBuildErrors: process.env.IGNORE_BUILD_ERROR === "true",
   },
   webpack: config => {
     config.resolve.fallback = {

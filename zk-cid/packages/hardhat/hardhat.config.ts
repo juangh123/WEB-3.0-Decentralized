@@ -1,15 +1,20 @@
-﻿import "dotenv/config";
+import "dotenv/config";
 import { defineConfig, overrideTask } from "hardhat/config";
 import hardhatToolbox from "@nomicfoundation/hardhat-toolbox-mocha-ethers";
 import HardhatDeploy from "hardhat-deploy";
 import generateTsAbis from "./scripts/generateTsAbis.js";
+import { LOCAL_PRIVATE_KEY as LOCAL_DEV_PRIVATE_KEY } from "./scripts/localDev.js";
 
-// If not set, it uses the hardhat account 0 private key.
-// You can generate a random account with `yarn generate` or `yarn account:import` to import your existing PK
-const deployerPrivateKey =
-  process.env.DEPLOYER_PRIVATE_KEY ??
-  process.env.__RUNTIME_DEPLOYER_PRIVATE_KEY ??
-  "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+// Local development fallback only: the well-known Anvil/Hardhat account #0 private key.
+// Live networks must supply DEPLOYER_PRIVATE_KEY (or __RUNTIME_DEPLOYER_PRIVATE_KEY); without
+// it they are configured without a signer, so a deploy fails loudly instead of silently using
+// a public key. Generate your own with `yarn generate` / `yarn account:import`.
+const configuredDeployerPrivateKey =
+  process.env.DEPLOYER_PRIVATE_KEY ?? process.env.__RUNTIME_DEPLOYER_PRIVATE_KEY;
+const localAccounts = [configuredDeployerPrivateKey ?? LOCAL_DEV_PRIVATE_KEY];
+const remoteAccountConfig = configuredDeployerPrivateKey
+  ? { accounts: [configuredDeployerPrivateKey] }
+  : {};
 
 // API keys are read from environment variables only (no defaults shipped); see .env.example.
 // You can get your own Alchemy key at https://dashboard.alchemyapi.io
@@ -52,6 +57,7 @@ export default defineConfig({
     default: {
       type: "http",
       url: "http://127.0.0.1:8545",
+      accounts: localAccounts,
     },
     hardhat: {
       type: "edr-simulated",
@@ -63,92 +69,92 @@ export default defineConfig({
     mainnet: {
       type: "http",
       url: "https://mainnet.rpc.buidlguidl.com",
-      accounts: [deployerPrivateKey],
+      ...remoteAccountConfig,
     },
     sepolia: {
       type: "http",
       url: `https://eth-sepolia.g.alchemy.com/v2/${providerApiKey}`,
-      accounts: [deployerPrivateKey],
+      ...remoteAccountConfig,
     },
     optimism: {
       type: "http",
       url: `https://opt-mainnet.g.alchemy.com/v2/${providerApiKey}`,
-      accounts: [deployerPrivateKey],
+      ...remoteAccountConfig,
     },
     optimismSepolia: {
       type: "http",
       url: `https://opt-sepolia.g.alchemy.com/v2/${providerApiKey}`,
-      accounts: [deployerPrivateKey],
+      ...remoteAccountConfig,
     },
     base: {
       type: "http",
       url: "https://mainnet.base.org",
-      accounts: [deployerPrivateKey],
+      ...remoteAccountConfig,
     },
     baseSepolia: {
       type: "http",
       url: "https://sepolia.base.org",
-      accounts: [deployerPrivateKey],
+      ...remoteAccountConfig,
     },
     arbitrum: {
       type: "http",
       url: `https://arb-mainnet.g.alchemy.com/v2/${providerApiKey}`,
-      accounts: [deployerPrivateKey],
+      ...remoteAccountConfig,
     },
     arbitrumSepolia: {
       type: "http",
       url: `https://arb-sepolia.g.alchemy.com/v2/${providerApiKey}`,
-      accounts: [deployerPrivateKey],
+      ...remoteAccountConfig,
     },
     scrollSepolia: {
       type: "http",
       url: "https://sepolia-rpc.scroll.io",
-      accounts: [deployerPrivateKey],
+      ...remoteAccountConfig,
     },
     scroll: {
       type: "http",
       url: "https://rpc.scroll.io",
-      accounts: [deployerPrivateKey],
+      ...remoteAccountConfig,
     },
     celo: {
       type: "http",
       url: "https://forno.celo.org",
-      accounts: [deployerPrivateKey],
+      ...remoteAccountConfig,
     },
     celoSepolia: {
       type: "http",
       url: "https://forno.celo-sepolia.celo-testnet.org/",
-      accounts: [deployerPrivateKey],
+      ...remoteAccountConfig,
     },
     polygon: {
       type: "http",
       url: `https://polygon-mainnet.g.alchemy.com/v2/${providerApiKey}`,
-      accounts: [deployerPrivateKey],
+      ...remoteAccountConfig,
     },
     polygonAmoy: {
       type: "http",
       url: `https://polygon-amoy.g.alchemy.com/v2/${providerApiKey}`,
-      accounts: [deployerPrivateKey],
+      ...remoteAccountConfig,
     },
     gnosis: {
       type: "http",
       url: "https://rpc.gnosischain.com",
-      accounts: [deployerPrivateKey],
+      ...remoteAccountConfig,
     },
     chiado: {
       type: "http",
       url: "https://rpc.chiadochain.net",
-      accounts: [deployerPrivateKey],
+      ...remoteAccountConfig,
     },
     polygonZkEvm: {
       type: "http",
       url: `https://polygonzkevm-mainnet.g.alchemy.com/v2/${providerApiKey}`,
-      accounts: [deployerPrivateKey],
+      ...remoteAccountConfig,
     },
     polygonZkEvmCardona: {
       type: "http",
       url: `https://polygonzkevm-cardona.g.alchemy.com/v2/${providerApiKey}`,
-      accounts: [deployerPrivateKey],
+      ...remoteAccountConfig,
     },
   },
   tasks: [

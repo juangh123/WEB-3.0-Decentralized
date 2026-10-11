@@ -67,6 +67,9 @@ jobs:
       - name: Check types (frontend)
         run: yarn next:check-types
 
+      - name: Check address consistency
+        run: yarn check:addresses
+
       - name: Run frontend unit tests
         run: yarn next:test
 

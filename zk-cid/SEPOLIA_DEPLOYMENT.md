@@ -7,8 +7,14 @@ This document records the live Sepolia deployment and the exact commands used to
 | Contract | Address | Deployment Transaction |
 | --- | --- | --- |
 | ComplianceGate v2.2 | `0x1b8ae78C37c3E29DFcB0236E1c562b3CCFA44F70` | `0xfe593613bab81860bdddc54e3dde59d16b97ad8c83f2620a1dd587360b858635` |
-| AccessNFT | `0x5e7140b8c967440A5B7Db15a4B82F4e4428cCc32` | `0x066fd2f47ec73da2bb42cee93713730fd762de4e7fc7668986d06015bc7fd5c0` |
+| AccessNFT (v2, access revocation) | `0x7A52459d8eEF432fa3F044c152dd36ba1F3F931f` | `0x50fcc360d274d7b976fa49b79f3e4f48cff8ad3d5d7e87fdadb383ba8c5f169e` |
 | ComplianceGateReceiver (CRE write path) | `0xB5ad6413a16efd82b76212830f908B2D67C20425` | `0x01cc9b0ea19bcab37af0cd0960d940a50965b1801ab4eea72fed92c0f6e48020` |
+
+AccessNFT was replaced on 2026-10-11 so the live contract matches the audited source
+(`revokeAccess` / `restoreAccess` / `isValid`, plus transfer blocking for revoked accounts):
+the gate's `accessNFT` and verifier registry now point at v2, and the previous contract
+(`0x5e7140b8…`) is deregistered. No tokens existed on the previous contract (`nextTokenId = 0`),
+so nothing had to be migrated.
 
 External dependency:
 
@@ -28,7 +34,7 @@ reviewers can read the exact deployed code without trusting this repository:
 | Contract | Blockscout | Sourcify |
 | --- | --- | --- |
 | ComplianceGate | https://eth-sepolia.blockscout.com/address/0x1b8ae78C37c3E29DFcB0236E1c562b3CCFA44F70#code | https://sourcify.dev/server/repo-ui/11155111/0x1b8ae78C37c3E29DFcB0236E1c562b3CCFA44F70 |
-| AccessNFT | https://eth-sepolia.blockscout.com/address/0x5e7140b8c967440A5B7Db15a4B82F4e4428cCc32#code | https://sourcify.dev/server/repo-ui/11155111/0x5e7140b8c967440A5B7Db15a4B82F4e4428cCc32 |
+| AccessNFT (v2) | https://eth-sepolia.blockscout.com/address/0x7A52459d8eEF432fa3F044c152dd36ba1F3F931f#code | https://sourcify.dev/server/repo-ui/11155111/0x7A52459d8eEF432fa3F044c152dd36ba1F3F931f |
 
 Reproduce the verification (no Etherscan API key required; the Blockscout and
 Sourcify verifiers are built into `hardhat-verify` v3):
@@ -38,7 +44,7 @@ cd zk-cid
 yarn workspace @se-2/hardhat hardhat-verify --network sepolia `
   0x1b8ae78C37c3E29DFcB0236E1c562b3CCFA44F70 0x8A1fd199516489B0Fb7153EB5f075cDAC83c693D
 yarn workspace @se-2/hardhat hardhat-verify --network sepolia `
-  0x5e7140b8c967440A5B7Db15a4B82F4e4428cCc32 0x1b8ae78C37c3E29DFcB0236E1c562b3CCFA44F70
+  0x7A52459d8eEF432fa3F044c152dd36ba1F3F931f 0x1b8ae78C37c3E29DFcB0236E1c562b3CCFA44F70
 yarn workspace @se-2/hardhat hardhat-verify --network sepolia `
   0xB5ad6413a16efd82b76212830f908B2D67C20425 0xF8344CFd5c43616a4366C34E3EEE75af79a74482 0x1b8ae78C37c3E29DFcB0236E1c562b3CCFA44F70
 ```

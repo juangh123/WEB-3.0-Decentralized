@@ -105,10 +105,12 @@ ZK-CID separates "prove compliance" from "reveal identity":
 ## Sepolia Live Evidence
 
 - `ComplianceGate`: `0x1b8ae78C37c3E29DFcB0236E1c562b3CCFA44F70`
-- `AccessNFT`: `0x5e7140b8c967440A5B7Db15a4B82F4e4428cCc32`
+- `AccessNFT`: `0x7A52459d8eEF432fa3F044c152dd36ba1F3F931f` (replaced 2026-10-11 with the
+  access-revocation build; the previous `0x5e7140b8…` had zero mints and is deregistered — see
+  `SEPOLIA_DEPLOYMENT.md`)
 - Source-verified on Blockscout and Sourcify (2026-10-02):
   - https://eth-sepolia.blockscout.com/address/0x1b8ae78C37c3E29DFcB0236E1c562b3CCFA44F70#code
-  - https://eth-sepolia.blockscout.com/address/0x5e7140b8c967440A5B7Db15a4B82F4e4428cCc32#code
+  - https://eth-sepolia.blockscout.com/address/0x7A52459d8eEF432fa3F044c152dd36ba1F3F931f#code
 - Semaphore v4 dependency: `0x8A1fd199516489B0Fb7153EB5f075cDAC83c693D`
 - Deployer/issuer wallet: `0x951c41D827d0A6F5b9ef4C44943E3Feb25E51348`
 - Current live commitment: `123456789012345678901234567890123456789`
