@@ -423,5 +423,5 @@ Mock API: 无 token / dev-token 均 401
 **第三轮补充（2026-10-11）**
 
 - **CRE 部署权限复查（实测）**：`cre account access` 仍返回 "Deployment access is not yet enabled for your organization."，未重复提交申请。H4 的线上 Receiver 身份固定继续等待 Chainlink 审批，拿到 `EXPECTED_WORKFLOW_AUTHOR/ID` 后一条命令即可完成。
-- **生产控制台噪音修复**：wagmi 回退链此前把 viem 内置的 Sepolia 默认端点（浏览器端间歇性 CORS 失败）排在最前，导致每次读取先报错再回退；现在显式、CORS 友好的公共 RPC（publicnode）排在其前面，生产冒烟实测控制台错误清零。
+- **生产 RPC 回退链修复（两轮迭代后才定稿）**：原顺序里 viem 内置的 Sepolia 默认端点排在最前（浏览器端间歇性 CORS 失败）；直接把 publicnode 提前后又暴露了 429 限流（演示页 3 秒轮询负载）。最终顺序为 **Alchemy（模板共享 key）→ publicnode → viem 内置默认**，生产冒烟实测控制台错误与 4xx/5xx 双清零。
 - **H7 预置完成**：`deploySepolia` / `deployComplianceGateReceiver` / `setStrictMode` / `configureReceiverIdentity` / `replaceAccessNFT` 全部支持加密 keystore（`DEPLOYER_PRIVATE_KEY_ENCRYPTED` + 交互密码，`scripts/deployerWallet.ts`），并在 `SEPOLIA_DEPLOYMENT.md` 增加「Issuer Key Rotation」runbook——用户执行一次 `account:import`/`account:generate` 后即可安全删除明文私钥。
