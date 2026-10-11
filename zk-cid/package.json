@@ -69,7 +69,7 @@
         "@chainlink/cre-sdk": "^1.16.0",
         "@playwright/test": "^1.63.0",
         "@types/node": "^22.12.0",
-        "hardhat": "^3.0.0",
+        "hardhat": "^3.18.1",
         "husky": "^9.1.6",
         "lint-staged": "^15.2.10",
         "ts-node": "10",
