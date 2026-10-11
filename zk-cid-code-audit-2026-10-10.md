@@ -412,3 +412,10 @@ Mock API: 无 token / dev-token 均 401
 1. `yarn hardhat:configure:receiver`：等 CRE 网络部署权限批下来后，用真实的 `EXPECTED_WORKFLOW_AUTHOR` / `EXPECTED_WORKFLOW_ID` 执行。
 2. issuer 私钥轮换到硬件钱包/keystore（线下决定；轮换会改变 issuer 地址，需要重新部署并迁移）。
 3. 把 CRE 工作流部署到 CRE 网络（`cre workflow deploy compliance-lifecycle -T production-settings`）。
+
+**第二轮最终验收（2026-10-11，提交 `22f45ea` → 生产部署 READY）**
+
+- 合约 34 passing；前端单测 7 passing；workflow jest 3 passing；CRE 仿真 9 passing；mock-api 13 passing；Playwright E2E 6 passing
+- `next build`、`hardhat:check-types`、`next:check-types`、`next:lint --max-warnings=0`、`workflow tsc`、`mock-api tsc` 全部 0 错误
+- `yarn check:addresses` 通过；`yarn npm audit -A --severity high` → No audit suggestions
+- 生产站点实测：`/zk-cid` 200、`/api/demo-issue` → `enabled:true` + issuer 与链上一致、`/api/sanctions` 200、新「链上撤销记录」面板渲染正常、部署产物包含 v2 AccessNFT 地址 `0x7A52…`（Playwright 生产冒烟通过）
