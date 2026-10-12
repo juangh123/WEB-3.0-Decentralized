@@ -9,12 +9,9 @@ import { LOCAL_PRIVATE_KEY as LOCAL_DEV_PRIVATE_KEY } from "./scripts/localDev.j
 // Live networks must supply DEPLOYER_PRIVATE_KEY (or __RUNTIME_DEPLOYER_PRIVATE_KEY); without
 // it they are configured without a signer, so a deploy fails loudly instead of silently using
 // a public key. Generate your own with `yarn generate` / `yarn account:import`.
-const configuredDeployerPrivateKey =
-  process.env.DEPLOYER_PRIVATE_KEY ?? process.env.__RUNTIME_DEPLOYER_PRIVATE_KEY;
+const configuredDeployerPrivateKey = process.env.DEPLOYER_PRIVATE_KEY ?? process.env.__RUNTIME_DEPLOYER_PRIVATE_KEY;
 const localAccounts = [configuredDeployerPrivateKey ?? LOCAL_DEV_PRIVATE_KEY];
-const remoteAccountConfig = configuredDeployerPrivateKey
-  ? { accounts: [configuredDeployerPrivateKey] }
-  : {};
+const remoteAccountConfig = configuredDeployerPrivateKey ? { accounts: [configuredDeployerPrivateKey] } : {};
 
 // API keys are read from environment variables only (no defaults shipped); see .env.example.
 // You can get your own Alchemy key at https://dashboard.alchemyapi.io

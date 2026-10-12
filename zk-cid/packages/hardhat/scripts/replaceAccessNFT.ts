@@ -88,7 +88,8 @@ async function main() {
   if (gateAccessNft.toLowerCase() !== nftAddress.toLowerCase()) throw new Error("gate.accessNFT assertion failed");
   if (!newIsVerifier) throw new Error("new AccessNFT is not registered as verifier");
   if (oldIsVerifier) throw new Error("old AccessNFT is still registered as verifier");
-  if (nftGate.toLowerCase() !== gateDeployment.address.toLowerCase()) throw new Error("nft.complianceGate assertion failed");
+  if (nftGate.toLowerCase() !== gateDeployment.address.toLowerCase())
+    throw new Error("nft.complianceGate assertion failed");
 
   const record = {
     address: nftAddress,
