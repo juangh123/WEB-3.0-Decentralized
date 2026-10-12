@@ -55,7 +55,7 @@
     "eslint-config-prettier": "^10.1.1",
     "eslint-plugin-prettier": "^5.2.4",
     "ethers": "^6.17.0",
-    "hardhat": "^3.9.1",
+    "hardhat": "^3.18.0",
     "hardhat-deploy": "^2.0.30",
     "mocha": "^11",
     "prettier": "^3.5.3",
