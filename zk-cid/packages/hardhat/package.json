@@ -57,7 +57,7 @@
     "ethers": "^6.17.0",
     "hardhat": "^3.9.1",
     "hardhat-deploy": "^2.0.8",
-    "mocha": "^11",
+    "mocha": "^12",
     "prettier": "^3.5.3",
     "prettier-plugin-solidity": "^1.4.1",
     "rocketh": "^0.19.7",
