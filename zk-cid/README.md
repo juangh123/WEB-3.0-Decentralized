@@ -14,6 +14,20 @@
 ## 🌐 Live Demo
 - **URL**: [https://web-3-0-decentralized.vercel.app](https://web-3-0-decentralized.vercel.app) (Requires MetaMask connected to Sepolia Testnet or local fork)
 - **Sepolia 部署与复现**: [SEPOLIA_DEPLOYMENT.md](./SEPOLIA_DEPLOYMENT.md)
+
+### ⏱️ 评委 3 分钟路径
+1. 打开 [主演示页](https://web-3-0-decentralized.vercel.app/zk-cid)，在 MetaMask 中切换到 Sepolia。
+2. **身份与证明**：点击生成匿名身份；私钥与证明都在浏览器本地计算。
+3. **发证入群**：点击演示发证（服务端 `/api/demo-issue` 仅暴露 `issueCredential`），随后生成 ZK 证明。
+4. **链上验证**：点击铸造 AccessNFT。铸造需要钱包持有少量 Sepolia ETH；
+   没有测试币时可先走本地 Anvil 路径（`yarn chain` + `yarn deploy` + `yarn start`）。
+5. **自动化撤销证据**：CRE 工作流的官方 CLI 模拟日志与真实广播演练见
+   [`workflows/compliance-lifecycle/evidence/`](./workflows/compliance-lifecycle/evidence/)。
+
+> 状态说明（2026-10-17）：严格模式下的首笔完整 mint 已实测成功（tx
+> `0x03b17a4d…22b2`，`nextTokenId = 1`）；验收用的临时凭证随后已撤销，成员集恢复为
+> 原来的单个演示成员。发证、mint 与 Merkle 撤销现在都有真实交易证据。
+
 ## 💡 问题陈述与解决方案
 
 当前的 Web3 合规面临着**“双重信任困境”**：
@@ -133,7 +147,7 @@ ZK-CID 提供了一种**可插拔、无需信任的合规中间件**。对于 De
 当前版本的边界与修复状态（均已在代码中显式标注，不回避）：
 
 - **严格模式为部署默认**：`ComplianceGate` 构造函数即 `demoMode = false`；`deploySepolia.ts` / `deployDirect.ts` / `ci-deploy.ts` / `hardhat-deploy` 部署后还会断言严格模式。只有显式 `DEMO_MODE=true`（会高声告警）或 issuer 主动调用 `setDemoMode(true)` 才能打开演示模式。`verifyCompliance` 无论 demo 与否都要求 `proof.merkleTreeRoot == 当前组根`，撤销后的旧证明因此失效。
-- **线上 Sepolia 已切换严格模式**（2026-10-10，tx `0xaab09625…ca2f`）。生产环境已配置服务端 Demo Issuer：`DEMO_ISSUER_KEY` 仅存放于 Vercel production 环境变量，`/api/demo-issue` 只暴露 `issueCredential`，带限流与链上 issuer 匹配校验；访客可完整走通「生成身份 → 演示发证 → 生成证明 → mint」。2026-10-11 已用真实交易验证发证与撤销路径（发证 tx `0x6206c00f…`，撤销 tx `0x5d04c889…`）。
+- **线上 Sepolia 已切换严格模式**（2026-10-10，tx `0xaab09625…ca2f`）。生产环境已配置服务端 Demo Issuer：`DEMO_ISSUER_KEY` 仅存放于 Vercel production 环境变量，`/api/demo-issue` 只暴露 `issueCredential`，带限流与链上 issuer 匹配校验。2026-10-11 已用真实交易验证发证与撤销路径（发证 tx `0x6206c00f…`，撤销 tx `0x5d04c889…`）。2026-10-17 进一步完成严格模式的完整验收：演示发证 → 本地生成证明 → `AccessNFT.mint` 成功（tx `0x03b17a4d…22b2`，`nextTokenId = 1`），随后撤销临时凭证恢复成员集（tx `0x14469a82…`）。访客走完整流程仍需持有少量 Sepolia ETH 的钱包。
 - **撤销的 Merkle 语义**：CRE 工作流读取 `getLeaves()`，按链上稳定叶子重建 Semaphore 树并生成真实 siblings，再调用 `revokeCredentialWithMerkleProof` 从树中移除成员。批量撤销时每笔写入后都会重新读取 `getMembers()/getLeaves()` 再计算下一笔 siblings；写链失败不再静默，会以 `status: partial/failed` + `failedCount/failed[]` 上报。
 - **制裁名单输入校验**：工作流只接受 1~78 位十进制、且小于 BN254 标量域的 commitment；非法条目被跳过并计入 `invalidEntries`，不会中断整轮合规检查。
 - **访问凭据可撤销**：`AccessNFT.revokeAccess / restoreAccess / isValid`（仅 issuer 可调用）。被撤销的地址不能转移 token；消费方应检查 `AccessNFT.isValid(account)` 而不是 `balanceOf`（撤销不销毁 token 是有意设计，便于申诉后恢复）。

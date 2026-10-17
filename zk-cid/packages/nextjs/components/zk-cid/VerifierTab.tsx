@@ -1,12 +1,24 @@
+import { ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
+
 type VerifierTabProps = {
   walletAddress?: string;
   hasProof: boolean;
   hasMinted: boolean | undefined;
   isVerifying: boolean;
+  mintTxHash?: `0x${string}`;
+  accessNftAddress?: string;
   onVerifyProof: () => void;
 };
 
-export const VerifierTab = ({ walletAddress, hasProof, hasMinted, isVerifying, onVerifyProof }: VerifierTabProps) => {
+export const VerifierTab = ({
+  walletAddress,
+  hasProof,
+  hasMinted,
+  isVerifying,
+  mintTxHash,
+  accessNftAddress,
+  onVerifyProof,
+}: VerifierTabProps) => {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap justify-between items-center gap-2">
@@ -66,23 +78,37 @@ export const VerifierTab = ({ walletAddress, hasProof, hasMinted, isVerifying, o
             <span className="badge badge-warning badge-lg font-bold text-gray-900">Verified Access</span>
           </div>
           <p className="opacity-90 text-sm mb-4 leading-relaxed">
-            恭喜！您的钱包已通过零知识证明链上验证，成功进入受监管的高净值合规流动性池，链上合约无法追溯您的真实身份。
+            钱包已通过零知识证明的链上验证，获得 AccessNFT 访问权限。链上只记录匿名承诺、证明 nullifier
+            与持有凭证的钱包地址，不包含真实身份。
           </p>
 
           <div className="bg-white/15 p-4 rounded-xl backdrop-blur-md border border-white/20 flex flex-col gap-3">
             <div className="flex justify-between items-center">
-              <span className="text-sm opacity-90">模拟合规资金池余额:</span>
+              <span className="text-sm opacity-90">演示资金池余额:</span>
               <span className="font-mono text-2xl font-black text-amber-300">100.00 USDC</span>
             </div>
-            <p className="text-xs opacity-75">* 此为实测 Demo 展示面板，已完成完整的链上闭环验证。</p>
-            <div className="flex gap-3 pt-1">
-              <button className="btn btn-sm flex-1 border-none bg-white text-indigo-700 hover:bg-gray-100 font-bold">
-                Swap 隐私闪兑
-              </button>
-              <button className="btn btn-sm flex-1 border-none bg-indigo-900 text-white hover:bg-indigo-950 font-bold">
-                Stake 合规质押
-              </button>
-            </div>
+            <p className="text-xs opacity-75">* 演示数据，未接入真实资金池或 DeFi 协议。</p>
+            {mintTxHash ? (
+              <a
+                className="btn btn-sm border-none bg-white text-indigo-700 hover:bg-gray-100 font-bold"
+                href={`https://eth-sepolia.blockscout.com/tx/${mintTxHash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <ArrowTopRightOnSquareIcon className="h-4 w-4" />在 Blockscout 查看铸造交易
+              </a>
+            ) : (
+              accessNftAddress && (
+                <a
+                  className="btn btn-sm border-none bg-white text-indigo-700 hover:bg-gray-100 font-bold"
+                  href={`https://eth-sepolia.blockscout.com/address/${accessNftAddress}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <ArrowTopRightOnSquareIcon className="h-4 w-4" />在 Blockscout 查看 AccessNFT
+                </a>
+              )
+            )}
           </div>
         </div>
       )}

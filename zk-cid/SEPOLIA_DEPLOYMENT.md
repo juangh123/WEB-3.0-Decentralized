@@ -379,3 +379,11 @@ removed first:
 - Broadcast is off by default in `cre workflow simulate`, so a local run produces no transaction (`txHashes: [""]`): the local simulation signer is not accepted by the production Keystone forwarder. A live broadcast needs CRE-network deployment access (`cre account access`).
 - The contract side of that write path is done: `ComplianceGateReceiver` (`0xB5ad6413a16efd82b76212830f908B2D67C20425`, Blockscout + Sourcify verified) implements the official `ReceiverTemplate` pattern, only accepts reports from the Sepolia Keystone forwarder `0xF8344CFd5c43616a4366C34E3EEE75af79a74482`, and `ComplianceGate.creWorkflow` now points at the adapter instead of the deployer wallet.
 - The live sanctions list must be seeded with the same commitment that is currently a member of the new `ComplianceGate` group; otherwise the CRE revocation demo has no intersection.
+- ~~Strict-mode mint never verified on the live v2 NFT~~ Resolved 2026-10-17:
+  `scripts/sepoliaLiveMint.ts` generated a fresh identity, issued it through the
+  production `/api/demo-issue` endpoint (tx `0xa3658c60…ed4a`), generated the
+  proof locally against the live tree, and minted token `0` (tx
+  `0x03b17a4d…22b2`, Blockscout status `ok`). The acceptance credential was then
+  revoked with a real Merkle proof (tx `0x14469a82…5d78`), restoring
+  `getMembers()` to the single demo member. `nextTokenId` is now `1`;
+  `hasMinted(deployer)` and `isValid(deployer)` are both true.

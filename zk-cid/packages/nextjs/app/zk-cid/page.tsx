@@ -28,6 +28,7 @@ export default function ZKCIDDemo() {
   const { enabled: demoIssuerEnabled, isIssuing: isDemoIssuing, issue: issueDemoCredential } = useDemoIssuer();
 
   const [activeTab, setActiveTab] = useState<"user" | "issuer" | "verifier">("user");
+  const [mintTxHash, setMintTxHash] = useState<`0x${string}` | undefined>();
 
   // Read the Group ID from the Contract
   const { data: groupId } = useScaffoldReadContract({
@@ -183,13 +184,14 @@ export default function ZKCIDDemo() {
   const { writeContractAsync: writeAccessNFT, isPending: isVerifying } = useScaffoldWriteContract({
     contractName: "AccessNFT",
   });
+  const { data: accessNftContract } = useDeployedContractInfo({ contractName: "AccessNFT" });
 
   const handleVerifyProof = async () => {
     if (!proof) return notification.error("请先在 Tab 1 生成零知识证明。");
     if (!address) return notification.error("请先连接钱包。");
 
     try {
-      await writeAccessNFT({
+      const hash = await writeAccessNFT({
         functionName: "mint",
         args: [
           {
@@ -211,6 +213,7 @@ export default function ZKCIDDemo() {
           },
         ],
       });
+      if (hash) setMintTxHash(hash);
       notification.success("合规验证通过！AccessNFT 铸造成功，已解锁 DeFi 权限。");
     } catch (e: any) {
       console.error(e);
@@ -296,6 +299,8 @@ export default function ZKCIDDemo() {
             hasProof={!!proof}
             hasMinted={hasMinted}
             isVerifying={isVerifying}
+            mintTxHash={mintTxHash}
+            accessNftAddress={accessNftContract?.address}
             onVerifyProof={handleVerifyProof}
           />
         )}

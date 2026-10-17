@@ -94,6 +94,20 @@ ZK-CID separates "prove compliance" from "reveal identity":
 - **Off-chain data**: Vercel mock sanctions API, unified JSON schema
 - **Reproducible local environment**: Anvil/Hardhat
 
+## Regulatory Context
+
+ZK-CID is built for regimes where privacy and AML obligations have to coexist:
+
+- **GDPR**: data minimisation (Art. 5) and privacy by design (Art. 25); only a
+  pseudonymous commitment is written on-chain.
+- **OFAC / EU sanctions**: ongoing screening and automated revocation, with an
+  appeal and restoration path.
+- **FATF Travel Rule and MiCA**: complementary to, not a replacement for, a
+  VASP/CASP's own AML programme.
+
+See `LEGAL_MAPPING.md` for the detailed requirement-by-requirement mapping and
+open gaps. This is a technical mapping, not legal advice.
+
 ## Live URLs
 
 - Demo: https://web-3-0-decentralized.vercel.app
@@ -115,14 +129,38 @@ ZK-CID separates "prove compliance" from "reveal identity":
 - Deployer/issuer wallet: `0x951c41D827d0A6F5b9ef4C44943E3Feb25E51348`
 - Current live commitment: `123456789012345678901234567890123456789`
 - `groupId`: `712`
-- `demoMode`: `true`
+- `demoMode`: `false` (strict Semaphore verification since 2026-10-10)
 - `getMembers()`: `["123456789012345678901234567890123456789"]`
+- `getLeaves()`: `["0","0","123456789012345678901234567890123456789","0","0"]`
+  (5 leaves; the acceptance-run leaf at index 4 was revoked back to zero)
+- `AccessNFT.nextTokenId`: `1` — the first strict-mode mint succeeded on
+  2026-10-17. Token `0` is owned by the deployer, `hasMinted = true`, and
+  `isValid = true`.
 
-Key transactions:
+Key transactions (read-only state re-verified on 2026-10-17):
 
-- Issue credential: `0x37e37f2a3cba81d6327bbfe0e7565649a51115771f0a1ad329ba788deef51dcf`
-- Revoke temporary credential from tree: `0x8f0cb9341d4cf108101fb07a835c334c39f23ca9994bb26acc4497ee9e829ee0`
+- Switch live gate to strict mode (2026-10-10):
+  [tx `0xaab09625…ca2f`](https://eth-sepolia.blockscout.com/tx/0xaab0962578786f644c6b1d39a5bb2a643c7ebdd2e20c1ea60647b447e57eca2f)
+- Issue a throwaway credential (2026-10-11):
+  [tx `0x6206c00f…df35`](https://eth-sepolia.blockscout.com/tx/0x6206c00f02369e57897a89c8ecb74c814f6b1339674e8dff41bee04c525edf35)
+- Revoke that credential with a real Merkle proof (2026-10-11):
+  [tx `0x5d04c889…3f44`](https://eth-sepolia.blockscout.com/tx/0x5d04c88925e18f6202a63425a732bfbd45290e92a104b5ae5204841434593f44)
+- First strict-mode proof → AccessNFT mint (2026-10-17):
+  [tx `0x03b17a4d…22b2`](https://eth-sepolia.blockscout.com/tx/0x03b17a4dbaa9bb3e8ad79de993bf99f50673874a4a874f7d4e986904372622b2)
+- Demo issuance for the acceptance run (2026-10-17):
+  [tx `0xa3658c60…ed4a`](https://eth-sepolia.blockscout.com/tx/0xa3658c60413d8c9ece98f88773fa41133464d165d633d4b3fdf95077a0f6ed4a)
+- Revoke the acceptance-run credential (2026-10-17):
+  [tx `0x14469a82…5d78`](https://eth-sepolia.blockscout.com/tx/0x14469a82cf6bb4c7fc3a0cb716e329e6ed57bf558e61bad10a4eeddbf7035d78)
 - Deployment details and reproduction steps: `zk-cid/SEPOLIA_DEPLOYMENT.md`
+
+### Strict-Mode Mint Acceptance (2026-10-17)
+
+The acceptance run used the production `/api/demo-issue` endpoint, generated
+the Semaphore proof locally against the live 5-leaf tree, and called
+`AccessNFT.mint` on Sepolia. Blockscout reports the mint transaction as
+`ok`. The throwaway credential was then removed with a real Merkle proof, so
+`getMembers()` is back to the single demo member and `hasBeenRevoked` is true
+for the test commitment. The minted token remains as evidence.
 
 ## Validation Commands
 
@@ -144,6 +182,9 @@ Additional real-environment checks:
 # Sepolia status (public RPC)
 cd zk-cid/packages/hardhat
 .\node_modules\.bin\tsx.cmd scripts\sepoliaSmokeDemo.ts status
+
+# Strict-mode live acceptance (writes Sepolia txs; requires DEPLOYER_PRIVATE_KEY)
+.\node_modules\.bin\tsx.cmd scripts\sepoliaLiveMint.ts
 
 # Deployed API and admin route
 Invoke-RestMethod -Uri 'https://mock-api-topaz-zeta.vercel.app/api/sanctions-list'
@@ -178,7 +219,7 @@ Invoke-RestMethod -Uri 'https://mock-api-topaz-zeta.vercel.app/api/admin' `
   switched back to the production Keystone forwarder afterwards); full caveats
   in `workflows/compliance-lifecycle/evidence/cre-broadcast-evidence.md`.
 - End-to-end SDK simulation executed with the real CRE SDK TestRuntime
-  (`yarn workspace compliance-lifecycle test:sim`): 6/6 tests pass (3 flow +
+  (`yarn workspace compliance-lifecycle test:sim`): 9/9 tests pass (6 flow +
   3 Poseidon compatibility vectors). The
   workflow fetches the sanctions API, reads on-chain `getMembers()` and
   `getLeaves()`, computes the intersection, rebuilds the Semaphore tree,
@@ -193,8 +234,16 @@ Invoke-RestMethod -Uri 'https://mock-api-topaz-zeta.vercel.app/api/admin' `
 
 ## Known Limitations
 
-- `demoMode = true` is kept for a repeatable hackathon demo; strict Semaphore
-  validation is a production roadmap item.
+- The live Sepolia deployment runs strict Semaphore verification
+  (`demoMode = false` since 2026-10-10); demo mode is not enabled in
+  production. The full path — demo issuance → local proof generation →
+  AccessNFT mint — was verified live on 2026-10-17 (`nextTokenId = 1`). The
+  throwaway credential used for the run was revoked afterward, restoring the
+  member set; the minted token remains owned by the deployer as acceptance
+  evidence.
+- Contract unit tests use the `MockSemaphore` verifier for speed. The deployed
+  path uses the real Semaphore v4 verifier at
+  `0x8A1fd199516489B0Fb7153EB5f075cDAC83c693D`.
 - On-tree revocation is production-wired: the CRE workflow rebuilds the
   Semaphore tree from the contract's stable leaves and supplies real Merkle
   siblings to `revokeCredentialWithMerkleProof`.
@@ -223,6 +272,7 @@ Invoke-RestMethod -Uri 'https://mock-api-topaz-zeta.vercel.app/api/admin' `
 | Screenshots | `zk-cid/docs/assets/demo-00-landing.png`, `demo-01-comparison.png`, `demo-02-identity.png`, `demo-03-issued-success.png`, `demo-03-issued.png` | For gallery upload |
 | Demo video (file) | `zk-cid/packages/nextjs/public/demo/zk-cid-pitch-video-en.mp4` | 1920x1080, 2:48, 30 MB; English voiceover + captions, also live-hosted |
 | Submit copy | this file | Paste into the DoraHacks form |
+| Regulatory mapping | `zk-cid/deliverables/LEGAL_MAPPING.md` | GDPR / OFAC / FATF / MiCA / eIDAS mapping and open gaps |
 
 ## Final Checklist
 

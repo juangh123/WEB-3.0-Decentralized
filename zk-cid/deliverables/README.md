@@ -41,4 +41,18 @@ Clean, full-resolution screenshots of the application (2160px wide):
 
 ### 4. 📝 Submission Copy & Checklists
 - **`DORA_SUBMISSION.md`**: Complete, copy-pasteable submission text covering problem, solution, architecture, deployed contracts on Sepolia, and bounty criteria.
+- **`LEGAL_MAPPING.md`**: GDPR / OFAC / FATF / MiCA / eIDAS requirement mapping and open gaps.
 - **`FINAL_SUBMISSION_CHECKLIST.md`**: Pre-flight verification checklist.
+
+---
+
+### 5. ✅ Live BUIDL Evidence (2026-10-17)
+- **`media/buidl-updated-2026-10-17.png`**: Public BUIDL page after the strict-mode evidence update.
+- **`media/buidl-live-mint-2026-10-17.png`**: Live strict-mode mint section with Blockscout links.
+- **`../packages/hardhat/scripts/sepoliaLiveMint.ts`**: Reproducible acceptance run
+  (demo issuance -> local proof -> AccessNFT mint -> Merkle revocation).
+- Strict-mode mint tx: `0x03b17a4dbaa9bb3e8ad79de993bf99f50673874a4a874f7d4e986904372622b2`
+- Acceptance-run issuance tx: `0xa3658c60413d8c9ece98f88773fa41133464d165d633d4b3fdf95077a0f6ed4a`
+- Acceptance-run revocation tx: `0x14469a82cf6bb4c7fc3a0cb716e329e6ed57bf558e61bad10a4eeddbf7035d78`
+- Final state: `nextTokenId = 1`, `hasMinted(deployer) = true`, `isValid(deployer) = true`,
+  `getMembers()` restored to the single demo member.
