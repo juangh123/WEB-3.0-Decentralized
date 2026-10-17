@@ -15,8 +15,9 @@ test.describe("ZK-CID E2E Flow", () => {
   test("main demo page renders the full flow", async ({ page }) => {
     await page.goto("/zk-cid");
 
-    // The demo page should render the ZK-CID header
-    await expect(page.locator("h1, h2").first()).toBeVisible();
+    // English is the default for the international judging panel.
+    await expect(page.getByRole("heading", { name: "ZK-CID Privacy Compliance Demo" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "中文", exact: true })).toBeVisible();
 
     // Verify the page is interactive (no crash)
     await page.waitForLoadState("domcontentloaded");
@@ -26,10 +27,10 @@ test.describe("ZK-CID E2E Flow", () => {
     await page.goto("/zk-cid");
 
     // The random-identity path is purely client-side and must work before any wallet connects.
-    await page.getByRole("button", { name: "生成随机匿名身份" }).click();
+    await page.getByRole("button", { name: "Generate random anonymous identity" }).click();
 
-    await expect(page.getByText("当前本地身份已就绪")).toBeVisible({ timeout: 30_000 });
-    await expect(page.getByText("Identity Commitment (公钥哈希):")).toBeVisible();
+    await expect(page.getByText("Local identity ready")).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText("Identity commitment (public hash):")).toBeVisible();
   });
 
   test("privacy comparison page loads", async ({ page }) => {
