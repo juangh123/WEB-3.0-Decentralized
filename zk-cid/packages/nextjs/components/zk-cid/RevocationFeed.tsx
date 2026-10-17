@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { useLanguage } from "./LanguageContext";
 import { useScaffoldWatchContractEvent } from "~~/hooks/scaffold-eth";
 
 type Revocation = { commitment: string; txHash: string };
@@ -13,6 +14,7 @@ const MAX_ENTRIES = 5;
  * here because event-history reads from block 0 time out on public Sepolia RPC endpoints.
  */
 export const RevocationFeed = () => {
+  const { t } = useLanguage();
   const [revocations, setRevocations] = useState<Revocation[]>([]);
 
   const recordRevocations = useCallback((logs: readonly unknown[]) => {
@@ -51,13 +53,15 @@ export const RevocationFeed = () => {
   return (
     <div className="mt-4 border-t border-base-300 pt-3">
       <div className="flex items-center justify-between mb-2">
-        <span className="font-bold">链上撤销记录（实时监听）</span>
+        <span className="font-bold">{t("链上撤销记录（实时监听）", "On-chain revocations (live)")}</span>
         <span className="opacity-60">
-          最近 {revocations.length}/{MAX_ENTRIES} 条
+          {t(`最近 ${revocations.length}/${MAX_ENTRIES} 条`, `Latest ${revocations.length}/${MAX_ENTRIES}`)}
         </span>
       </div>
       {revocations.length === 0 ? (
-        <p className="opacity-60">暂无新撤销事件（页面打开期间实时监听）</p>
+        <p className="opacity-60">
+          {t("暂无新撤销事件（页面打开期间实时监听）", "No new revocations while this page is open")}
+        </p>
       ) : (
         <ul className="flex flex-col gap-1">
           {revocations.map(entry => (
@@ -74,7 +78,7 @@ export const RevocationFeed = () => {
                 target="_blank"
                 rel="noreferrer"
               >
-                交易
+                {t("交易", "Tx")}
               </a>
             </li>
           ))}
