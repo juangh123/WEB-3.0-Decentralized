@@ -94,5 +94,8 @@ jobs:
       - name: Test mock sanctions API
         run: yarn workspace zk-cid-mock-sanctions-api test
 
-      - name: Audit dependencies (critical and high)
+      - name: Audit direct dependencies (high)
         run: yarn npm audit -A --severity high
+
+      - name: Audit transitive dependencies (critical)
+        run: yarn npm audit -A --recursive --severity critical
