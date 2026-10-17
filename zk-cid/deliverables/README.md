@@ -13,6 +13,10 @@ Direct local access to project pitch videos and subtitles:
   *Online Live URL:* `https://web-3-0-decentralized.vercel.app/demo/zk-cid-pitch-video-en.mp4`
 - **`zk-cid-pitch-video-zh.mp4`** (30 MB, 1080p, 2m 48s)
   Chinese captioned edition with the same English voiceover for multilingual judges.
+- **`zk-cid-strict-mode-acceptance.mp4`** (5.2 MB, 1080p, 34s)
+  Supplementary strict-mode acceptance clip: English demo UI, the live
+  AccessNFT mint transaction, and the revocation evidence.
+  *Online Live URL:* `https://web-3-0-decentralized.vercel.app/demo/zk-cid-strict-mode-acceptance.mp4`
 - **`subtitles_en.srt`** & **`subtitles_zh.srt`**
   Full transcript & SRT timing files.
 
