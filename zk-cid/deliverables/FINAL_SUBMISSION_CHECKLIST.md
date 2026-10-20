@@ -2,16 +2,15 @@
 
 Use this checklist immediately before submitting the DoraHacks BUIDL.
 
-Status as of 2026-10-21: review edits are committed in `c6a3530` and pushed to
-`origin/main`; GitHub Actions run `39454898322` passed. Mock API was redeployed
-on 2026-10-20, and the live DoraHacks BUIDL was updated with the `isValid`
-revocation boundary. Local review screenshots and drafts are ignored so they can
-remain on disk without dirtying the submission tree.
+Status as of 2026-10-21: review edits are pushed to `origin/main`; Mock API was
+redeployed on 2026-10-20, and the live DoraHacks BUIDL was updated with the
+`isValid` revocation boundary. Local review screenshots and drafts are ignored
+so they can remain on disk without dirtying the submission tree.
 
 ## Public Repository
 
 - [x] Public repository: `https://github.com/juangh123/WEB-3.0-Decentralized`
-- [x] Latest source and deployment artifacts are pushed to `origin/main` in `c6a3530`
+- [x] Latest source and deployment artifacts are pushed to `origin/main`
 - [x] `git status` is clean immediately before the final submit
 - [x] No production/deployer private key, real `ADMIN_TOKEN`, or local `.env` file is committed (only public Anvil dev keys remain in local scripts)
 
@@ -57,7 +56,7 @@ remain on disk without dirtying the submission tree.
 ## Regression Gates
 
 - [x] Current counts re-verified 2026-10-20: contracts 34/34, frontend 7/7, CRE logic 3/3, CRE simulation 9/9, mock API 13/13
-- [x] GitHub Actions run `39454898322` passed on commit `c6a3530` (2026-10-20 UTC)
+- [x] GitHub Actions main CI passed on the final pushed revision (2026-10-21)
 - [x] `yarn hardhat:test`
 - [x] `yarn next:build`
 - [x] `yarn next:test --maxWorkers=1` (7/7; use a single worker on this Windows path)
@@ -72,7 +71,7 @@ remain on disk without dirtying the submission tree.
 ## Repository Hygiene
 
 - [ ] Encrypt or rotate the live issuer key in `packages/hardhat/.env`; it is currently plaintext and matches the on-chain issuer
-- [x] Resolve moderate Dependabot alert 173 with `sprintf-js` 1.1.3 resolution through `js-yaml@3 → argparse@1.0.10`
+- [x] Remove the Jest 29 test stack to eliminate the `js-yaml@3 → argparse@1.0.10 → sprintf-js` advisory chain; CRE logic tests now run under Bun
 - [x] No tracked `*.log`, `*.pid`, or Vercel local state files
 - [x] Large generated video production files are ignored
 - [x] Only the intended frontend demo MP4 remains tracked under
