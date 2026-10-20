@@ -28,7 +28,7 @@
 ```bash
 cd zk-cid
 yarn install --immutable
-yarn test                                          # contracts + frontend unit + CRE jest + mock API
+yarn test                                          # contracts + frontend unit + CRE Bun unit tests + mock API
 yarn workspace compliance-lifecycle test:sim       # CRE workflow simulation (bun)
 yarn next:build                                    # frontend production build
 yarn e2e:install                                   # one-time Chromium download
