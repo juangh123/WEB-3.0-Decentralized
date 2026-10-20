@@ -2,14 +2,15 @@
 
 Use this checklist immediately before submitting the DoraHacks BUIDL.
 
-Status as of 2026-10-20: review edits are present locally and Mock API was
-redeployed. Source freeze, commit and push are still pending, so the working
-tree is intentionally not clean until those steps are approved.
+Status as of 2026-10-21: review edits are committed in `c6a3530` and pushed to
+`origin/main`; GitHub Actions run `39454898322` passed. Mock API was redeployed
+on 2026-10-20. Three pre-existing untracked local artifacts still prevent a
+fully clean working tree.
 
 ## Public Repository
 
 - [x] Public repository: `https://github.com/juangh123/WEB-3.0-Decentralized`
-- [ ] Latest source and deployment artifacts are pushed to `origin/main` after the 2026-10-20 review edits
+- [x] Latest source and deployment artifacts are pushed to `origin/main` in `c6a3530`
 - [ ] `git status` is clean immediately before the final submit
 - [x] No production/deployer private key, real `ADMIN_TOKEN`, or local `.env` file is committed (only public Anvil dev keys remain in local scripts)
 
@@ -55,6 +56,7 @@ tree is intentionally not clean until those steps are approved.
 ## Regression Gates
 
 - [x] Current counts re-verified 2026-10-20: contracts 34/34, frontend 7/7, CRE logic 3/3, CRE simulation 9/9, mock API 13/13
+- [x] GitHub Actions run `39454898322` passed on commit `c6a3530` (2026-10-20 UTC)
 - [x] `yarn hardhat:test`
 - [x] `yarn next:build`
 - [x] `yarn next:test --maxWorkers=1` (7/7; use a single worker on this Windows path)
@@ -69,6 +71,7 @@ tree is intentionally not clean until those steps are approved.
 ## Repository Hygiene
 
 - [ ] Encrypt or rotate the live issuer key in `packages/hardhat/.env`; it is currently plaintext and matches the on-chain issuer
+- [ ] Track moderate Dependabot alert 173 (`sprintf-js` DoS through `js-yaml@3 → argparse@1.0.10`; no in-range patched version)
 - [x] No tracked `*.log`, `*.pid`, or Vercel local state files
 - [x] Large generated video production files are ignored
 - [x] Only the intended frontend demo MP4 remains tracked under
