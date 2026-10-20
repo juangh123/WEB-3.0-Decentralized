@@ -241,6 +241,13 @@ Invoke-RestMethod -Uri 'https://mock-api-topaz-zeta.vercel.app/api/admin' `
   throwaway credential used for the run was revoked afterward, restoring the
   member set; the minted token remains owned by the deployer as acceptance
   evidence.
+- `AccessNFT.isValid` is an administrative pass flag (`hasMinted` and not
+  manually revoked by the issuer), not a live sanctions or compliance check.
+  The acceptance token still returns `isValid = true` after its credential was
+  revoked from the Semaphore tree. CRE tree revocation blocks future proof
+  mints; it does not automatically revoke previously minted access passes.
+  Consumers must revalidate a fresh ZK proof or query an authoritative
+  compliance source before granting protected resources.
 - Contract unit tests use the `MockSemaphore` verifier for speed. The deployed
   path uses the real Semaphore v4 verifier at
   `0x8A1fd199516489B0Fb7153EB5f075cDAC83c693D`.

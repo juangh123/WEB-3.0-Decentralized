@@ -6,7 +6,7 @@
 > 下文提到的三个遗留问题均已解决，且项目状态已远超当时的"演示级"：
 >
 > 1. **包管理器争议** —— 已统一为 Yarn 4 + workspace，`yarn install --immutable`、lint、类型检查在 CI 全绿。
-> 2. **测试脚手架残留** —— `workflows/compliance-lifecycle` 现有完整测试：SDK 流程测试 3 条 + Poseidon 兼容性向量 3 条（`test:sim`，6/6），合约测试 30/30（含 7 条 CRE receiver 用例）。
+> 2. **测试脚手架残留** —— `workflows/compliance-lifecycle` 现有完整测试：SDK 流程测试 6 条 + Poseidon 兼容性向量 3 条（`test:sim`，9/9），合约测试 34/34（含 7 条 CRE receiver 用例）。
 > 3. **CRE 仅为模拟 SDK** —— 现已用官方 CRE CLI v1.36.0 完成 `cre workflow build` / `cre workflow simulate`，
 >    并部署了真实的写链适配器 `ComplianceGateReceiver`（Blockscout + Sourcify 已验证），
 >    还通过 `--broadcast` 在 Sepolia 上产生了真实撤销交易

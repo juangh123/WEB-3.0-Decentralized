@@ -2,11 +2,15 @@
 
 Use this checklist immediately before submitting the DoraHacks BUIDL.
 
+Status as of 2026-10-20: review edits are present locally and Mock API was
+redeployed. Source freeze, commit and push are still pending, so the working
+tree is intentionally not clean until those steps are approved.
+
 ## Public Repository
 
 - [x] Public repository: `https://github.com/juangh123/WEB-3.0-Decentralized`
-- [x] Latest source and deployment artifacts are pushed to `origin/main`
-- [x] `git status` is clean immediately before the final submit
+- [ ] Latest source and deployment artifacts are pushed to `origin/main` after the 2026-10-20 review edits
+- [ ] `git status` is clean immediately before the final submit
 - [x] No production/deployer private key, real `ADMIN_TOKEN`, or local `.env` file is committed (only public Anvil dev keys remain in local scripts)
 
 ## Live Demo
@@ -16,6 +20,7 @@ Use this checklist immediately before submitting the DoraHacks BUIDL.
 - [x] Demo video is reachable: `/demo/zk-cid-pitch-video-en.mp4`
 - [x] Mock API returns a real seeded commitment: `https://mock-api-topaz-zeta.vercel.app/api/sanctions-list`
 - [x] Deployed admin route responds: `/api/admin` with `{"action":"status"}`
+- [x] Mock API production redeployed 2026-10-20 (`dpl_4EfR5zLuyzHWTp4ULQSbNpQy1Pjr`); GET returns the seeded commitment and unauthenticated admin POST returns 401
 
 ## Sepolia Consistency
 
@@ -39,7 +44,7 @@ Use this checklist immediately before submitting the DoraHacks BUIDL.
 - [x] Real CRE SDK compilation produces `dist/compliance-lifecycle.wasm`
 - [x] Official CRE CLI v1.36.0 `cre workflow build compliance-lifecycle -T staging-settings` succeeds
   (run from a space-free path copy; bun 1.2.21 → binary hash `482ea06d...`)
-- [x] yarn workspace compliance-lifecycle test:sim (CRE SDK TestRuntime end-to-end simulation, 3/3 pass)
+- [x] yarn workspace compliance-lifecycle test:sim (CRE SDK TestRuntime end-to-end simulation, 9/9 pass: 6 flow + 3 Poseidon vectors; re-verified 2026-10-20)
 - [x] Official `cre workflow simulate` executed end-to-end with CLI v1.36.0 (log: `evidence/cre-simulate-20261002-232950.log`, receiver = `ComplianceGateReceiver`)
 - [x] CRE write path wired: `ComplianceGateReceiver` deployed + source-verified, `ComplianceGate.creWorkflow` points at it, report payload is `abi.encode(uint256, uint256[])`, 7 adapter tests passing
 - [x] Real broadcast rehearsal executed: tx `0xb64c050e37d7959951510eae66cc6994e11a7f640f8c4699f0d7e1050713e4d9` revoked the credential on Sepolia (via MockKeystoneForwarder; adapter switched back to the production forwarder afterwards)
@@ -49,16 +54,21 @@ Use this checklist immediately before submitting the DoraHacks BUIDL.
 
 ## Regression Gates
 
+- [x] Current counts re-verified 2026-10-20: contracts 34/34, frontend 7/7, CRE logic 3/3, CRE simulation 9/9, mock API 13/13
 - [x] `yarn hardhat:test`
 - [x] `yarn next:build`
+- [x] `yarn next:test --maxWorkers=1` (7/7; use a single worker on this Windows path)
+- [x] `yarn e2e` (6/6)
 - [x] `yarn next:lint --max-warnings=0`
 - [x] `yarn hardhat:lint --max-warnings=0`
 - [x] `yarn workspace compliance-lifecycle compile`
 - [x] `yarn workspace zk-cid-mock-sanctions-api test`
 - [x] `node --check zk-cid/mock-api/server.js`
+- [x] Sepolia AccessNFT runtime bytecode matches the local artifact (`0x699b0e44...f0ef`)
 
 ## Repository Hygiene
 
+- [ ] Encrypt or rotate the live issuer key in `packages/hardhat/.env`; it is currently plaintext and matches the on-chain issuer
 - [x] No tracked `*.log`, `*.pid`, or Vercel local state files
 - [x] Large generated video production files are ignored
 - [x] Only the intended frontend demo MP4 remains tracked under
@@ -70,7 +80,8 @@ Use this checklist immediately before submitting the DoraHacks BUIDL.
 - [x] Track confirmed: `All BUIDLs` (the only selectable track)
 - [x] Bounty confirmed selected on the form: `Best workflow with CRE - 2x $1,000` (Chainlink CRE, bounty 1362)
 - [x] Live URLs, repo URL, video URL and Sepolia tx links present on the BUIDL
-- [x] Known Limitations section visible on the BUIDL, updated 2026-10-02 with the executed CRE CLI simulation and the remaining broadcast/forwarder boundary
+- [x] Known Limitations section visible on the BUIDL, including the 2026-10-17 strict-mode evidence and CRE simulation boundary
+- [ ] Copy the 2026-10-20 `AccessNFT.isValid` limitation into the live BUIDL page; the local source is `DORA_SUBMISSION.md`
 
 ## Submission Materials (prepared 2026-09-09)
 
@@ -81,7 +92,7 @@ Use this checklist immediately before submitting the DoraHacks BUIDL.
 - [x] Demo video thumbnails: `zk-cid/deliverables/media/video-thumbnail-20s.png`, `video-thumbnail-60s.png`
 - [x] Screenshots gallery: `zk-cid/docs/assets/demo-00-landing.png`, `demo-01-comparison.png`, `demo-02-identity.png`, `demo-03-issued-success.png`, `demo-03-issued.png`
 - [x] Demo video (30 MB, 1080p 2:48, English voiceover + captions) tracked and live-hosted
-- [x] All live URLs re-verified 2026-09-15 (demo, /zk-cid, video, mock API, GitHub, Sepolia)
+- [x] All live URLs re-verified 2026-10-20 (demo, /zk-cid, video, mock API, GitHub, Sepolia)
 - [x] Submission copy, links, cover and video are attached to the BUIDL form
 - [x] CRE evidence paragraph on the BUIDL updated twice: first to the executed CLI simulation (2026-10-02), then to the production-wired receiver adapter + the real broadcast revocation tx (2026-10-03, verified by reloading the live BUIDL page)
 - [ ] Optional: upload the remaining pitch deck PDF / screenshot gallery files if the organizer asks for them explicitly

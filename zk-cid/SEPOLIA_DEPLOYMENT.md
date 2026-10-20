@@ -386,4 +386,8 @@ removed first:
   `0x03b17a4d…22b2`, Blockscout status `ok`). The acceptance credential was then
   revoked with a real Merkle proof (tx `0x14469a82…5d78`), restoring
   `getMembers()` to the single demo member. `nextTokenId` is now `1`;
-  `hasMinted(deployer)` and `isValid(deployer)` are both true.
+  `hasMinted(deployer)` and `isValid(deployer)` are both true. `isValid` is an
+  administrative pass flag, not current compliance: the acceptance credential
+  was revoked from the tree while the already-minted token remains
+  `isValid = true`. Consumers must revalidate a fresh ZK proof or query an
+  authoritative compliance source.
