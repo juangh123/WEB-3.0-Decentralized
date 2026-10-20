@@ -4,8 +4,9 @@ Use this checklist immediately before submitting the DoraHacks BUIDL.
 
 Status as of 2026-10-21: review edits are committed in `c6a3530` and pushed to
 `origin/main`; GitHub Actions run `39454898322` passed. Mock API was redeployed
-on 2026-10-20. Three pre-existing untracked local artifacts still prevent a
-fully clean working tree.
+on 2026-10-20, and the live DoraHacks BUIDL was updated with the `isValid`
+revocation boundary. Three pre-existing untracked local artifacts still prevent
+a fully clean working tree.
 
 ## Public Repository
 
@@ -84,7 +85,7 @@ fully clean working tree.
 - [x] Bounty confirmed selected on the form: `Best workflow with CRE - 2x $1,000` (Chainlink CRE, bounty 1362)
 - [x] Live URLs, repo URL, video URL and Sepolia tx links present on the BUIDL
 - [x] Known Limitations section visible on the BUIDL, including the 2026-10-17 strict-mode evidence and CRE simulation boundary
-- [ ] Copy the 2026-10-20 `AccessNFT.isValid` limitation into the live BUIDL page; the local source is `DORA_SUBMISSION.md`
+- [x] Copy the 2026-10-20 `AccessNFT.isValid` limitation into the live BUIDL page and verify it on 2026-10-21
 
 ## Submission Materials (prepared 2026-09-09)
 
