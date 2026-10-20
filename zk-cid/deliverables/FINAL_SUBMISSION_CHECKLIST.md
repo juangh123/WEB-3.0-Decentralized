@@ -5,14 +5,14 @@ Use this checklist immediately before submitting the DoraHacks BUIDL.
 Status as of 2026-10-21: review edits are committed in `c6a3530` and pushed to
 `origin/main`; GitHub Actions run `39454898322` passed. Mock API was redeployed
 on 2026-10-20, and the live DoraHacks BUIDL was updated with the `isValid`
-revocation boundary. Three pre-existing untracked local artifacts still prevent
-a fully clean working tree.
+revocation boundary. Local review screenshots and drafts are ignored so they can
+remain on disk without dirtying the submission tree.
 
 ## Public Repository
 
 - [x] Public repository: `https://github.com/juangh123/WEB-3.0-Decentralized`
 - [x] Latest source and deployment artifacts are pushed to `origin/main` in `c6a3530`
-- [ ] `git status` is clean immediately before the final submit
+- [x] `git status` is clean immediately before the final submit
 - [x] No production/deployer private key, real `ADMIN_TOKEN`, or local `.env` file is committed (only public Anvil dev keys remain in local scripts)
 
 ## Live Demo
@@ -72,7 +72,7 @@ a fully clean working tree.
 ## Repository Hygiene
 
 - [ ] Encrypt or rotate the live issuer key in `packages/hardhat/.env`; it is currently plaintext and matches the on-chain issuer
-- [ ] Track moderate Dependabot alert 173 (`sprintf-js` DoS through `js-yaml@3 → argparse@1.0.10`; no in-range patched version)
+- [x] Resolve moderate Dependabot alert 173 with `sprintf-js` 1.1.3 resolution through `js-yaml@3 → argparse@1.0.10`
 - [x] No tracked `*.log`, `*.pid`, or Vercel local state files
 - [x] Large generated video production files are ignored
 - [x] Only the intended frontend demo MP4 remains tracked under

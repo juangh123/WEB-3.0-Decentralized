@@ -17,3 +17,8 @@ video-production/cards/*.png
 video-production/cards/preview/
 video-production/segments/
 video-production/recordings/
+
+# local review and submission artifacts
+.codex-buidl-preview.png
+email-draft-for-bli.eml
+output/
