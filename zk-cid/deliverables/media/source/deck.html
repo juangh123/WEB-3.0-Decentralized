@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ZK-CID Pitch Deck</title>
+<style>
+  :root {
+    --bg: #0b1120; --panel: #111a2e; --panel2: #0f172a; --line: #1f2a44;
+    --text: #e5e7eb; --muted: #94a3b8; --dim: #64748b;
+    --accent: #34d399; --accent-soft: rgba(52, 211, 153, .12); --amber: #fbbf24;
+  }
+  @page { size: 1280px 720px; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); }
+  body { font-family: "Inter", "DejaVu Sans", sans-serif; color: var(--text); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .slide { width: 1280px; height: 720px; position: relative; overflow: hidden; background: var(--bg); page-break-after: always; break-after: page; padding: 56px 72px 48px; border-top: 6px solid var(--accent); }
+  .slide:last-child { page-break-after: auto; break-after: auto; }
+  .num { position: absolute; top: 28px; right: 40px; font: 500 14px "DejaVu Sans Mono", monospace; color: var(--accent); }
+  .foot { position: absolute; left: 72px; right: 72px; bottom: 26px; display: flex; justify-content: space-between; font: 12px "DejaVu Sans Mono", monospace; color: var(--dim); }
+  h1 { font: 700 40px/1.15 "Inter Display", "Inter", sans-serif; margin: 0 0 6px; letter-spacing: -0.5px; }
+  h2 { font: 500 19px/1.4 "Inter", sans-serif; color: var(--muted); margin: 0 0 30px; }
+  .rule { height: 1px; background: var(--line); margin: 0 0 28px; }
+  ul.b { list-style: none; padding: 0; margin: 0; }
+  ul.b li { position: relative; padding-left: 26px; margin: 0 0 16px; font-size: 20px; line-height: 1.45; }
+  ul.b li::before { content: ""; position: absolute; left: 4px; top: 11px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+  .quote { margin-top: 26px; border: 1px solid var(--line); border-left: 4px solid var(--accent); background: var(--panel); border-radius: 10px; padding: 18px 22px; font-size: 20px; color: var(--accent); }
+  .quote small { display: block; margin-top: 6px; font: 13px "DejaVu Sans Mono", monospace; color: var(--muted); }
+  .steps { display: flex; flex-direction: column; gap: 12px; }
+  .step { display: flex; align-items: center; gap: 20px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 15px 22px; font-size: 19px; line-height: 1.4; }
+  .step b { font: 700 22px "Inter Display", sans-serif; color: var(--accent); width: 22px; flex: none; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px 22px; }
+  .card h3 { margin: 0 0 10px; font: 600 18px "Inter", sans-serif; color: var(--accent); }
+  .card p, .card li { font-size: 17.5px; line-height: 1.5; color: var(--text); margin: 0; }
+  .card ul { margin: 0; padding-left: 18px; }
+  .card li { margin-bottom: 6px; }
+  .muted { color: var(--muted); }
+  .mono { font-family: "DejaVu Sans Mono", monospace; }
+  table { width: 100%; border-collapse: collapse; font-size: 18px; }
+  th { text-align: left; font-weight: 600; color: var(--accent); padding: 12px 14px; border-bottom: 1px solid var(--line); background: var(--panel2); }
+  td { padding: 16px 14px; border-bottom: 1px solid var(--line); vertical-align: top; line-height: 1.4; }
+  td:first-child { color: var(--muted); width: 26%; }
+  td.z { color: var(--accent); font-weight: 600; }
+  .ev { list-style: none; padding: 0; margin: 0; }
+  .ev li { display: flex; gap: 12px; font-size: 17px; line-height: 1.45; margin-bottom: 11px; }
+  .ev li i { font-style: normal; color: var(--accent); flex: none; width: 18px; }
+  .ev li.p i { color: var(--amber); }
+  .pill { display: inline-block; font: 600 12px "DejaVu Sans Mono", monospace; color: var(--accent); border: 1px solid var(--accent); border-radius: 999px; padding: 3px 10px; margin-right: 8px; }
+  .kv { display: grid; grid-template-columns: 170px 1fr; row-gap: 12px; column-gap: 14px; font-size: 17px; }
+  .kv div:nth-child(odd) { color: var(--muted); }
+  .title-wrap { display: flex; align-items: center; gap: 48px; margin-top: 70px; }
+  .title-wrap h1 { font-size: 96px; letter-spacing: -2px; margin: 0; }
+  .sub { font-size: 26px; color: var(--muted); line-height: 1.35; margin-top: 6px; }
+  .tag { font-size: 28px; color: var(--accent); margin-top: 26px; font-weight: 600; }
+  .meta { position: absolute; left: 72px; bottom: 58px; font-size: 16px; color: var(--muted); line-height: 1.8; }
+  .meta .mono { font-size: 14px; color: var(--dim); }
+  .done { color: var(--accent); }
+  .next { color: var(--amber); }
+  svg text { font-family: "Inter", sans-serif; }
+</style>
+</head>
+<body>
+
+<!-- 1. Title -->
+<section class="slide">
+  <div class="title-wrap">
+    <img src="logo.svg" width="210" height="210" alt="">
+    <div>
+      <h1>ZK-CID</h1>
+      <div class="sub">Zero-Knowledge Compliance Identity<br>&amp; Decentralized Workflow Orchestration</div>
+      <div class="tag">Prove you are compliant, protect who you are.</div>
+    </div>
+  </div>
+  <div class="meta">
+    BLI Legal Tech Hackathon 2 · LegalTech &amp; RegTech · Chainlink CRE bounty · Live on Sepolia<br>
+    <span class="mono">Demo  https://web-3-0-decentralized.vercel.app/zk-cid</span><br>
+    <span class="mono">Code  https://github.com/juangh123/WEB-3.0-Decentralized</span>
+  </div>
+</section>
+
+<!-- 2. Problem -->
+<section class="slide">
+  <div class="num">02</div>
+  <h1>Web3 is forced to choose: compliance or privacy</h1>
+  <h2>Both sides of today's KYC model fail someone.</h2>
+  <div class="rule"></div>
+  <ul class="b">
+    <li>Traditional KYC hands passports, faces and home addresses to every service. One breach leaks everything.</li>
+    <li>Fully anonymous DeFi carries AML and sanctions risk that institutions cannot take on.</li>
+    <li>Screening usually happens once, at onboarding. Designations made later slip through, and revocation is manual and slow.</li>
+    <li>Age checks today mean collecting ID documents from children: the opposite of data minimisation.</li>
+  </ul>
+  <div class="quote">"Trust is currently misplaced: either on a data honeypot, or on no one."
+    <small>GDPR and AML duties have to coexist. ZK-CID makes them complementary.</small></div>
+</section>
+
+<!-- 3. Solution -->
+<section class="slide">
+  <div class="num">03</div>
+  <h1>Prove compliance without revealing identity</h1>
+  <h2>And keep that status current automatically.</h2>
+  <div class="steps">
+    <div class="step"><b>1</b>A regulated issuer verifies the user off-chain (documents, sanctions screening).</div>
+    <div class="step"><b>2</b>Only an anonymous Semaphore commitment is added to the on-chain compliance group.</div>
+    <div class="step"><b>3</b>The user proves membership with a zero-knowledge proof made in the browser and bound to their wallet.</div>
+    <div class="step"><b>4</b>ComplianceGate checks it with the real Semaphore v4 verifier, then AccessNFT mints the pass. Each proof works once.</div>
+    <div class="step"><b>5</b>A Chainlink CRE workflow screens at issuance and every 5 minutes, and revokes listed members on-chain.</div>
+  </div>
+</section>
+
+<!-- 4. Architecture -->
+<section class="slide">
+  <div class="num">04</div>
+  <h1>Architecture</h1>
+  <h2>Privacy on the verifier side, decentralized trust on the issuer side.</h2>
+  <div style="display:grid;grid-template-columns:760px 1fr;gap:28px;align-items:start">
+    <svg width="760" height="470" viewBox="0 0 760 470">
+      <defs>
+        <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#34d399"/></marker>
+        <marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#94a3b8"/></marker>
+      </defs>
+      <g font-size="15" fill="#e5e7eb">
+        <rect x="10" y="20" width="210" height="76" rx="12" fill="#111a2e" stroke="#1f2a44"/>
+        <text x="115" y="52" text-anchor="middle" font-weight="600">User browser</text>
+        <text x="115" y="74" text-anchor="middle" fill="#94a3b8" font-size="13">identity + Groth16 prover</text>
+
+        <rect x="10" y="196" width="210" height="76" rx="12" fill="#111a2e" stroke="#1f2a44"/>
+        <text x="115" y="228" text-anchor="middle" font-weight="600">Regulated issuer</text>
+        <text x="115" y="250" text-anchor="middle" fill="#94a3b8" font-size="13">off-chain KYC</text>
+
+        <rect x="290" y="196" width="200" height="76" rx="12" fill="#0f2a22" stroke="#34d399"/>
+        <text x="390" y="228" text-anchor="middle" font-weight="600">ComplianceGate</text>
+        <text x="390" y="250" text-anchor="middle" fill="#94a3b8" font-size="13">Semaphore group</text>
+
+        <rect x="290" y="20" width="200" height="76" rx="12" fill="#111a2e" stroke="#1f2a44"/>
+        <text x="390" y="52" text-anchor="middle" font-weight="600">AccessNFT</text>
+        <text x="390" y="74" text-anchor="middle" fill="#94a3b8" font-size="13">mint(proof)</text>
+
+        <rect x="290" y="372" width="200" height="76" rx="12" fill="#111a2e" stroke="#1f2a44"/>
+        <text x="390" y="404" text-anchor="middle" font-weight="600">CRE receiver</text>
+        <text x="390" y="426" text-anchor="middle" fill="#94a3b8" font-size="13">Keystone forwarder only</text>
+
+        <rect x="578" y="196" width="172" height="76" rx="12" fill="#111a2e" stroke="#34d399"/>
+        <text x="664" y="228" text-anchor="middle" font-weight="600">Chainlink CRE</text>
+        <text x="664" y="250" text-anchor="middle" fill="#94a3b8" font-size="13">cron + log trigger</text>
+
+        <rect x="578" y="20" width="172" height="76" rx="12" fill="#111a2e" stroke="#1f2a44"/>
+        <text x="664" y="52" text-anchor="middle" font-weight="600">Sanctions feed</text>
+        <text x="664" y="74" text-anchor="middle" fill="#94a3b8" font-size="13">issuer re-screening</text>
+      </g>
+      <g stroke-width="2" fill="none" font-size="12">
+        <path d="M115 96 V196" stroke="#94a3b8" marker-end="url(#g)"/>
+        <text x="124" y="150" fill="#94a3b8">commitment only</text>
+        <path d="M220 234 H290" stroke="#34d399" marker-end="url(#a)"/>
+        <text x="228" y="226" fill="#34d399">issue</text>
+        <path d="M220 58 H290" stroke="#34d399" marker-end="url(#a)"/>
+        <text x="226" y="50" fill="#34d399">ZK proof</text>
+        <path d="M390 96 V196" stroke="#34d399" marker-end="url(#a)"/>
+        <text x="398" y="150" fill="#34d399">verify</text>
+        <path d="M664 96 V196" stroke="#94a3b8" marker-end="url(#g)"/>
+        <text x="672" y="150" fill="#94a3b8">DON consensus</text>
+        <path d="M490 220 H578" stroke="#94a3b8" stroke-dasharray="5 4" marker-end="url(#g)"/>
+        <text x="497" y="211" fill="#94a3b8" font-size="11">UserAdded</text>
+        <path d="M578 252 H490" stroke="#94a3b8" marker-end="url(#g)"/>
+        <text x="497" y="269" fill="#94a3b8" font-size="11">read leaves</text>
+        <path d="M664 272 V410 H490" stroke="#34d399" marker-end="url(#a)"/>
+        <text x="540" y="400" fill="#34d399">DON-signed report</text>
+        <path d="M390 372 V272" stroke="#34d399" marker-end="url(#a)"/>
+        <text x="398" y="330" fill="#34d399">revoke</text>
+      </g>
+    </svg>
+    <div class="kv" style="grid-template-columns:120px 1fr;margin-top:6px">
+      <div>ZK</div><div>Semaphore v4 (Groth16, LeanIMT)</div>
+      <div>Contracts</div><div>Solidity 0.8.28, Hardhat 3, OpenZeppelin</div>
+      <div>Frontend</div><div>Next.js, Scaffold-ETH 2, wagmi, viem</div>
+      <div>Workflow</div><div>Chainlink CRE TypeScript SDK 1.16, CLI 1.36</div>
+      <div>Network</div><div>Ethereum Sepolia</div>
+      <div>Data</div><div>Mock sanctions API (Vercel)</div>
+    </div>
+  </div>
+</section>
+
+<!-- 5. CRE -->
+<section class="slide">
+  <div class="num">05</div>
+  <h1>Chainlink CRE: the compliance lifecycle</h1>
+  <h2>One workflow, two triggers, one revocation path.</h2>
+  <div class="grid2" style="grid-template-columns:1.05fr 1fr">
+    <div>
+      <div class="card" style="margin-bottom:16px">
+        <h3>Handlers</h3>
+        <p><span class="pill">0 · cron</span>every 5 min: re-screen every member</p>
+        <p style="margin-top:10px"><span class="pill">1 · EVM log</span><span class="mono" style="font-size:14px">UserAdded</span>, finalized: screen each new credential at issuance</p>
+      </div>
+      <div class="card">
+        <h3>Pipeline</h3>
+        <ul>
+          <li>HTTP fetch of the sanctions feed, identical-result DON consensus</li>
+          <li><span class="mono" style="font-size:14px">getMembers()</span> / <span class="mono" style="font-size:14px">getLeaves()</span> at the finalized block</li>
+          <li>Rebuild the Semaphore tree (LeanIMT + Poseidon in WASM), real Merkle siblings</li>
+          <li>DON-signed report → <span class="mono" style="font-size:14px">writeReport</span> → receiver → on-tree revocation</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Evidence</h3>
+      <ul class="ev">
+        <li><i>✓</i><span>Official CRE CLI 1.36 build + <span class="mono" style="font-size:14px">simulate</span> against live Sepolia: <span class="mono" style="font-size:14px">{"status":"revoked"}</span></span></li>
+        <li><i>✓</i><span>A CRE report produced a real on-chain revocation (tx 0xb64c050e…)</span></li>
+        <li><i>✓</i><span>Receiver follows the official ReceiverTemplate pattern and is source-verified</span></li>
+        <li><i>✓</i><span>11 TestRuntime workflow tests cover both handlers; 34 contract tests</span></li>
+        <li><i>✓</i><span>Running simulate exposed 3 runtime defects, all fixed and documented</span></li>
+        <li class="p"><i>⏳</i><span>Scheduled DON execution follows Chainlink's commercial onboarding (requested 3 Oct)</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 6. Demo -->
+<section class="slide">
+  <div class="num">06</div>
+  <h1>Try it in 3 minutes, no wallet needed</h1>
+  <h2>web-3-0-decentralized.vercel.app/zk-cid</h2>
+  <div class="grid2" style="grid-template-columns:1.1fr 1fr">
+    <div class="steps">
+      <div class="step"><b>1</b>Generate an anonymous identity in the browser.</div>
+      <div class="step"><b>2</b>Demo issuer adds the commitment to the group on Sepolia.</div>
+      <div class="step"><b>3</b>Generate the Groth16 proof locally.</div>
+      <div class="step"><b>4</b>Verify it without gas: an eth_call runs the real strict-mode verifier on the live contracts.</div>
+    </div>
+    <div class="card">
+      <h3>Live on Sepolia</h3>
+      <div class="kv">
+        <div>Verification</div><div>Strict mode since 10 Oct</div>
+        <div>First mint</div><div>17 Oct, real proof (tx 0x03b17a4d…)</div>
+        <div>Revocations</div><div>Real Merkle-proof removals on-chain</div>
+        <div>Source</div><div>Verified on Blockscout + Sourcify</div>
+        <div>Tests</div><div>CI: contracts, unit, workflow, API, E2E</div>
+        <div>Video</div><div>2:48 pitch + 34 s acceptance clip</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 7. Comparison -->
+<section class="slide">
+  <div class="num">07</div>
+  <h1>How ZK-CID compares</h1>
+  <h2>Same compliance guarantee, a fraction of the data exposure.</h2>
+  <table>
+    <tr><th></th><th>Classic KYC gate</th><th>KYC token / soulbound badge</th><th>ZK-CID</th></tr>
+    <tr><td>What the dApp learns</td><td>Full identity</td><td>That this wallet passed KYC</td><td class="z">Only that a valid proof was given</td></tr>
+    <tr><td>Wallet ↔ person link</td><td>Stored by every service</td><td>Public and permanent</td><td class="z">None on-chain; unlinkable within the group</td></tr>
+    <tr><td>New sanctions</td><td>Manual review</td><td>Manual burn or revoke</td><td class="z">Automated: CRE at issuance + every 5 min</td></tr>
+    <tr><td>Breach impact</td><td>Full PII</td><td>Identity graph of wallets</td><td class="z">No PII at the dApp or on-chain</td></tr>
+    <tr><td>Replay / theft</td><td>Session-based</td><td>Transferable unless soulbound</td><td class="z">Proof bound to wallet, single-use nullifier</td></tr>
+  </table>
+  <p class="muted" style="margin-top:18px;font-size:15px">Privacy grows with group size: a production group holds an issuer's whole customer base, the demo group only a handful. CRE automation is CLI-simulated today; scheduled DON execution follows Chainlink onboarding.</p>
+</section>
+
+<!-- 8. Regulatory -->
+<section class="slide">
+  <div class="num">08</div>
+  <h1>Regulatory fit</h1>
+  <h2>A technical control that maps onto existing duties. Not legal advice.</h2>
+  <div class="grid2" style="row-gap:20px">
+    <div class="card"><h3>GDPR</h3><p>Data minimisation (Art. 5) and privacy by design (Art. 25): only a pseudonymous commitment and a nullifier go on-chain; PII stays with the issuer.</p></div>
+    <div class="card"><h3>Sanctions (OFAC, EU)</h3><p>Screening at onboarding and continuously, automated revocation, and a restoration path for false positives.</p></div>
+    <div class="card"><h3>Minors and age assurance</h3><p>GDPR Art. 8, COPPA, UK Online Safety Act: an "over 18" group lets a service gate by age without ever storing a birth date or ID.</p></div>
+    <div class="card"><h3>FATF Travel Rule, MiCA</h3><p>Complementary to a VASP/CASP's own AML programme; the issuer stays accountable for KYC.</p></div>
+  </div>
+  <p class="muted" style="margin-top:20px;font-size:15px">Requirement-by-requirement mapping with open gaps: zk-cid/deliverables/LEGAL_MAPPING.md</p>
+</section>
+
+<!-- 9. Business -->
+<section class="slide">
+  <div class="num">09</div>
+  <h1>Who pays, and why</h1>
+  <h2>Proposed model: compliance that removes data liability instead of adding it.</h2>
+  <div class="grid2" style="grid-template-columns:1fr 1fr 1fr;gap:20px">
+    <div class="card"><h3>Verifiers</h3><p>DeFi pools and RWA platforms that must restrict access. Pay per verification or a subscription to gate pools without ever holding PII.</p></div>
+    <div class="card"><h3>Issuers</h3><p>KYC providers issue reusable ZK credentials. One check, many venues; revenue per credential without sharing customer data.</p></div>
+    <div class="card"><h3>Compliance teams</h3><p>Continuous screening and revocation as a managed CRE workflow, with on-chain evidence auditors can replay.</p></div>
+  </div>
+  <div class="quote" style="margin-top:16px;color:var(--text)">Go-to-market: start with permissioned DeFi and RWA venues that already have to KYC every investor, then add attribute groups (age, accredited investor, jurisdiction).</div>
+  <div class="card" style="margin-top:16px">
+    <h3>Why now</h3>
+    <ul>
+      <li>MiCA has applied in full across the EU since 30 December 2024, so crypto-asset service providers need AML controls that work on-chain.</li>
+      <li>UK age checks under the Online Safety Act have been enforced since 25 July 2025, which pushes services towards checking age without hoarding ID documents.</li>
+      <li>Sanctions designations keep changing after onboarding, and one-time screening cannot keep up.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 10. Roadmap -->
+<section class="slide">
+  <div class="num">10</div>
+  <h1>Status and roadmap</h1>
+  <h2>Built, deployed and evidenced, with the gaps stated openly.</h2>
+  <div class="grid2">
+    <div class="card">
+      <h3>Done</h3>
+      <ul class="ev">
+        <li><i>✓</i><span>Strict-mode ZK verification live on Sepolia</span></li>
+        <li><i>✓</i><span>CRE workflow: CLI-simulated cron handler, a real revocation tx, and a new issuance trigger</span></li>
+        <li><i>✓</i><span>Gas-free on-chain verification for anyone</span></li>
+        <li><i>✓</i><span>Verified contracts; CI with contract, unit, workflow, API and E2E tests</span></li>
+        <li><i>✓</i><span>Regulatory mapping with open gaps</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="color:var(--amber)">Next</h3>
+      <ul class="ev">
+        <li class="p"><i>→</i><span>DON deployment after Chainlink onboarding</span></li>
+        <li class="p"><i>→</i><span>Pass expiry so revocation reaches minted passes</span></li>
+        <li class="p"><i>→</i><span>Licensed sanctions feed and human review queue</span></li>
+        <li class="p"><i>→</i><span>Attribute groups (18+, accredited) with per-app scopes</span></li>
+        <li class="p"><i>→</i><span>A KYC provider as the first production issuer</span></li>
+      </ul>
+    </div>
+  </div>
+  <div style="margin-top:40px;display:flex;align-items:center;gap:22px">
+    <img src="logo.svg" width="64" height="64" alt="">
+    <div><div style="font:700 40px 'Inter Display','Inter',sans-serif">Thank you.</div>
+    <div class="muted" style="font-size:17px">Private by design, compliant by proof.</div></div>
+  </div>
+  <div class="foot"><span>web-3-0-decentralized.vercel.app/zk-cid</span><span>github.com/juangh123/WEB-3.0-Decentralized</span></div>
+</section>
+
+</body>
+</html>

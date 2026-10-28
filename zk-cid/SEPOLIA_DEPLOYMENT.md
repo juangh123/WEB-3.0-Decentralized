@@ -228,7 +228,7 @@ the tree-removal step, and keep the live demo commitment issued.
 The live mock sanctions list currently flags the same commitment that is a
 member on-chain, so the moment a real CRE workflow (or a live DON deployment)
 executes, it legitimately revokes the demo credential and the `/zk-cid` page
-will show `链上成员数 0`. That is the intended behaviour, not a bug. Restore the
+will show `On-chain members: 0`. That is the intended behaviour, not a bug. Restore the
 demo in one command with the issuer wallet:
 
 ```powershell

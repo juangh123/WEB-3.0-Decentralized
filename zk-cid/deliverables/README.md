@@ -7,7 +7,7 @@ This directory contains all finalized media, artifacts, and presentation materia
 ## 📂 Directory Structure & Deliverable Files
 
 ### 1. 🎥 Videos (`deliverables/videos/`)
-Direct local access to project pitch videos and subtitles:
+Pitch videos and subtitles. The MP4 files stay on the submission machine and are live-hosted; only the subtitles are tracked in git:
 - **`zk-cid-pitch-video-en.mp4`** (30 MB, 1080p, 2m 48s)
   Official English submission pitch video with English voiceover and embedded captions.
   *Online Live URL:* `https://web-3-0-decentralized.vercel.app/demo/zk-cid-pitch-video-en.mp4`
@@ -37,16 +37,17 @@ Clean, full-resolution screenshots of the application (2160px wide):
 ### 3. 🎨 Media & Brand Assets (`deliverables/media/`)
 - **`zk-cid-logo-512.png`**: Official square 512x512 PNG logo for DoraHacks BUIDL profile.
 - **`submission-cover.png`**: 1280x720 banner/cover image formatted for DoraHacks submission header.
-- **`ZK-CID-Pitch-Deck.pdf`**: 8-page 16:9 PDF slide deck matching `PITCH_DECK.md`.
-- **`architecture-diagram.png`**: High-resolution workflow and contract interaction diagram.
+- **`ZK-CID-Pitch-Deck.pdf`**: 10-slide 16:9 PDF deck matching `PITCH_DECK.md` (source in `media/source/deck.html`).
+- **`architecture-diagram.png`**: Contract and CRE workflow diagram, including both CRE triggers.
 - **`video-thumbnail-20s.png`** & **`video-thumbnail-60s.png`**: Video cover frames.
 
 ---
 
 ### 4. 📝 Submission Copy & Checklists
 - **`DORA_SUBMISSION.md`**: Complete, copy-pasteable submission text covering problem, solution, architecture, deployed contracts on Sepolia, and bounty criteria.
-- **`LEGAL_MAPPING.md`**: GDPR / OFAC / FATF / MiCA / eIDAS requirement mapping and open gaps.
-- **`FINAL_SUBMISSION_CHECKLIST.md`**: Pre-flight verification checklist.
+- **`LEGAL_MAPPING.md`**: GDPR / OFAC / age assurance (GDPR Art. 8, COPPA) / FATF / MiCA / eIDAS mapping and open gaps.
+- **`FINAL_SUBMISSION_CHECKLIST.md`**: Pre-flight verification checklist (final sprint status).
+- **`CRE_RECORDING_GUIDE.md`**: How to record the 60–90 s CRE CLI simulation clip.
 
 ---
 

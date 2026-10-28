@@ -1,101 +1,67 @@
 # ZK-CID Final Submission Checklist
 
-Use this checklist immediately before submitting the DoraHacks BUIDL.
+Deadline: **2026-11-01 01:01 UTC = 2026-11-01 09:01 Beijing time.** Aim to finish by the
+evening of 2026-10-31 (Beijing); BUIDL edits are likely locked after the deadline.
 
-Status as of 2026-10-21: review edits are pushed to `origin/main`; Mock API was
-redeployed on 2026-10-20, and the live DoraHacks BUIDL was updated with the
-`isValid` revocation boundary. Local review screenshots and drafts are ignored
-so they can remain on disk without dirtying the submission tree.
+Status as of 2026-10-27. Items marked "you" need the account owner (wallet, DoraHacks login,
+CRE CLI credentials or a screen recording).
 
-## Public Repository
+## 1. Code and repository (final sprint, 2026-10-27)
 
-- [x] Public repository: `https://github.com/juangh123/WEB-3.0-Decentralized`
-- [x] Latest source and deployment artifacts are pushed to `origin/main`
-- [x] `git status` is clean immediately before the final submit
-- [x] No production/deployer private key, real `ADMIN_TOKEN`, or local `.env` file is committed (only public Anvil dev keys remain in local scripts)
+- [x] CRE workflow: second handler (EVM log trigger on `UserAdded`, FINALIZED) for screening at
+      issuance; cron path unchanged; compiles to CRE WASM
+- [x] CRE TestRuntime simulation: 11 workflow tests + 3 Poseidon vectors pass
+- [x] Frontend: gas-free verification (eth_call of `AccessNFT.mint`) and proof generation without
+      a wallet; verified against live Sepolia with the 2026-10-17 strict-mode proof
+- [x] Frontend: CRE panel explains why the seeded sanctioned member is still in the group, with
+      links to the CLI log and the broadcast revocation
+- [x] Security: Next.js 16.4.0 → 16.4.2 (two critical RCE advisories and one high DoS advisory
+      on 16.4.0); unused direct `zod@3` removed from the Hardhat package; both audit gates clean
+- [x] Judge-facing docs in English: `zk-cid/README.md`, evidence README, mock API README,
+      workflow comments (Chinese copies kept as `*.zh-CN.md`)
+- [x] Internal Chinese notes moved to `docs/internal/` with an English audit summary
+- [x] New logo, cover, social preview, favicon, 10-slide pitch deck, architecture diagram
+- [x] `LEGAL_MAPPING.md`: age assurance / minors' data row (matches the track description)
+- [x] Dependabot version updates paused during judging (restore `open-pull-requests-limit: 5` afterwards)
+- [x] Local gates: contracts 34/34, frontend unit 12/12, E2E 7/7, CRE sim 14/14, mock API 13/13,
+      lint, type checks, `next build`, `check:addresses`, both audits
+- [ ] **you**: push the branch / merge to `main`, then confirm GitHub Actions is green
+- [ ] **you**: confirm the Vercel production deployment picked up the new commit and
+      `/zk-cid` shows "Check on Sepolia without gas"
 
-## Live Demo
+## 2. Live environment
 
-- [x] Frontend returns HTTP 200: `https://web-3-0-decentralized.vercel.app`
-- [x] Main demo route loads: `/zk-cid`
-- [x] Demo video is reachable: `/demo/zk-cid-pitch-video-en.mp4`
-- [x] Mock API returns a real seeded commitment: `https://mock-api-topaz-zeta.vercel.app/api/sanctions-list`
-- [x] Deployed admin route responds: `/api/admin` with `{"action":"status"}`
-- [x] Mock API production redeployed 2026-10-20 (`dpl_4EfR5zLuyzHWTp4ULQSbNpQy1Pjr`); GET returns the seeded commitment and unauthenticated admin POST returns 401
+- [ ] **you**: top up the demo issuer `0x951c41D827d0A6F5b9ef4C44943E3Feb25E51348`
+      (0.034 Sepolia ETH on 2026-10-27; aim for ≥ 0.2). Judges' "Demo issuer" clicks spend it,
+      and judging can run weeks past the deadline.
+- [ ] **you**: run the full judge path once on production without a wallet
+      (identity → demo issuer → proof → "Verify proof without gas" shows "Accepted on-chain")
+- [x] Mock API returns the seeded commitment; `/api/sanctions` proxy works on production
+- [x] Sepolia: strict mode, members/leaves consistent with the docs, contracts verified
 
-## Sepolia Consistency
+## 3. CRE evidence
 
-- [x] `ComplianceGate` = `0x1b8ae78C37c3E29DFcB0236E1c562b3CCFA44F70`
-- [x] `AccessNFT` = `0x7A52459d8eEF432fa3F044c152dd36ba1F3F931f` (access-revocation build, replaced
-      2026-10-11; previous `0x5e7140b8…` deregistered)
-- [x] `deployedContracts.ts` includes both Sepolia addresses
-- [x] Mock API seed commitment matches current `getMembers()`
-- [x] Sepolia issue transaction recorded:
-  `0x37e37f2a3cba81d6327bbfe0e7565649a51115771f0a1ad329ba788deef51dcf`
-- [x] Sepolia on-tree removal verified:
-  `0x8f0cb9341d4cf108101fb07a835c334c39f23ca9994bb26acc4497ee9e829ee0`
-- [x] Both contracts source-verified on Blockscout + Sourcify (2026-10-02)
-- [ ] Optional: verify on Etherscan Sepolia once `ETHERSCAN_API_KEY` is available
+- [x] Official CLI build + cron `simulate` log (2026-10-02)
+- [x] Real broadcast revocation tx `0xb64c050e…` (2026-10-02)
+- [ ] **you**: run `.\run-cre-simulate.ps1` and `.\run-cre-simulate.ps1 -Trigger issuance`,
+      commit both logs, and mark the issuance row ✅ in the evidence README
+- [ ] **you** (optional, high value): record the 60–90 s CLI clip, see `CRE_RECORDING_GUIDE.md`
+- [ ] Optional business step: Chainlink onboarding call + MNDA, then
+      `cre workflow deploy compliance-lifecycle -T production-settings`
 
-## CRE Workflow
+## 4. DoraHacks BUIDL page (https://dorahacks.io/buidl/48603)
 
-- [x] `workflow.yaml`, `config.json`, and `.env.example` use the live
-  Sepolia `ComplianceGate` address
-- [x] `tsc` compilation passes
-- [x] Real CRE SDK compilation produces `dist/compliance-lifecycle.wasm`
-- [x] Official CRE CLI v1.36.0 `cre workflow build compliance-lifecycle -T staging-settings` succeeds
-  (run from a space-free path copy; bun 1.2.21 → binary hash `482ea06d...`)
-- [x] yarn workspace compliance-lifecycle test:sim (CRE SDK TestRuntime end-to-end simulation, 9/9 pass: 6 flow + 3 Poseidon vectors; re-verified 2026-10-20)
-- [x] Official `cre workflow simulate` executed end-to-end with CLI v1.36.0 (log: `evidence/cre-simulate-20261002-232950.log`, receiver = `ComplianceGateReceiver`)
-- [x] CRE write path wired: `ComplianceGateReceiver` deployed + source-verified, `ComplianceGate.creWorkflow` points at it, report payload is `abi.encode(uint256, uint256[])`, 7 adapter tests passing
-- [x] Real broadcast rehearsal executed: tx `0xb64c050e37d7959951510eae66cc6994e11a7f640f8c4699f0d7e1050713e4d9` revoked the credential on Sepolia (via MockKeystoneForwarder; adapter switched back to the production forwarder afterwards)
-- [x] Deploy-access request submitted to Chainlink on 2026-10-03 via `cre account access` (org `org_Ny2pYrg6kUlxEU8h`) with a full use-case description
-- [x] Chainlink replied: local simulation is supported (done); testnet/mainnet DON deployment requires a commercial call + MNDA (business step, not a technical blocker)
-- [ ] Optional business follow-up: schedule the call and sign the MNDA, then run `cre workflow deploy compliance-lifecycle -T production-settings` (no contract/workflow changes needed)
+- [ ] **you**: upload the new logo `media/zk-cid-logo-512.png`
+- [ ] **you**: upload the new cover `media/submission-cover.png`
+- [ ] **you**: replace the description with the Details section of `DORA_SUBMISSION.md`
+- [ ] **you**: attach or link `media/ZK-CID-Pitch-Deck.pdf`
+- [ ] **you**: confirm the Chainlink CRE bounty is still ticked; reload the public page and check it
+- [x] Track: `All BUIDLs`; RYO-CHAN agents bounty not ticked
 
-## Regression Gates
+## 5. Hygiene
 
-- [x] Current counts re-verified 2026-10-20: contracts 34/34, frontend 7/7, CRE logic 3/3, CRE simulation 9/9, mock API 13/13
-- [x] GitHub Actions main CI passed on the final pushed revision (2026-10-21)
-- [x] `yarn hardhat:test`
-- [x] `yarn next:build`
-- [x] `yarn next:test --maxWorkers=1` (7/7; use a single worker on this Windows path)
-- [x] `yarn e2e` (6/6)
-- [x] `yarn next:lint --max-warnings=0`
-- [x] `yarn hardhat:lint --max-warnings=0`
-- [x] `yarn workspace compliance-lifecycle compile`
-- [x] `yarn workspace zk-cid-mock-sanctions-api test`
-- [x] `node --check zk-cid/mock-api/server.js`
-- [x] Sepolia AccessNFT runtime bytecode matches the local artifact (`0x699b0e44...f0ef`)
-
-## Repository Hygiene
-
-- [ ] Encrypt or rotate the live issuer key in `packages/hardhat/.env`; it is currently plaintext and matches the on-chain issuer
-- [x] Remove the Jest 29 test stack to eliminate the `js-yaml@3 → argparse@1.0.10 → sprintf-js` advisory chain; CRE logic tests now run under Bun
-- [x] No tracked `*.log`, `*.pid`, or Vercel local state files
-- [x] Large generated video production files are ignored
-- [x] Only the intended frontend demo MP4 remains tracked under
-  `zk-cid/packages/nextjs/public/demo/`
-
-## DoraHacks Submission
-
-- [x] Submission published to `legal-hack-2026` (2026-10-02, status `Under Review`)
-- [x] Track confirmed: `All BUIDLs` (the only selectable track)
-- [x] Bounty confirmed selected on the form: `Best workflow with CRE - 2x $1,000` (Chainlink CRE, bounty 1362)
-- [x] Live URLs, repo URL, video URL and Sepolia tx links present on the BUIDL
-- [x] Known Limitations section visible on the BUIDL, including the 2026-10-17 strict-mode evidence and CRE simulation boundary
-- [x] Copy the 2026-10-20 `AccessNFT.isValid` limitation into the live BUIDL page and verify it on 2026-10-21
-
-## Submission Materials (prepared 2026-09-09)
-
-- [x] Project logo: `zk-cid/deliverables/media/zk-cid-logo-512.png` (512x512)
-- [x] Submission cover / OG image: `zk-cid/deliverables/media/submission-cover.png` (1280x720)
-- [x] Pitch deck PDF: `zk-cid/deliverables/media/ZK-CID-Pitch-Deck.pdf` (8 slides, 16:9)
-- [x] Architecture diagram: `zk-cid/deliverables/media/architecture-diagram.png`
-- [x] Demo video thumbnails: `zk-cid/deliverables/media/video-thumbnail-20s.png`, `video-thumbnail-60s.png`
-- [x] Screenshots gallery: `zk-cid/docs/assets/demo-00-landing.png`, `demo-01-comparison.png`, `demo-02-identity.png`, `demo-03-issued-success.png`, `demo-03-issued.png`
-- [x] Demo video (30 MB, 1080p 2:48, English voiceover + captions) tracked and live-hosted
-- [x] All live URLs re-verified 2026-10-20 (demo, /zk-cid, video, mock API, GitHub, Sepolia)
-- [x] Submission copy, links, cover and video are attached to the BUIDL form
-- [x] CRE evidence paragraph on the BUIDL updated twice: first to the executed CLI simulation (2026-10-02), then to the production-wired receiver adapter + the real broadcast revocation tx (2026-10-03, verified by reloading the live BUIDL page)
-- [ ] Optional: upload the remaining pitch deck PDF / screenshot gallery files if the organizer asks for them explicitly
+- [x] No `.env`, private keys or tokens tracked
+- [ ] **you**: rotate or encrypt the issuer key in `packages/hardhat/.env` after judging
+      (plaintext on disk, never committed)
+- [ ] After judging: restore Dependabot, consider pinning the receiver
+      (`setExpectedAuthor` / `setExpectedWorkflowName`) once the DON owner address exists

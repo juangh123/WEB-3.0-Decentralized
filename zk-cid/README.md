@@ -1,173 +1,214 @@
-﻿# ZK-CID 🛡️
+# ZK-CID 🛡️
+
 **Zero-Knowledge Compliance Identity & Decentralized Workflow Orchestration**
 
-> **一句话定位**: "ZK-CID 用 ZK 零知识证明保护 Web3 用户验证端隐私，用 Chainlink CRE 消除颁发端信任——合规数据由去中心化预言机网络自动编排，用户隐私由数学密码学守护。"
+> Prove you are compliant, protect who you are. ZK-CID lets a user prove "I passed KYC and I
+> am not sanctioned" with a zero-knowledge proof, and a Chainlink CRE workflow keeps that
+> status current by revoking credentials automatically when the sanctions feed changes.
 
-![ZK-CID Comparison UI](docs/assets/demo-00-landing.png)
+![ZK-CID landing page](docs/assets/demo-00-landing.png)
 
-## 🏆 参赛赛道
-- **主赛道**: Law / Finance / Compliance (Blockchain Legal Institute)
-- **附加赏金**: Best Workflow with CRE (Chainlink)
+Built for the **BLI Legal Tech Hackathon 2** (category: LegalTech & RegTech) and the
+**Chainlink CRE "Best workflow with CRE"** bounty.
 
----
+| | |
+| --- | --- |
+| Live demo | <https://web-3-0-decentralized.vercel.app/zk-cid> |
+| Pitch video (2:48) | <https://web-3-0-decentralized.vercel.app/demo/zk-cid-pitch-video-en.mp4> |
+| Strict-mode acceptance clip (34 s) | <https://web-3-0-decentralized.vercel.app/demo/zk-cid-strict-mode-acceptance.mp4> |
+| CRE evidence | [`workflows/compliance-lifecycle/evidence/`](./workflows/compliance-lifecycle/evidence/README.md) |
+| Sepolia deployment | [`SEPOLIA_DEPLOYMENT.md`](./SEPOLIA_DEPLOYMENT.md) |
+| Regulatory mapping | [`deliverables/LEGAL_MAPPING.md`](./deliverables/LEGAL_MAPPING.md) |
 
-## 🌐 Live Demo
-- **URL**: [https://web-3-0-decentralized.vercel.app](https://web-3-0-decentralized.vercel.app) (Requires MetaMask connected to Sepolia Testnet or local fork)
-- **Sepolia 部署与复现**: [SEPOLIA_DEPLOYMENT.md](./SEPOLIA_DEPLOYMENT.md)
+## Judge quick path (3 minutes, no wallet needed)
 
-### ⏱️ 评委 3 分钟路径
-1. 打开 [主演示页](https://web-3-0-decentralized.vercel.app/zk-cid)，在 MetaMask 中切换到 Sepolia。
-2. **身份与证明**：点击生成匿名身份；私钥与证明都在浏览器本地计算。
-3. **发证入群**：点击演示发证（服务端 `/api/demo-issue` 仅暴露 `issueCredential`），随后生成 ZK 证明。
-4. **链上验证**：点击铸造 AccessNFT。铸造需要钱包持有少量 Sepolia ETH；
-   没有测试币时可先走本地 Anvil 路径（`yarn chain` + `yarn deploy` + `yarn start`）。
-5. **自动化撤销证据**：CRE 工作流的官方 CLI 模拟日志与真实广播演练见
-   [`workflows/compliance-lifecycle/evidence/`](./workflows/compliance-lifecycle/evidence/)。
+1. Open the [main demo](https://web-3-0-decentralized.vercel.app/zk-cid) and click
+   **Generate random anonymous identity**. The Semaphore identity and its secret stay in
+   your browser.
+2. **Tab 2 · Issuer**: click **Demo issuer (testnet only)**. A server-side issuer adds only
+   your public commitment to the on-chain Semaphore group on Sepolia; its key never reaches
+   the browser.
+3. **Tab 1**: click **Generate ZK proof**. The Groth16 proof is computed locally. Without a
+   wallet it is bound to a throwaway address.
+4. **Tab 3 · Verifier**: click **Verify proof without gas**. The page runs `AccessNFT.mint`
+   as an `eth_call` against the live Sepolia contracts, so the real Semaphore v4 verifier
+   checks your proof in strict mode. Nothing is broadcast and no testnet ETH is needed.
+5. Optional: connect a wallet with a little Sepolia ETH, regenerate the proof, and mint the
+   AccessNFT for real.
+6. The **CRE data source** panel shows the live sanctions feed intersected with the on-chain
+   members, and links to the CLI simulation log and the on-chain revocation produced by the
+   workflow.
 
-> 状态说明（2026-10-17）：严格模式下的首笔完整 mint 已实测成功（tx
-> `0x03b17a4d…22b2`，`nextTokenId = 1`）；验收用的临时凭证随后已撤销，成员集恢复为
-> 原来的单个演示成员。发证、mint 与 Merkle 撤销现在都有真实交易证据。
+Local alternative without testnet funds: `yarn chain` + `yarn deploy` + `yarn start` (see
+[Quickstart](#quickstart-local)).
 
-## 💡 问题陈述与解决方案
+## Problem
 
-当前的 Web3 合规面临着**“双重信任困境”**：
-1. **验证端隐私泄露**：传统的 KYC 门控要求用户直接出示身份以通过验证，从而暴露了底层隐私数据，不符合 Web3 匿名精神和 GDPR 标准。
-2. **颁发端单点信任与更新滞后**：合规状态（例如：是否处于 OFAC 制裁名单）通常由中心化机构人工维护。这不仅存在人为操纵的单点信任风险，且撤销机制往往不够及时。
+Web3 compliance forces a bad trade-off:
 
-**ZK-CID 的破局之道**：
-- **ZK 隐私保护 (Semaphore v4)**：机构仅颁发一个身份承诺 (Commitment) 上链，用户在本地生成有效 ZK Proof（零知识证明），在**零身份暴露**的情况下向 DeFi 协议（Verifier）证明自己的合规属性，并完成 NFT Mint。
-- **去中心化运维编排 (Chainlink CRE)**：彻底淘汰人工黑名单更新。利用 Chainlink CRE SDK 编写的 Serverless 工作流定期拉取外部合规 API（Mock OFAC），达成共识后**全自动撤销**链上违规用户的凭证。
+1. **Verifier-side privacy leaks.** Classic KYC gates ask users to reveal who they are to every
+   protocol, building honeypots of personal data and conflicting with GDPR data minimisation.
+2. **Issuer-side trust and stale status.** Compliance status (for example an OFAC listing) is
+   maintained by hand in centralised systems. Revocations are slow and depend on a single
+   operator.
 
----
+## Solution
 
-## 🛠 技术栈
-- **核心逻辑 & ZKP**: Semaphore v4 Protocol
-- **合约层**: Solidity ^0.8.23 (compiled with 0.8.28) + Hardhat
-- **前端展示**: Next.js (App Router) + Scaffold-ETH 2 + wagmi
-- **预言机编排层 (CRE Bounty)**: Chainlink CRE SDK (TypeScript) + Vercel (Mock API)
-- **测试网/环境**: Sepolia 测试网(线上部署) + Anvil/Hardhat Localnet(本地端到端复现)
+ZK-CID separates "prove compliance" from "reveal identity" and automates the revocation side:
 
----
+- **Zero-knowledge membership (Semaphore v4).** A regulated issuer KYCs the user off-chain and
+  adds only an anonymous commitment to an on-chain group. The user proves membership with a
+  zero-knowledge proof, so a DeFi protocol learns "this wallet belongs to a compliant person"
+  and nothing else. The proof is bound to the submitting wallet (`proof.message ==
+  msg.sender`) and every nullifier is single-use, which blocks front-running and replay.
+- **Decentralized revocation (Chainlink CRE).** A CRE workflow screens members against an
+  external sanctions feed on a schedule **and** whenever a new credential is issued, reaches
+  DON consensus on the feed, rebuilds the Semaphore tree, and removes listed members on-chain
+  through a DON-signed report.
 
-## 🚀 Quickstart(本地端到端演示)
+## Architecture
+
+```mermaid
+graph TD
+    U[User browser<br/>Semaphore identity + Groth16 prover] -->|commitment only| I[Regulated issuer<br/>off-chain KYC]
+    I -->|issueCredential| G[ComplianceGate<br/>Semaphore group 712]
+    U -->|ZK proof bound to wallet| N[AccessNFT.mint]
+    N -->|verifyCompliance| G
+    G -->|valid, current root, unused nullifier| N
+    F[(Sanctions feed<br/>mock OFAC list)] --> W
+    G -. UserAdded log .-> W[Chainlink CRE workflow<br/>cron + EVM log trigger]
+    W -->|getMembers / getLeaves| G
+    W -->|DON-signed report| R[ComplianceGateReceiver<br/>Keystone forwarder only]
+    R -->|revokeCredentialWithMerkleProof| G
+```
+
+| Layer | Stack |
+| --- | --- |
+| Zero knowledge | Semaphore v4 (Groth16, LeanIMT) |
+| Contracts | Solidity ^0.8.23 (compiled with 0.8.28), Hardhat 3, OpenZeppelin |
+| Frontend | Next.js App Router, Scaffold-ETH 2, wagmi, viem, DaisyUI |
+| Orchestration | Chainlink CRE TypeScript SDK 1.16.0, official CRE CLI 1.36.0 |
+| Off-chain data | Mock sanctions API on Vercel with a unified JSON schema |
+
+## Chainlink CRE workflow
+
+`workflows/compliance-lifecycle/` is a real CRE workflow, not a script that imitates one.
+
+| Handler | Trigger | What it does |
+| --- | --- | --- |
+| 0 | Cron, every 5 minutes | Screens every active member: HTTP fetch with identical-result DON consensus → `getMembers()` / `getLeaves()` at the finalized block → intersect → rebuild the Semaphore tree → DON-signed report → `writeReport` revokes each hit |
+| 1 | EVM log trigger on `ComplianceGate.UserAdded`, `FINALIZED` | Screening at issuance: checks only the new commitment and revokes it immediately if it is listed |
+
+Evidence (details in [`evidence/README.md`](./workflows/compliance-lifecycle/evidence/README.md)):
+
+- **Official CRE CLI v1.36.0** builds the workflow and `cre workflow simulate` runs the cron
+  handler end to end against live Sepolia state, ending in
+  `{"status":"revoked","revokedCount":1}` ([raw log](./workflows/compliance-lifecycle/evidence/cre-simulate-20261002-232950.log)).
+- **A real on-chain revocation** produced by the workflow's report:
+  [tx `0xb64c050e…`](https://eth-sepolia.blockscout.com/tx/0xb64c050e37d7959951510eae66cc6994e11a7f640f8c4699f0d7e1050713e4d9)
+  removed the member from the live Semaphore tree (rehearsal through the MockKeystoneForwarder;
+  caveats in [`cre-broadcast-evidence.md`](./workflows/compliance-lifecycle/evidence/cre-broadcast-evidence.md)).
+- **Production write path**: `ComplianceGateReceiver`
+  ([verified source](https://eth-sepolia.blockscout.com/address/0xB5ad6413a16efd82b76212830f908B2D67C20425#code))
+  follows the official `ReceiverTemplate` pattern and only accepts the Sepolia Keystone forwarder.
+- **SDK TestRuntime simulation**: 11 workflow tests cover both handlers, batching, malformed
+  feeds, failed writes and misrouted logs (`yarn workspace compliance-lifecycle test:sim`).
+- Running `simulate` surfaced three real runtime defects (a browser-only `atob` dependency,
+  a `process` global, and a shadowing `project.yaml`), all fixed and documented.
+
+## Live Sepolia deployment
+
+| Item | Value |
+| --- | --- |
+| ComplianceGate v2.2 | [`0x1b8ae78C37c3E29DFcB0236E1c562b3CCFA44F70`](https://eth-sepolia.blockscout.com/address/0x1b8ae78C37c3E29DFcB0236E1c562b3CCFA44F70#code) |
+| AccessNFT v2 | [`0x7A52459d8eEF432fa3F044c152dd36ba1F3F931f`](https://eth-sepolia.blockscout.com/address/0x7A52459d8eEF432fa3F044c152dd36ba1F3F931f#code) |
+| ComplianceGateReceiver | [`0xB5ad6413a16efd82b76212830f908B2D67C20425`](https://eth-sepolia.blockscout.com/address/0xB5ad6413a16efd82b76212830f908B2D67C20425#code) |
+| Semaphore v4 | `0x8A1fd199516489B0Fb7153EB5f075cDAC83c693D` |
+| Mode | `demoMode = false` (strict Semaphore verification since 2026-10-10) |
+| Mock sanctions API | <https://mock-api-topaz-zeta.vercel.app/api/sanctions-list> |
+
+All three contracts are source-verified on Blockscout and Sourcify. Key transactions (strict
+mode switch, issuance, Merkle revocation, the first strict-mode mint on 2026-10-17) are listed
+in [`SEPOLIA_DEPLOYMENT.md`](./SEPOLIA_DEPLOYMENT.md).
+
+## Regulatory fit
+
+ZK-CID is a technical control, not legal advice. [`LEGAL_MAPPING.md`](./deliverables/LEGAL_MAPPING.md)
+maps it requirement by requirement, including the open gaps:
+
+- **GDPR** data minimisation (Art. 5) and privacy by design (Art. 25): only a pseudonymous
+  commitment and a nullifier go on-chain.
+- **OFAC / EU sanctions**: continuous and issuance-time screening with automated revocation and
+  a restoration path.
+- **Age assurance and minors' data** (GDPR Art. 8, COPPA, UK Online Safety Act): the same
+  primitive proves "over 18" membership without a birth date or ID reaching the service.
+- **FATF Travel Rule and MiCA**: complementary to, not a replacement for, a VASP/CASP's own
+  AML programme.
+
+## Quickstart (local)
 
 ```bash
-# 0. 安装依赖(项目根目录)
+cd zk-cid
 yarn install
 
-# 终端 1:启动本地链
-yarn chain
-
-# 终端 2:部署合约(自动为前端生成 TS ABI)
-yarn deploy
-
-# 终端 3:启动 Mock 制裁名单 API(默认 http://localhost:3001)
-cd mock-api && npm install && npm start
-
-# 终端 4:启动前端(默认 http://localhost:3000)
-yarn start
+yarn chain                       # terminal 1: local chain
+yarn deploy                      # terminal 2: deploy contracts, regenerate the frontend ABI map
+yarn workspace zk-cid-mock-sanctions-api start   # terminal 3: sanctions API on http://localhost:3001
+yarn start                       # terminal 4: frontend on http://localhost:3000
 ```
 
-打开 `http://localhost:3000/zk-cid` 进入主演示路径(首页为 ZK-CID 落地页;`/user`、`/issuer`、`/verify` 为 Legacy 页面,顶部有徽章标注)。
+Open <http://localhost:3000/zk-cid>.
 
-### CRE 工作流(附加赏金路径)
-
-`workflows/compliance-lifecycle/` 为独立的 Chainlink CRE 工作流:Cron 定时拉取 Mock 制裁名单 API,读取链上 `getMembers()` 与 `getLeaves()` 求交集并重建 Semaphore 树,对命中者自动调用 `revokeCredentialWithMerkleProof` 完成树级撤销。代码按真实 `@chainlink/cre-sdk@1.16.0` API 编写,已通过 `tsc` 类型检查,并已用 `npx bun` 调用真实 `cre-compile` 生成 `dist/compliance-lifecycle.wasm`。
-
-> ✅ **实测声明**:官方 CRE CLI(v1.36.0)的 `cre workflow build` 与 `cre workflow simulate` **均已实测通过**(2026-10-02),并且用 `--broadcast` 在 Sepolia 上产生过**真实撤销交易**:`0xb64c050e37d7959951510eae66cc6994e11a7f640f8c4699f0d7e1050713e4d9`(交易成功后 `getMembers()` 从 1 个成员变为 0)。simulate 日志见 `workflows/compliance-lifecycle/evidence/cre-simulate-20261002-232950.log`,广播演练与注意事项见 `workflows/compliance-lifecycle/evidence/cre-broadcast-evidence.md`。真实广播路径已按官方模式落地(`ComplianceGateReceiver` 适配器 + Keystone forwarder,`ComplianceGate.creWorkflow` 已指向适配器),仅剩 CRE 网络的部署权限。核心命令:
+## Verify it yourself
 
 ```bash
-# 需先安装 CRE CLI(参考 https://docs.chain.link/cre)与 bun
-cd zk-cid/workflows
-cre workflow build compliance-lifecycle -T staging-settings
-cre login   # 或设置 CRE_API_KEY,然后:
-cre workflow simulate compliance-lifecycle -T staging-settings
+cd zk-cid
+yarn install --immutable
+yarn hardhat:test                                # 34 contract tests (incl. 7 CRE receiver tests)
+yarn next:test                                   # 12 frontend unit tests
+yarn workspace compliance-lifecycle test:sim     # 11 CRE workflow tests + 3 Poseidon vectors
+yarn workspace zk-cid-mock-sanctions-api test    # 13 mock API tests
+yarn workspace compliance-lifecycle compile:cre  # compile the workflow to CRE WASM
+yarn next:build && yarn e2e                      # 7 Playwright end-to-end tests
+yarn npm audit -A --severity high                # dependency gate (must be clean)
 ```
 
-> Windows 提示:CRE CLI 内部通过 `cmd` 调用 `cre-compile`,仓库路径**不能包含空格**(否则报 `'F:\AI' is not recognized ...`)。
+GitHub Actions runs all of these on every push except `compile:cre` (CI type-checks the workflow with `tsc` instead).
 
-已完成的真实 CRE 编译复现命令:
+## Known limitations
 
-```powershell
-cd workflows/compliance-lifecycle
-npx -y bun@1.1.42 node_modules\@chainlink\cre-sdk\bin\cre-compile.ts main.ts dist\compliance-lifecycle.wasm --skip-type-checks
-```
+- **No scheduled DON execution yet.** The workflow is proven with the official CLI simulation
+  and a broadcast rehearsal. Running it on the Chainlink DON needs deploy access, which
+  Chainlink grants after a commercial onboarding step (requested 2026-10-03). No contract or
+  workflow change is needed for that step.
+- **Revocation blocks future proofs, not passes minted earlier.** `AccessNFT.isValid` means
+  "minted and not manually revoked by the issuer". Because a Semaphore proof does not reveal
+  the commitment, the contract cannot link an existing token to a revoked credential without
+  breaking privacy. Consumers should require a fresh proof (or a short-lived pass) for
+  protected actions; pass expiry is on the roadmap.
+- **The sanctions feed is a mock** with in-memory storage and one source. Production needs a
+  licensed, versioned feed, persistence and human review of matches.
+- **The receiver does not pin a workflow owner or ID yet.** It only accepts the Keystone
+  forwarder; pinning follows once the deploying owner address exists.
+- **Small anonymity set on the demo group.** Privacy grows with the number of members in the
+  group; a demo group with a handful of members offers little anonymity.
+- **Contract unit tests use `MockSemaphore`** for speed. The deployed path uses the real
+  Semaphore v4 verifier, which the strict-mode mint on 2026-10-17 and the gas-free check
+  exercise.
+- **One proof per identity per scope.** The demo uses `scope = groupId`, so an identity's
+  nullifier can be used for one mint; multi-application deployments should define a scope per
+  application.
 
----
+## Repository layout
 
-## 🎯 核心功能与演示截屏
-
-### 1. 传统 Web3 KYC vs ZK-CID 体验对比
-我们在 `app/demo` 中构建了直观的上帝视角双栏对比页面，让非技术评委也能一秒看懂 ZKP 的价值。
-
-### 2. 身份生成与无感授权
-用户在本地浏览器生成唯一的 Semaphore 身份（Private Key 绝不离端）。在证明合规时，链上仅仅记录一个由数学生成的 `Nullifier Hash`。
-
-![Identity Generation](docs/assets/demo-02-identity.png)
-
-### 3. 机构发证与状态监控
-授权的合规机构（Issuer）确认用户身份后，将其 `Commitment` 追加至智能合约的 Merkle Tree 中。
-
-![Issuance Success](docs/assets/demo-03-issued-success.png)
-
-### 4. 自动化违规撤销 (CRE Workflow)
-一旦用户命中 Mock API 中的外部制裁名单，部署在去中心化网络上的 Chainlink CRE Workflow 将立即捕获，并**自动发起链上撤销（revokeCredential）**，阻断该用户后续的 ZK Proof 验证。
-
----
-
-## 🔗 本地 Anvil/Hardhat 链上证据 (PoC Evidence)
-
-由于本产品强调“一键式自动确权”，我们在本地主链路跑通了端到端（发证->生成证明->智能合约校验->自动 Mint）的全验证流程。
-
-> Sepolia 线上部署地址与 smoke-test 交易见 [SEPOLIA_DEPLOYMENT.md](./SEPOLIA_DEPLOYMENT.md)；本节保留本地 Anvil/Hardhat 复现证据。
-
-> 📌 以下地址/tx 为 2026-07-19 本地完整重部署后的最新链上证据；重启本地链后，最新地址请以 `packages/hardhat/deployments/localhost/*.json` 为准。
-
-| 步骤 | 状态 | On-Chain Hash |
-|------|------|---------------|
-| **部署 MockSemaphore** | ✅ | `0x5FbDB2315678afecb367f032d93F642f64180aa3` |
-| **部署 ComplianceGate** | ✅ | `0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512` |
-| **部署 AccessNFT** | ✅ | `0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0` |
-| **Issuer 颁发凭证** | ✅ | `0x93064d9effc3b57a26c946f5fb49609a3e0f491b0a4f1352ab43ba67524d9158` |
-| **用户出示 ZKP 并 Mint NFT** | ✅ | `0x6b60a9014547c375c8d7bb20ec77686a38fd46882314824dbb36b435f1974adc` |
-| **CRE 命中制裁名单并撤销凭证** | ✅ | `0x497fd6ba8d5bd5c0837435ef1b1e6d3150bf961b8ad0611db2ac11734ea7448c` |
-| **撤销后再次 Mint（应失败）** | ✅ 已拦截 | revert `Credential revoked`（`hasBeenRevoked` 强制检查） |
-
-> *注：用户 Mint 成功后，智能合约会拦截其生成的唯一 Nullifier，有效防止了双花/重放攻击。*
-
----
-
-## 🚀 商业影响 (Business Impact)
-ZK-CID 提供了一种**可插拔、无需信任的合规中间件**。对于 DeFi 协议（DEX, 借贷），它们只需接入我们的 `Gate` 接口即可无缝拥抱监管，并彻底免除自身触碰、存储用户隐私敏感数据的法律风险，实现商业利益与合规安全的完美平衡。
-
----
-
-## ⚠️ Known Limitations / Demo Mode
-
-当前版本的边界与修复状态（均已在代码中显式标注，不回避）：
-
-- **严格模式为部署默认**：`ComplianceGate` 构造函数即 `demoMode = false`；`deploySepolia.ts` / `deployDirect.ts` / `ci-deploy.ts` / `hardhat-deploy` 部署后还会断言严格模式。只有显式 `DEMO_MODE=true`（会高声告警）或 issuer 主动调用 `setDemoMode(true)` 才能打开演示模式。`verifyCompliance` 无论 demo 与否都要求 `proof.merkleTreeRoot == 当前组根`，撤销后的旧证明因此失效。
-- **线上 Sepolia 已切换严格模式**（2026-10-10，tx `0xaab09625…ca2f`）。生产环境已配置服务端 Demo Issuer：`DEMO_ISSUER_KEY` 仅存放于 Vercel production 环境变量，`/api/demo-issue` 只暴露 `issueCredential`，带限流与链上 issuer 匹配校验。2026-10-11 已用真实交易验证发证与撤销路径（发证 tx `0x6206c00f…`，撤销 tx `0x5d04c889…`）。2026-10-17 进一步完成严格模式的完整验收：演示发证 → 本地生成证明 → `AccessNFT.mint` 成功（tx `0x03b17a4d…22b2`，`nextTokenId = 1`），随后撤销临时凭证恢复成员集（tx `0x14469a82…`）。访客走完整流程仍需持有少量 Sepolia ETH 的钱包。
-- **撤销的 Merkle 语义**：CRE 工作流读取 `getLeaves()`，按链上稳定叶子重建 Semaphore 树并生成真实 siblings，再调用 `revokeCredentialWithMerkleProof` 从树中移除成员。批量撤销时每笔写入后都会重新读取 `getMembers()/getLeaves()` 再计算下一笔 siblings；写链失败不再静默，会以 `status: partial/failed` + `failedCount/failed[]` 上报。
-- **制裁名单输入校验**：工作流只接受 1~78 位十进制、且小于 BN254 标量域的 commitment；非法条目被跳过并计入 `invalidEntries`，不会中断整轮合规检查。
-- **访问凭据状态不等于实时合规状态**：`AccessNFT.revokeAccess / restoreAccess / isValid`（仅 issuer 可调用）。`isValid` 只表示“已铸造且未被 issuer 手动撤销”，不会自动反映 CRE 对 Semaphore 成员的树级撤销。Semaphore proof 不揭示 commitment，当前合约也无法在不引入地址与 commitment 关联的情况下自动判断旧 token 是否仍合规。2026-10-17 验收 token 在其临时凭证撤销后仍返回 `isValid = true`，这是行政性的访问票状态，不是当前制裁状态。消费方必须重新验证新的 ZK proof 或查询权威合规状态；不能仅凭 `isValid` 授予受保护资源。
-- **演示私钥不再进入浏览器**：`NEXT_PUBLIC_DEMO_ISSUER_KEY` 已移除，改为服务端 `/api/demo-issue`（`DEMO_ISSUER_KEY`，仅暴露 `issueCredential`，带限流与 on-chain issuer 匹配校验），默认关闭。
-- **CRE 编译与 simulate 均已实测**：工作流通过 `tsc` 类型检查，WASM 由 `cre-compile` 生成，官方 CLI `cre workflow simulate` 已端到端跑通（日志见 `workflows/compliance-lifecycle/evidence/cre-simulate-20261002-232950.log`，报告目标为 `ComplianceGateReceiver` 适配器）。为此修复了三个真实缺陷：`poseidon-lite` 依赖 `atob`（改用本地 Poseidon(2)）、工作流访问不存在的 `process` 全局、以及工作流目录里冲突的旧 `project.yaml`。
-- **Scope 与 nullifier 限制**：前端以 `scope = groupId` 生成证明，Semaphore 的 nullifier 由 `(identity, scope)` 决定，因此同一身份在同一群组只能生成一次可用证明；扩展到多业务域时需要按业务定义 scope（当前演示只有一个业务域，未改协议）。
-- **模板默认 key**：`scaffold.config.ts` 中保留的 Alchemy / WalletConnect 默认值是 SE-2 模板的公共共享 key，仅够原型使用；生产部署应通过 `NEXT_PUBLIC_ALCHEMY_API_KEY` / `NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID` 配置自己的 key，避免限流影响演示。
-- **真实广播路径已落地，只差 CRE 网络部署权限**：新增 `contracts/cre/ComplianceGateReceiver.sol`（官方 `ReceiverTemplate` 模式：只接受 Keystone forwarder 调用；部署脚本默认要求固定 workflow owner/id，未固定时必须显式使用 `ALLOW_UNPINNED_RECEIVER=true`），已部署到 Sepolia 并把 `ComplianceGate.creWorkflow` 指向它；工作流报告 payload 改为 `abi.encode(uint256 commitment, uint256[] siblings)`。合约侧现有 34 条测试覆盖 forwarder-only 访问控制、身份固定接口与真实撤销流程（`Hardhat contract tests: 34/34`）。由于本地模拟产生的签名不会被生产 forwarder 接受，真正的链上广播需要 `cre account access` 获得的 CRE 网络部署权限。
-- **文档中的链上地址**：README / DEMO_SUMMARY 中的地址与交易哈希来自 2026-07-19 本地完整重部署（最新证据），链重启/重部署后以 `packages/hardhat/deployments/localhost/*.json` 为准。
-
----
-
-## 📁 目录结构导览
 ```text
 zk-cid/
-├── packages/
-│   ├── hardhat/                    # 智能合约层 (Semaphore/Gate/AccessNFT)
-│   └── nextjs/                     # DApp 前端层 (Identity/Proof/对比展示页)
-├── workflows/compliance-lifecycle/ # CRE 编排层 (Chainlink SDK 独立模块)
-└── mock-api/                       # 链下数据层 (模拟的制裁名单微服务)
+├── packages/hardhat/                 # ComplianceGate, AccessNFT, CRE receiver, tests, scripts
+├── packages/nextjs/                  # demo dApp (identity, issuer, verifier, live state)
+├── workflows/compliance-lifecycle/   # Chainlink CRE workflow, TestRuntime tests, CLI evidence
+├── mock-api/                         # mock sanctions feed (Express + Vercel functions)
+├── deliverables/                     # submission copy, legal mapping, media, checklist
+└── e2e/                              # Playwright tests
 ```
 
-**Developed with ❤️ for BLI Legal Tech Hackathon Edition 2**
+A Chinese version of the earlier README is kept in [`README.zh-CN.md`](./README.zh-CN.md).

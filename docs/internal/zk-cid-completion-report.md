@@ -13,8 +13,8 @@
 >    `0xb64c050e37d7959951510eae66cc6994e11a7f640f8c4699f0d7e1050713e4d9`。
 >    唯一剩余项是 Chainlink 的 CRE 网络部署权限（2026-10-03 已提交申请，审核中）。
 >
-> 最新状态请以 [README.md](./zk-cid/README.md)、[SEPOLIA_DEPLOYMENT.md](./zk-cid/SEPOLIA_DEPLOYMENT.md)
-> 与 [workflows/.../evidence/README.md](./zk-cid/workflows/compliance-lifecycle/evidence/README.md) 为准。
+> 最新状态请以 [README.md](../../zk-cid/README.md)、[SEPOLIA_DEPLOYMENT.md](../../zk-cid/SEPOLIA_DEPLOYMENT.md)
+> 与 [workflows/.../evidence/README.md](../../zk-cid/workflows/compliance-lifecycle/evidence/README.md) 为准。
 
 ## 1. 代码质量与工程规范化扫描报告
 本项目基于先前的 `plan.md`，执行了以下补充修复和回归检查，确认项目在工程层面达到较高的完整度和稳健性：

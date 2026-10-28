@@ -12,8 +12,8 @@ const buildHardhatEslintCommand = (filenames) =>
     .map((f) => path.relative(path.join("packages", "hardhat"), f))
     .join(" ")}`;
 
-// prettier(含 prettier-plugin-solidity)安装在 @se-2/hardhat workspace,
-// mock-api / workflows 复用该二进制;.prettierrc 按被格式化文件所在目录解析。
+// prettier (with prettier-plugin-solidity) is installed in the @se-2/hardhat workspace;
+// mock-api and workflows reuse that binary, and .prettierrc resolves per formatted file.
 const buildPrettierCommand = (filenames) =>
   `yarn workspace @se-2/hardhat prettier --write ${filenames
     .map((f) => path.relative(path.join("packages", "hardhat"), f))

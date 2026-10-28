@@ -5,7 +5,9 @@ updates:
     directory: "/zk-cid"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
+    # Version-update PRs are paused while the hackathon submission is under review (security
+    # updates still open). Restore to 5 after judging.
+    open-pull-requests-limit: 0
     groups:
       nextjs:
         patterns:
@@ -25,4 +27,4 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 0 # paused during judging; restore to 5 afterwards
