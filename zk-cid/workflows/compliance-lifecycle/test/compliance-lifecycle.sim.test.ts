@@ -1,21 +1,27 @@
 /**
- * ZK-CID compliance-lifecycle CRE 工作流端到端模拟测试
+ * ZK-CID compliance-lifecycle: end-to-end CRE workflow simulation tests.
  *
- * 使用 @chainlink/cre-sdk/test 的真实 TestRuntime + 能力 Mock
- * (HTTP / EVM)在同一进程内完整执行 runComplianceCheck 主逻辑:
+ * Uses the real TestRuntime from @chainlink/cre-sdk/test plus capability mocks (HTTP / EVM)
+ * to execute the production `core.ts` logic in-process:
  *
- *   cron 触发 -> 抓取制裁名单(DON 共识) -> 读取 getMembers()/getLeaves()
- *   -> 求交集并重建 Semaphore 树生成 siblings -> runtime.report()
- *   -> EVMClient.writeReport 模拟链上树级撤销
+ *   cron trigger -> fetch the sanctions list (DON consensus) -> read getMembers()/getLeaves()
+ *   -> intersect, rebuild the Semaphore tree, produce Merkle siblings -> runtime.report()
+ *   -> EVMClient.writeReport performs the simulated on-tree revocation
  *
- * 运行方式(workspace 根目录):
+ *   issuance log (UserAdded) -> screen only the new commitment -> same report path
+ *
+ * Run from the workspace root:
  *   yarn workspace compliance-lifecycle test:sim
  *
- * 说明:这是 SDK 级 TypeScript 运行时模拟,不等同于完整 CRE CLI
- * 的 `cre workflow simulate`(后者需要完整 CRE 环境)。它让评审者
- * 无需安装 CRE CLI 即可复现工作流编排逻辑的端到端执行。
+ * Note: this is an SDK-level TypeScript runtime simulation, not the official CRE CLI
+ * `cre workflow simulate` (see evidence/README.md for the CLI runs). It lets reviewers
+ * reproduce the orchestration end to end without installing the CRE CLI.
  */
-import { test, newTestRuntime, registerTestCapability } from "@chainlink/cre-sdk/test";
+import {
+  test,
+  newTestRuntime,
+  registerTestCapability,
+} from "@chainlink/cre-sdk/test";
 import { create } from "@bufbuild/protobuf";
 import { anyPack, anyUnpack } from "@bufbuild/protobuf/wkt";
 import { EVM_PB, HTTP_CLIENT_PB } from "@chainlink/cre-sdk/pb";
@@ -25,15 +31,20 @@ import {
   decodeFunctionData,
   encodeFunctionResult,
   hexToBytes,
+  numberToHex,
   type Address,
+  type Hex,
 } from "viem";
 import {
   GATE_ABI,
+  USER_ADDED_TOPIC,
+  initWorkflow,
   runComplianceCheck,
+  screenIssuanceLog,
   type Config,
 } from "../core";
 
-/** 与 config.json / Sepolia 实况一致的工作流配置 */
+/** Workflow config matching config.json and the live Sepolia deployment. */
 const CFG: Config = {
   schedule: "*/5 * * * *",
   sanctionsApiUrl: "https://mock-api-topaz-zeta.vercel.app/api/sanctions-list",
@@ -43,19 +54,20 @@ const CFG: Config = {
   gasLimit: "500000",
 };
 
-/** 当前 Sepolia 实况成员(与 mock-api seed、合约 getMembers 一致) */
+/** Live Sepolia demo member (same as the mock-api seed and the contract's getMembers()). */
 const LIVE_MEMBER = 123456789012345678901234567890123456789n;
-/** BN254 标量域上界(应当被工作流判为非法 commitment) */
-const SNARK_SCALAR_FIELD = "21888242871839275222246405745257275088548364400416034343698204186575808495617";
+/** BN254 scalar field size; the workflow must reject it as an invalid commitment. */
+const SNARK_SCALAR_FIELD =
+  "21888242871839275222246405745257275088548364400416034343698204186575808495617";
 
-/** 注册 HTTP + EVM 能力 Mock,并返回调用计数以便断言 */
+/** Registers HTTP + EVM capability mocks and returns call counters for assertions. */
 function registerMocks(opts: {
   sanctioned: string[];
   members: bigint[];
   leaves?: bigint[];
-  /** 模拟真实链上状态变化:每次成功的 writeReport 移除下一个命中成员 */
+  /** Mirror real chain state: every successful writeReport removes the next sanctioned member. */
   applyRevocations?: boolean;
-  /** 前 N 次 writeReport 直接失败(模拟交易 revert) */
+  /** Fail the first N writeReport calls (simulated transaction revert). */
   failFirstWrites?: number;
 }) {
   const selector = getNetwork({ chainSelectorName: CFG.chainSelectorName })!
@@ -65,10 +77,14 @@ function registerMocks(opts: {
   let leavesState = [...(opts.leaves ?? opts.members)];
   let failuresRemaining = opts.failFirstWrites ?? 0;
 
+  const calls = { http: 0, callContract: 0, writeReport: 0 };
   registerTestCapability("http-actions@1.0.0-alpha", (req) => {
     if (req.method !== "SendRequest") {
-      return { response: { case: "error", value: `unknown method ${req.method}` } };
+      return {
+        response: { case: "error", value: `unknown method ${req.method}` },
+      };
     }
+    calls.http += 1;
     anyUnpack(req.payload, HTTP_CLIENT_PB.RequestSchema);
     const body = new TextEncoder().encode(
       JSON.stringify({
@@ -82,12 +98,14 @@ function registerMocks(opts: {
       body,
     });
     return {
-      response: { case: "payload", value: anyPack(HTTP_CLIENT_PB.ResponseSchema, reply) },
+      response: {
+        case: "payload",
+        value: anyPack(HTTP_CLIENT_PB.ResponseSchema, reply),
+      },
     };
   });
 
   const evmCapabilityId = `evm:ChainSelector:${selector}@1.0.0`;
-  const calls = { callContract: 0, writeReport: 0 };
   registerTestCapability(evmCapabilityId, (req) => {
     if (req.method === "CallContract") {
       const request = anyUnpack(req.payload, EVM_PB.CallContractRequestSchema)!;
@@ -99,13 +117,17 @@ function registerMocks(opts: {
       const encoded = encodeFunctionResult({
         abi: GATE_ABI,
         functionName: decoded.functionName,
-        result: decoded.functionName === "getLeaves" ? leavesState : membersState,
+        result:
+          decoded.functionName === "getLeaves" ? leavesState : membersState,
       });
       const reply = create(EVM_PB.CallContractReplySchema, {
         data: hexToBytes(encoded),
       });
       return {
-        response: { case: "payload", value: anyPack(EVM_PB.CallContractReplySchema, reply) },
+        response: {
+          case: "payload",
+          value: anyPack(EVM_PB.CallContractReplySchema, reply),
+        },
       };
     }
     if (req.method === "WriteReport") {
@@ -119,17 +141,24 @@ function registerMocks(opts: {
           errorMessage: "simulated revert",
         });
         return {
-          response: { case: "payload", value: anyPack(EVM_PB.WriteReportReplySchema, failedReply) },
+          response: {
+            case: "payload",
+            value: anyPack(EVM_PB.WriteReportReplySchema, failedReply),
+          },
         };
       }
 
       if (opts.applyRevocations) {
         const sanctioned = new Set(opts.sanctioned);
-        const index = membersState.findIndex((member) => sanctioned.has(member.toString()));
+        const index = membersState.findIndex((member) =>
+          sanctioned.has(member.toString()),
+        );
         if (index >= 0) {
           const revoked = membersState[index];
           membersState = membersState.filter((member) => member !== revoked);
-          leavesState = leavesState.map((leaf) => (leaf === revoked ? 0n : leaf));
+          leavesState = leavesState.map((leaf) =>
+            leaf === revoked ? 0n : leaf,
+          );
         }
       }
 
@@ -138,10 +167,15 @@ function registerMocks(opts: {
         txHash: hexToBytes("0xdeadbeefcafebabe"),
       });
       return {
-        response: { case: "payload", value: anyPack(EVM_PB.WriteReportReplySchema, reply) },
+        response: {
+          case: "payload",
+          value: anyPack(EVM_PB.WriteReportReplySchema, reply),
+        },
       };
     }
-    return { response: { case: "error", value: `unknown method ${req.method}` } };
+    return {
+      response: { case: "error", value: `unknown method ${req.method}` },
+    };
   });
 
   return calls;
@@ -172,8 +206,12 @@ test("sanctions list has no overlap -> credentials stay valid (status ok, no wri
   if (calls.writeReport !== 0) {
     throw new Error(`expected 0 writeReport, got ${calls.writeReport}`);
   }
-  if (!runtime.getLogs().some((l) => l.includes("on-chain members fetched: 1"))) {
-    throw new Error(`missing member-fetch log: ${JSON.stringify(runtime.getLogs())}`);
+  if (
+    !runtime.getLogs().some((l) => l.includes("on-chain members fetched: 1"))
+  ) {
+    throw new Error(
+      `missing member-fetch log: ${JSON.stringify(runtime.getLogs())}`,
+    );
   }
 });
 
@@ -200,7 +238,9 @@ test("sanctioned member intersects on-chain members -> CRE report + writeReport 
     throw new Error(`expected 1 revoked, got ${parsed.revokedCount}`);
   }
   if (parsed.revokedCommitments[0] !== LIVE_MEMBER.toString()) {
-    throw new Error(`unexpected revoked commitment: ${parsed.revokedCommitments[0]}`);
+    throw new Error(
+      `unexpected revoked commitment: ${parsed.revokedCommitments[0]}`,
+    );
   }
   if (parsed.txHashes[0] !== "0xdeadbeefcafebabe") {
     throw new Error(`unexpected tx hash: ${parsed.txHashes[0]}`);
@@ -209,10 +249,17 @@ test("sanctioned member intersects on-chain members -> CRE report + writeReport 
     throw new Error(`expected 1 Merkle proof, got ${parsed.proofs.length}`);
   }
   if (parsed.proofs[0].commitment !== LIVE_MEMBER.toString()) {
-    throw new Error(`unexpected proof commitment: ${parsed.proofs[0].commitment}`);
+    throw new Error(
+      `unexpected proof commitment: ${parsed.proofs[0].commitment}`,
+    );
   }
-  if (parsed.proofs[0].siblings.length !== 1 || parsed.proofs[0].siblings[0] !== "9999999999999999999") {
-    throw new Error(`unexpected Merkle siblings: ${JSON.stringify(parsed.proofs[0].siblings)}`);
+  if (
+    parsed.proofs[0].siblings.length !== 1 ||
+    parsed.proofs[0].siblings[0] !== "9999999999999999999"
+  ) {
+    throw new Error(
+      `unexpected Merkle siblings: ${JSON.stringify(parsed.proofs[0].siblings)}`,
+    );
   }
   if (calls.writeReport !== 1) {
     throw new Error(`expected 1 writeReport, got ${calls.writeReport}`);
@@ -278,7 +325,13 @@ test("multiple sanctioned members -> state is re-read between writes and the who
 test("invalid sanction entries are skipped without aborting the run", () => {
   const runtime = newTestRuntime();
   const calls = registerMocks({
-    sanctioned: ["not-a-number", "0", "-5", SNARK_SCALAR_FIELD, LIVE_MEMBER.toString()],
+    sanctioned: [
+      "not-a-number",
+      "0",
+      "-5",
+      SNARK_SCALAR_FIELD,
+      LIVE_MEMBER.toString(),
+    ],
     members: [LIVE_MEMBER],
     applyRevocations: true,
   });
@@ -296,7 +349,9 @@ test("invalid sanction entries are skipped without aborting the run", () => {
     throw new Error(`expected 1 revoked, got ${parsed.revokedCount}`);
   }
   if (parsed.invalidEntries.length !== 4) {
-    throw new Error(`expected 4 invalid entries, got ${parsed.invalidEntries.length}`);
+    throw new Error(
+      `expected 4 invalid entries, got ${parsed.invalidEntries.length}`,
+    );
   }
   if (calls.writeReport !== 1) {
     throw new Error(`expected 1 writeReport, got ${calls.writeReport}`);
@@ -324,12 +379,197 @@ test("a failed on-chain write is reported as partial instead of a false success"
     throw new Error(`expected status "partial", got "${parsed.status}"`);
   }
   if (parsed.revokedCount !== 1 || parsed.failedCount !== 1) {
-    throw new Error(`expected 1 revoked / 1 failed, got ${parsed.revokedCount} / ${parsed.failedCount}`);
+    throw new Error(
+      `expected 1 revoked / 1 failed, got ${parsed.revokedCount} / ${parsed.failedCount}`,
+    );
   }
   if (parsed.failed[0]?.error !== "simulated revert") {
-    throw new Error(`unexpected failure reason: ${JSON.stringify(parsed.failed)}`);
+    throw new Error(
+      `unexpected failure reason: ${JSON.stringify(parsed.failed)}`,
+    );
   }
   if (calls.writeReport !== 2) {
     throw new Error(`expected 2 writeReport, got ${calls.writeReport}`);
   }
+});
+
+// ---------------------------------------------------------------------------------------
+// Screening at issuance (EVM log trigger on ComplianceGate.UserAdded, handler index 1)
+// ---------------------------------------------------------------------------------------
+
+const ISSUE_TX =
+  "0xc24471de9b752244089bb3818b9e7a2b61b3cf24691812ddd5b7685fd4fb3247";
+
+/** Builds the EVM log the CRE log trigger delivers for `UserAdded(commitment)`. */
+function userAddedLog(
+  commitment: bigint,
+  overrides: { address?: Hex; topic0?: Hex; removed?: boolean } = {},
+) {
+  return create(EVM_PB.LogSchema, {
+    address: hexToBytes(
+      (overrides.address ?? CFG.complianceGateAddress) as Hex,
+    ),
+    topics: [
+      hexToBytes(overrides.topic0 ?? USER_ADDED_TOPIC),
+      hexToBytes(numberToHex(commitment, { size: 32 })),
+    ],
+    txHash: hexToBytes(ISSUE_TX),
+    data: new Uint8Array(),
+    removed: overrides.removed ?? false,
+  });
+}
+
+test("issuance of a clean commitment -> status clear, no EVM reads or writes", () => {
+  const runtime = newTestRuntime();
+  const fresh = 4242424242424242424242n;
+  const calls = registerMocks({
+    sanctioned: [LIVE_MEMBER.toString()],
+    members: [LIVE_MEMBER, fresh],
+  });
+
+  const parsed = JSON.parse(
+    screenIssuanceLog(runtime, CFG, userAddedLog(fresh)),
+  ) as {
+    status: string;
+    trigger: string;
+    commitment: string;
+    sourceTxHash: string;
+  };
+
+  if (parsed.status !== "clear")
+    throw new Error(`expected status "clear", got "${parsed.status}"`);
+  if (parsed.trigger !== "issuance")
+    throw new Error(`expected trigger "issuance", got "${parsed.trigger}"`);
+  if (parsed.commitment !== fresh.toString())
+    throw new Error(`unexpected commitment ${parsed.commitment}`);
+  if (parsed.sourceTxHash !== ISSUE_TX)
+    throw new Error(`unexpected source tx ${parsed.sourceTxHash}`);
+  if (calls.http !== 1)
+    throw new Error(`expected 1 sanctions fetch, got ${calls.http}`);
+  if (calls.callContract !== 0)
+    throw new Error(`expected 0 callContract reads, got ${calls.callContract}`);
+  if (calls.writeReport !== 0)
+    throw new Error(`expected 0 writeReport, got ${calls.writeReport}`);
+});
+
+test("issuance of a sanctioned commitment -> revoked immediately; other members are left to cron", () => {
+  const runtime = newTestRuntime();
+  const otherSanctioned = 7777777777777777777n;
+  const calls = registerMocks({
+    sanctioned: [LIVE_MEMBER.toString(), otherSanctioned.toString()],
+    members: [otherSanctioned, LIVE_MEMBER],
+    applyRevocations: true,
+  });
+
+  const parsed = JSON.parse(
+    screenIssuanceLog(runtime, CFG, userAddedLog(LIVE_MEMBER)),
+  ) as {
+    status: string;
+    trigger: string;
+    sourceTxHash: string;
+    revokedCount: number;
+    revokedCommitments: string[];
+    proofs: Array<{ commitment: string; siblings: string[] }>;
+  };
+
+  if (parsed.status !== "revoked")
+    throw new Error(`expected status "revoked", got "${parsed.status}"`);
+  if (parsed.trigger !== "issuance")
+    throw new Error(`expected trigger "issuance", got "${parsed.trigger}"`);
+  if (parsed.sourceTxHash !== ISSUE_TX)
+    throw new Error(`unexpected source tx ${parsed.sourceTxHash}`);
+  if (
+    parsed.revokedCount !== 1 ||
+    parsed.revokedCommitments[0] !== LIVE_MEMBER.toString()
+  ) {
+    throw new Error(
+      `expected only the issued commitment to be revoked: ${JSON.stringify(parsed.revokedCommitments)}`,
+    );
+  }
+  if (parsed.proofs[0].siblings[0] !== otherSanctioned.toString()) {
+    throw new Error(
+      `unexpected Merkle siblings: ${JSON.stringify(parsed.proofs[0].siblings)}`,
+    );
+  }
+  if (calls.writeReport !== 1)
+    throw new Error(`expected 1 writeReport, got ${calls.writeReport}`);
+  if (
+    !runtime
+      .getLogs()
+      .some(
+        (l) =>
+          l.includes("issuance screening") && l.includes("result=sanctioned"),
+      )
+  ) {
+    throw new Error(
+      `missing issuance screening log: ${JSON.stringify(runtime.getLogs())}`,
+    );
+  }
+});
+
+test("sanctioned issuance not yet visible at the finalized block -> skipped, no write", () => {
+  const runtime = newTestRuntime();
+  const pending = 5555555555555555555n;
+  const calls = registerMocks({
+    sanctioned: [pending.toString()],
+    members: [LIVE_MEMBER],
+  });
+
+  const parsed = JSON.parse(
+    screenIssuanceLog(runtime, CFG, userAddedLog(pending)),
+  ) as { status: string };
+
+  if (parsed.status !== "skipped")
+    throw new Error(`expected status "skipped", got "${parsed.status}"`);
+  if (calls.writeReport !== 0)
+    throw new Error(`expected 0 writeReport, got ${calls.writeReport}`);
+});
+
+test("logs from another contract, another event, or a reorg are ignored before any capability call", () => {
+  const calls = registerMocks({
+    sanctioned: [LIVE_MEMBER.toString()],
+    members: [LIVE_MEMBER],
+  });
+  const cases = [
+    userAddedLog(LIVE_MEMBER, {
+      address: "0x000000000000000000000000000000000000dEaD",
+    }),
+    userAddedLog(LIVE_MEMBER, { topic0: numberToHex(1n, { size: 32 }) }),
+    userAddedLog(LIVE_MEMBER, { removed: true }),
+  ];
+
+  for (const log of cases) {
+    const parsed = JSON.parse(
+      screenIssuanceLog(newTestRuntime(), CFG, log),
+    ) as { status: string };
+    if (parsed.status !== "ignored")
+      throw new Error(`expected status "ignored", got "${parsed.status}"`);
+  }
+  if (calls.http + calls.callContract + calls.writeReport !== 0) {
+    throw new Error(
+      `expected no capability calls, got ${JSON.stringify(calls)}`,
+    );
+  }
+});
+
+test("initWorkflow registers cron (index 0) and the UserAdded log trigger (index 1)", () => {
+  const both = initWorkflow({ ...CFG, screenOnIssuance: true });
+  if (both.length !== 2)
+    throw new Error(`expected 2 handlers, got ${both.length}`);
+  if (!both[0].trigger.capabilityId().startsWith("cron-trigger")) {
+    throw new Error(
+      `handler 0 should be the cron trigger, got ${both[0].trigger.capabilityId()}`,
+    );
+  }
+  if (!both[1].trigger.capabilityId().startsWith("evm:")) {
+    throw new Error(
+      `handler 1 should be the EVM log trigger, got ${both[1].trigger.capabilityId()}`,
+    );
+  }
+
+  const cronOnly = initWorkflow({ ...CFG, screenOnIssuance: false });
+  if (cronOnly.length !== 1)
+    throw new Error(
+      `expected 1 handler when screenOnIssuance=false, got ${cronOnly.length}`,
+    );
 });

@@ -1,7 +1,9 @@
-# CRE CLI 工作流设置(官方 schema,`cre workflow build|simulate` 读取本文件)。
-# 触发器与 HTTP/EVM 能力均在代码中声明(core.ts 的 CronCapability + cre.handler),
-# 这里只告诉 CLI 入口文件、运行时配置与 secrets 的位置。
-# 运行方式(项目根为上一层 workflows/):
+# CRE CLI workflow settings (official schema, read by `cre workflow build|simulate`).
+# Triggers and the HTTP/EVM capabilities are declared in code (core.ts: CronCapability for
+# continuous screening, EVM log trigger on ComplianceGate.UserAdded for screening at
+# issuance, both registered with cre.handler). This file only tells the CLI where the entry
+# file, runtime config and secrets live.
+# Usage (the project root is the parent folder, workflows/):
 #   cd zk-cid/workflows
 #   cre workflow build compliance-lifecycle -T staging-settings
 staging-settings:

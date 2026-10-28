@@ -1,47 +1,59 @@
 # Chainlink CRE Workflow: Compliance Lifecycle
 
-This directory contains the Chainlink CRE workflow that automates credential
-revocation based on an external sanctions API, written against the real
-`@chainlink/cre-sdk@1.16.0` API installed in the repo root.
+This directory contains the Chainlink CRE workflow that keeps the on-chain compliance group
+in sync with an external sanctions feed and revokes listed credentials automatically. It is
+written against the real `@chainlink/cre-sdk@1.16.0` API.
 
-## Workflow Overview
+## Workflow overview
 
-- **Trigger**: `CronCapability` (`cron-trigger@1.0.0`), schedule configurable
-  via `config.json` (default: every 5 minutes, `*/5 * * * *`).
-- **Entry**: `Runner.newRunner<Config>()` + `cre.handler(...)` in
-  `compliance-lifecycle/main.ts`.
-- **Step 1 (HTTP)**: Each DON node fetches the sanctions list from the Mock
-  API via `HTTPClient.sendRequest` in node mode; results are agreed with
-  `consensusIdenticalAggregation`.
-- **Step 2 (EVM read)**: `EVMClient.callContract` reads `getMembers()` and
-  `getLeaves()` from the `ComplianceGate` contract at the last finalized block.
-- **Step 3 (Compute)**: Intersect on-chain members with the sanctions list and
-  rebuild the Semaphore tree from stable leaves.
-- **Step 4 (EVM write)**: For each hit, a DON-signed report is produced via
-  `runtime.report(prepareReportRequest(...))` and submitted with
-  `EVMClient.writeReport`, which calls `revokeCredentialWithMerkleProof` on-chain.
+Two handlers share one screening pipeline (`compliance-lifecycle/core.ts`):
+
+| Index | Trigger | Purpose |
+| --- | --- | --- |
+| 0 | `CronCapability` (`cron-trigger@1.0.0`), default `*/5 * * * *` | Continuous screening of every active member |
+| 1 | EVM log trigger on `ComplianceGate.UserAdded(uint256 indexed commitment)`, `FINALIZED` confidence | Screening at issuance: only the newly issued commitment is checked |
+
+Pipeline:
+
+1. **HTTP**: every DON node fetches the sanctions list with `HTTPClient.sendRequest` in node
+   mode; results must be identical (`consensusIdenticalAggregation`).
+2. **EVM read**: `EVMClient.callContract` reads `getMembers()` and `getLeaves()` from
+   `ComplianceGate` at the last finalized block.
+3. **Compute**: intersect members with the list, rebuild the Semaphore tree from the stable
+   leaves, and generate real Merkle siblings for each hit.
+4. **EVM write**: each hit becomes a DON-signed report (`runtime.report(prepareReportRequest(...))`)
+   delivered by `EVMClient.writeReport` to `ComplianceGateReceiver`, which calls
+   `revokeCredentialWithMerkleProof` and removes the member from the Semaphore tree.
 
 ## Files
 
-- `compliance-lifecycle/main.ts` — workflow source (TypeScript, UTF-8).
-- `compliance-lifecycle/config.json` — runtime config consumed via
-  `runtime.config` (schedule, API URL, chain selector, contract address,
-  gas limit).
-- `compliance-lifecycle/workflow.yaml` — workflow-level CRE CLI settings
-  (official `staging-settings` / `production-settings` schema).
-- `project.yaml` — project-level CRE CLI settings (RPC endpoints per target).
-- `compliance-lifecycle/dist/` — `tsc` build output.
-- `compliance-lifecycle/evidence/README.md` — honest status, reproduction
-  commands, and remaining risks. Simulation output is only added after an
-  actual `cre workflow simulate` run on a machine with the CRE CLI.
+- `compliance-lifecycle/core.ts`: workflow logic and wiring (both handlers).
+- `compliance-lifecycle/main.ts`: CRE Runner entry point.
+- `compliance-lifecycle/config.json`: runtime config consumed via `runtime.config`
+  (schedule, API URL, chain selector, gate and receiver addresses, gas limit,
+  `screenOnIssuance`).
+- `compliance-lifecycle/workflow.yaml`: workflow-level CRE CLI settings (official
+  `staging-settings` / `production-settings` schema).
+- `project.yaml`: project-level CRE CLI settings (RPC endpoints per target).
+- `compliance-lifecycle/test/`: SDK TestRuntime simulation (11 workflow tests) and Poseidon
+  compatibility vectors (3).
+- `compliance-lifecycle/evidence/`: raw CLI logs, the broadcast rehearsal, and
+  [the evidence summary](./compliance-lifecycle/evidence/README.md).
+- `run-cre-simulate.ps1`: Windows helper that runs the official CLI from a space-free path
+  and writes a timestamped log into `evidence/`.
 
-## CRE CLI Commands
+## CRE CLI commands
 
 ```bash
 cd zk-cid/workflows
 cre workflow build compliance-lifecycle -T staging-settings
-cre workflow simulate compliance-lifecycle -T staging-settings   # requires `cre login` / CRE_API_KEY
+# cron handler (needs `cre login` / CRE_API_KEY)
+cre workflow simulate compliance-lifecycle -T staging-settings --non-interactive --trigger-index 0
+# issuance handler, replaying a real UserAdded log from Sepolia
+cre workflow simulate compliance-lifecycle -T staging-settings --non-interactive --trigger-index 1 \
+  --evm-tx-hash 0xc24471de9b752244089bb3818b9e7a2b61b3cf24691812ddd5b7685fd4fb3247 --evm-event-index 1
 ```
 
-Notes: the CLI needs `bun` on `PATH`, and on Windows the repository path must
-not contain spaces (the CLI invokes `cre-compile.cmd` without quoting).
+On Windows: `.\run-cre-simulate.ps1` (cron) or `.\run-cre-simulate.ps1 -Trigger issuance`.
+The CLI needs `bun` on `PATH`, and on Windows the repository path must not contain spaces
+(the CLI invokes `cre-compile.cmd` unquoted), which the helper script works around.

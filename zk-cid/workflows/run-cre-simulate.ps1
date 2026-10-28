@@ -21,8 +21,17 @@
     compliance-lifecycle/evidence/cre-simulate-<timestamp>.log so it can be
     attached to the DoraHacks submission.
 
+    The workflow has two handlers. `-Trigger cron` (default, handler index 0) runs the
+    continuous screening; `-Trigger issuance` (handler index 1) replays a real
+    ComplianceGate `UserAdded` log from Sepolia through the EVM log trigger. By default it
+    uses the issuance of the live demo commitment
+    (tx 0xc24471de...3247, log index 1 inside that transaction).
+
 .EXAMPLE
     .\run-cre-simulate.ps1 -ApiKey "cre_xxx"
+
+.EXAMPLE
+    .\run-cre-simulate.ps1 -Trigger issuance   # screening at issuance (EVM log trigger)
 
 .EXAMPLE
     .\run-cre-simulate.ps1 -SkipBuild -SkipMirror   # re-run simulate only
@@ -34,7 +43,11 @@ param(
     [string]$ScratchDir = (Join-Path $env:TEMP "zk-cid-cre-build"),
     [switch]$SkipBuild,
     [switch]$SkipMirror,
-    [switch]$BuildOnly
+    [switch]$BuildOnly,
+    [ValidateSet("cron", "issuance")]
+    [string]$Trigger = "cron",
+    [string]$EvmTxHash = "0xc24471de9b752244089bb3818b9e7a2b61b3cf24691812ddd5b7685fd4fb3247",
+    [int]$EvmEventIndex = 1
 )
 
 $ErrorActionPreference = "Stop"
@@ -128,7 +141,8 @@ Write-Host "      bun     : $bun"
 
 $evidenceDir = Join-Path $workflowDir "evidence"
 New-Item -ItemType Directory -Force -Path $evidenceDir | Out-Null
-$logPath = Join-Path $evidenceDir ("cre-simulate-" + (Get-Date -Format "yyyyMMdd-HHmmss") + ".log")
+$logPrefix = if ($Trigger -eq "issuance") { "cre-simulate-issuance-" } else { "cre-simulate-" }
+$logPath = Join-Path $evidenceDir ($logPrefix + (Get-Date -Format "yyyyMMdd-HHmmss") + ".log")
 
 Push-Location $ScratchDir
 try {
@@ -151,8 +165,15 @@ try {
         $env:CRE_API_KEY = $ApiKey
     }
 
-    Write-Host "[3/3] cre workflow simulate compliance-lifecycle -T staging-settings"
-    & $cli workflow simulate compliance-lifecycle -T staging-settings --non-interactive --trigger-index 0 @cliEnvArgs 2>&1 | Tee-Object -FilePath $logPath -Append
+    $triggerArgs = @("--non-interactive", "--trigger-index", "0")
+    if ($Trigger -eq "issuance") {
+        $triggerArgs = @(
+            "--non-interactive", "--trigger-index", "1",
+            "--evm-tx-hash", $EvmTxHash, "--evm-event-index", "$EvmEventIndex"
+        )
+    }
+    Write-Host "[3/3] cre workflow simulate compliance-lifecycle -T staging-settings $($triggerArgs -join ' ')"
+    & $cli workflow simulate compliance-lifecycle -T staging-settings @triggerArgs @cliEnvArgs 2>&1 | Tee-Object -FilePath $logPath -Append
     if ($LASTEXITCODE -ne 0) { throw "cre workflow simulate failed with exit code $LASTEXITCODE" }
 } finally {
     Pop-Location
