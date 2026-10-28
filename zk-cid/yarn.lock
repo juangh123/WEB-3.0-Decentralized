@@ -303,6 +303,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@bytecodealliance/preview2-shim@npm:^0.19.0":
+  version: 0.19.0
+  resolution: "@bytecodealliance/preview2-shim@npm:0.19.0"
+  checksum: 10/f6b9392acd415158ff307af6f0ee0cd58a19567791ae0ab5b1610e2f13ca84b681dbd93811f58efbdd002de0fb059dc92b7fe632dd6e8e6658f07cec2455de9b
+  languageName: node
+  linkType: hard
+
 "@chainlink/cre-sdk-javy-plugin@npm:1.7.0":
   version: 1.7.0
   resolution: "@chainlink/cre-sdk-javy-plugin@npm:1.7.0"
@@ -3231,6 +3238,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@nomicfoundation/slang@npm:1.3.8":
+  version: 1.3.8
+  resolution: "@nomicfoundation/slang@npm:1.3.8"
+  dependencies:
+    "@bytecodealliance/preview2-shim": "npm:^0.19.0"
+  checksum: 10/08a7cbf8f6d12e9b460bea4c7c5def93f7b63d7da41dfa776730ebeb46906e500d8195cece58795042ade2f166439e42d41ac1f23aa3d04dc49268c8e4978044
+  languageName: node
+  linkType: hard
+
 "@nomicfoundation/solidity-analyzer-darwin-arm64@npm:0.1.2":
   version: 0.1.2
   resolution: "@nomicfoundation/solidity-analyzer-darwin-arm64@npm:0.1.2"
@@ -4832,7 +4848,7 @@ __metadata:
     hardhat-deploy: "npm:^2.0.30"
     mocha: "npm:^12.0.3"
     prettier: "npm:^3.5.3"
-    prettier-plugin-solidity: "npm:^1.4.1"
+    prettier-plugin-solidity: "npm:^2.4.1"
     qrcode: "npm:^1.5.4"
     rocketh: "npm:^0.19.7"
     tsx: "npm:^4.21.0"
@@ -5938,7 +5954,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@solidity-parser/parser@npm:^0.20.1":
+"@solidity-parser/parser@npm:^0.20.2":
   version: 0.20.2
   resolution: "@solidity-parser/parser@npm:0.20.2"
   checksum: 10/405009cd712cc410df60e45510ddd2ca615d208b152903be71cef4b9440720287ffd3792f88a92eb0de375c2ea66b442e84c843cb810612d6b6e45fd51a2b49b
@@ -17080,15 +17096,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier-plugin-solidity@npm:^1.4.1":
-  version: 1.4.3
-  resolution: "prettier-plugin-solidity@npm:1.4.3"
+"prettier-plugin-solidity@npm:^2.4.1":
+  version: 2.4.1
+  resolution: "prettier-plugin-solidity@npm:2.4.1"
   dependencies:
-    "@solidity-parser/parser": "npm:^0.20.1"
-    semver: "npm:^7.7.1"
+    "@nomicfoundation/slang": "npm:1.3.8"
+    "@solidity-parser/parser": "npm:^0.20.2"
+    semver: "npm:^7.8.5"
   peerDependencies:
-    prettier: ">=2.3.0"
-  checksum: 10/785d47e4b58eb8886945f77c5604285e1843b3f3929b677a2b668c341eeb1540fd31285d09a80bb4ec024920d2f4c27d4221b970b53cae11d534ec2e32609f24
+    prettier: ">=3.0.0"
+  checksum: 10/cdd944b00b91370c820747d72fa600fa033ff909cecc95a1d86bc26efcde9f9b31599b3ac879e5d5878222fb5b15fa2010532c8c490e30da770cc4086bc6c62a
   languageName: node
   linkType: hard
 

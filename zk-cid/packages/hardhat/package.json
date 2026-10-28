@@ -59,7 +59,7 @@
     "hardhat-deploy": "^2.0.30",
     "mocha": "^12.0.3",
     "prettier": "^3.5.3",
-    "prettier-plugin-solidity": "^1.4.1",
+    "prettier-plugin-solidity": "^2.4.1",
     "rocketh": "^0.19.7",
     "tsx": "^4.21.0",
     "typescript": "^5.8.2"
