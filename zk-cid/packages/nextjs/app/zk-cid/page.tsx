@@ -10,10 +10,12 @@ import { SanctionsPanel } from "~~/components/zk-cid/SanctionsPanel";
 import { VerifierTab } from "~~/components/zk-cid/VerifierTab";
 import { useDeployedContractInfo, useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { useDemoIssuer } from "~~/hooks/zk-cid/useDemoIssuer";
+import { useDryRunMint } from "~~/hooks/zk-cid/useDryRunMint";
 import { useIdentity } from "~~/hooks/zk-cid/useIdentity";
 import { useProof } from "~~/hooks/zk-cid/useProof";
 import { useSanctions } from "~~/hooks/zk-cid/useSanctions";
 import { notification } from "~~/utils/scaffold-eth";
+import { createVerificationAddress, proofBoundAddress, toSemaphoreProofArgs } from "~~/utils/zk-cid/proofArgs";
 
 const ZKCIDDemoContent = () => {
   const { language, setLanguage, t } = useLanguage();
@@ -28,6 +30,7 @@ const ZKCIDDemoContent = () => {
   const { proof, generateZkProof, isGenerating, error: proofError } = useProof();
   const { sanctions } = useSanctions();
   const { enabled: demoIssuerEnabled, isIssuing: isDemoIssuing, issue: issueDemoCredential } = useDemoIssuer();
+  const { dryRunState, dryRun, resetDryRun } = useDryRunMint();
 
   const [activeTab, setActiveTab] = useState<"user" | "issuer" | "verifier">("user");
   const [mintTxHash, setMintTxHash] = useState<`0x${string}` | undefined>();
@@ -172,11 +175,6 @@ const ZKCIDDemoContent = () => {
     if (!identity) {
       return notification.error(t("请先生成或连接本地身份。", "Create or load a local identity first."));
     }
-    if (!address) {
-      return notification.error(
-        t("请先在右上角连接您的以太坊钱包。", "Connect your Ethereum wallet in the top-right corner first."),
-      );
-    }
     if (groupId === undefined) {
       return notification.error(t("合约 Group ID 加载中，请稍候...", "The contract group ID is still loading."));
     }
@@ -201,14 +199,25 @@ const ZKCIDDemoContent = () => {
       return;
     }
 
+    // The proof is bound to the wallet that will mint it (front-running protection). Without a
+    // wallet, bind it to a random address so it can still be checked on-chain with a gas-free
+    // eth_call in Tab 3.
+    const boundAddress = address ?? createVerificationAddress();
+    resetDryRun();
+
     try {
-      const generated = await generateZkProof(identity, merkleLeaves, groupId, address);
+      const generated = await generateZkProof(identity, merkleLeaves, groupId, boundAddress);
       if (generated) {
         notification.success(
-          t(
-            "零知识证明生成成功！现可前往 Tab 3 进行链上验证与铸造。",
-            "Zero-knowledge proof generated. Continue to Tab 3 to verify and mint.",
-          ),
+          address
+            ? t(
+                "零知识证明生成成功！现可前往 Tab 3 进行链上验证与铸造。",
+                "Zero-knowledge proof generated. Continue to Tab 3 to verify and mint.",
+              )
+            : t(
+                "零知识证明已生成（未连接钱包，已绑定一个临时地址）。前往 Tab 3 可免 gas 在 Sepolia 上验证。",
+                "Proof generated without a wallet (bound to a throwaway address). Go to Tab 3 to verify it on Sepolia without gas.",
+              ),
         );
       }
     } catch (err: any) {
@@ -227,33 +236,31 @@ const ZKCIDDemoContent = () => {
   });
   const { data: accessNftContract } = useDeployedContractInfo({ contractName: "AccessNFT" });
 
+  const proofAddress = proof ? proofBoundAddress(proof) : undefined;
+
+  const handleDryRun = async () => {
+    if (!proof)
+      return notification.error(t("请先在 Tab 1 生成零知识证明。", "Generate a zero-knowledge proof in Tab 1 first."));
+    await dryRun(proof);
+  };
+
   const handleVerifyProof = async () => {
     if (!proof)
       return notification.error(t("请先在 Tab 1 生成零知识证明。", "Generate a zero-knowledge proof in Tab 1 first."));
     if (!address) return notification.error(t("请先连接钱包。", "Connect a wallet first."));
+    if (proofAddress?.toLowerCase() !== address.toLowerCase()) {
+      return notification.error(
+        t(
+          "该证明绑定的是另一个地址。请连接钱包后在 Tab 1 重新生成证明再铸造。",
+          "This proof is bound to a different address. Connect your wallet and regenerate the proof in Tab 1 to mint.",
+        ),
+      );
+    }
 
     try {
       const hash = await writeAccessNFT({
         functionName: "mint",
-        args: [
-          {
-            merkleTreeDepth: BigInt(proof.merkleTreeDepth),
-            merkleTreeRoot: BigInt(proof.merkleTreeRoot),
-            nullifier: BigInt(proof.nullifier),
-            message: BigInt(proof.message),
-            scope: BigInt(proof.scope),
-            points: proof.points.map(p => BigInt(p)) as [
-              bigint,
-              bigint,
-              bigint,
-              bigint,
-              bigint,
-              bigint,
-              bigint,
-              bigint,
-            ],
-          },
-        ],
+        args: [toSemaphoreProofArgs(proof)],
       });
       if (hash) setMintTxHash(hash);
       notification.success(
@@ -375,10 +382,13 @@ const ZKCIDDemoContent = () => {
           <VerifierTab
             walletAddress={address}
             hasProof={!!proof}
+            proofAddress={proofAddress}
             hasMinted={hasMinted}
             isVerifying={isVerifying}
             mintTxHash={mintTxHash}
             accessNftAddress={accessNftContract?.address}
+            dryRunState={dryRunState}
+            onDryRun={handleDryRun}
             onVerifyProof={handleVerifyProof}
           />
         )}

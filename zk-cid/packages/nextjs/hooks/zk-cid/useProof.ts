@@ -8,11 +8,11 @@ export const useProof = () => {
   const [error, setError] = useState<string | null>(null);
 
   /**
-   * 生成 ZK 证明
-   * @param identity 用户的 Semaphore 身份
-   * @param leaves 链上稳定的 Semaphore leaves（被撤销的叶子为 0，不能压缩）
-   * @param groupId 群组ID (Scope)
-   * @param userAddress 用户的以太坊地址 (作为 message, 防抢跑)
+   * Generates a Semaphore proof in the browser.
+   * @param identity the user's Semaphore identity
+   * @param leaves stable on-chain leaves (revoked leaves are 0 and must not be compacted)
+   * @param groupId group id, also used as the proof scope
+   * @param userAddress address the proof is bound to (the `message`, prevents front-running)
    */
   const generateZkProof = async (
     identity: Identity,
@@ -23,16 +23,15 @@ export const useProof = () => {
     setIsGenerating(true);
     setError(null);
     try {
-      // 1. 重建与链上完全一致的群组。零值叶子必须保留，否则撤销后根会漂移。
+      // 1. Rebuild exactly the on-chain group. Zero leaves must stay, or the root drifts after a revocation.
       const { Group } = await import("@semaphore-protocol/group");
       const group = new Group(leaves);
 
-      // 2. 将目标用户的以太坊地址作为 Message，绑定此证明只能由该地址提交
-      // 需要将 address 转换为数字形式 (bigint/string) 以符合 Semaphore Message 格式
+      // 2. Bind the proof to the submitting address via the message (Semaphore expects a numeric value).
       const message = BigInt(userAddress).toString();
       const scope = groupId.toString();
 
-      // 3. 浏览器端生成 ZK Proof (无需下载巨型 wasm/zkey, Semaphore v4 已优化)
+      // 3. Generate the proof in the browser.
       // Load the prover (and its snarkjs/WASM payload) only when a proof is actually
       // requested so the demo page does not ship ~1MB of ZK tooling on first paint.
       const { generateProof } = await import("@semaphore-protocol/proof");

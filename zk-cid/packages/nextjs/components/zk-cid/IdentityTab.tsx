@@ -123,6 +123,14 @@ export const IdentityTab = ({
             ". The connected wallet address is bound to the proof to prevent front-running.",
           )}
         </p>
+        {!walletAddress && (
+          <p className="text-xs opacity-70">
+            {t(
+              "未连接钱包也可以继续：证明会绑定一个临时地址，可在 Tab 3 免 gas 验证（eth_call），但不能铸造。",
+              "No wallet? You can still continue: the proof is bound to a throwaway address and can be checked in Tab 3 without gas (eth_call), but it cannot mint.",
+            )}
+          </p>
+        )}
 
         <div className="flex items-center justify-between text-xs bg-base-300 px-4 py-2 rounded-lg">
           <span>

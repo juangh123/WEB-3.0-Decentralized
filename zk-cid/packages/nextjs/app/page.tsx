@@ -7,7 +7,7 @@ const entries = [
     href: "/zk-cid",
     icon: <RocketLaunchIcon className="h-8 w-8" />,
     title: "Main Demo",
-    desc: "Full flow in one page: create identity, issue credential, generate ZK proof, mint AccessNFT.",
+    desc: "Full flow in one page: create identity, issue credential, generate ZK proof, then verify it on Sepolia without gas or mint the AccessNFT. No wallet needed to try it.",
     badge: "Start here",
   },
   {

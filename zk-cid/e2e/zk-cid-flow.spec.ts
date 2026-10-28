@@ -33,6 +33,19 @@ test.describe("ZK-CID E2E Flow", () => {
     await expect(page.getByText("Identity commitment (public hash):")).toBeVisible();
   });
 
+  test("verifier tab offers a gas-free on-chain check before any wallet connects", async ({ page }) => {
+    await page.goto("/zk-cid");
+
+    await page.getByRole("button", { name: "3. Verifier · Verify & Mint" }).click();
+
+    await expect(page.getByRole("heading", { name: "Check on Sepolia without gas (no wallet needed)" })).toBeVisible();
+    // Without a proof both actions stay disabled and say why.
+    const proofButtons = page.getByRole("button", { name: "Generate a zero-knowledge proof in Tab 1 first" });
+    await expect(proofButtons).toHaveCount(2);
+    await expect(proofButtons.first()).toBeDisabled();
+    await expect(proofButtons.last()).toBeDisabled();
+  });
+
   test("privacy comparison page loads", async ({ page }) => {
     await page.goto("/demo");
 
