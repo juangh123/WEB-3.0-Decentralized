@@ -1994,17 +1994,17 @@ __metadata:
   linkType: hard
 
 "@libp2p/crypto@npm:^5.0.0, @libp2p/crypto@npm:^5.1.21, @libp2p/crypto@npm:^5.1.8":
-  version: 5.1.21
-  resolution: "@libp2p/crypto@npm:5.1.21"
+  version: 5.2.0
+  resolution: "@libp2p/crypto@npm:5.2.0"
   dependencies:
-    "@libp2p/interface": "npm:^3.2.5"
+    "@libp2p/interface": "npm:^3.4.0"
     "@noble/curves": "npm:^2.0.1"
     "@noble/hashes": "npm:^2.0.1"
     multiformats: "npm:^14.0.0"
     protons-runtime: "npm:^7.0.0"
     uint8arraylist: "npm:^3.0.2"
     uint8arrays: "npm:^6.1.1"
-  checksum: 10/e91c10d97082ee182e47c49459ce187f0f0de4607d1ef0a4619baf885de529b9a1d43601284dc56230449523d19cb3867268fc851e3ccfc940d5f59c68f0b20d
+  checksum: 10/95838c1752720ea5dc84d2039a4d15acf1f6118e7156fe2d296c4d00061d0c2940d5e96f0f3c516c72f8ae03583aec99c01792402a529e517abf609fa6dfece2
   languageName: node
   linkType: hard
 
@@ -2035,6 +2035,20 @@ __metadata:
     progress-events: "npm:^1.1.0"
     uint8arraylist: "npm:^3.0.2"
   checksum: 10/13dd9b001c15820a5d2320089b8d0be6b1e07ac4584fc4d7fef44d20ed57fc8cc427296daa4c7dbb5ebb45ad639ae1bf7e9c1ac3601f25d816f9ddb10eb34996
+  languageName: node
+  linkType: hard
+
+"@libp2p/interface@npm:^3.4.0":
+  version: 3.4.0
+  resolution: "@libp2p/interface@npm:3.4.0"
+  dependencies:
+    "@multiformats/dns": "npm:^1.0.6"
+    "@multiformats/multiaddr": "npm:^13.0.3"
+    main-event: "npm:^1.0.5"
+    multiformats: "npm:^14.0.0"
+    progress-events: "npm:^1.1.0"
+    uint8arraylist: "npm:^3.0.2"
+  checksum: 10/36647398af41e355f064cef23286a7f77a74b3888495f5de5d385fc0c41624ac1c86ace6e12f361c18617fcf0416d6277a2b6b1741950345cf4e199378e072b2
   languageName: node
   linkType: hard
 
@@ -14942,6 +14956,13 @@ __metadata:
   version: 1.0.4
   resolution: "main-event@npm:1.0.4"
   checksum: 10/d1dc2f5d7bbcdc60577ff7925a18f4fea1d6b621e38c74e07fe4f55b027a84b1d8b3b29b01a6a0f7c57c1e24b0b93aa17eaea0f785d98c312db28f0419773ca0
+  languageName: node
+  linkType: hard
+
+"main-event@npm:^1.0.5":
+  version: 1.0.5
+  resolution: "main-event@npm:1.0.5"
+  checksum: 10/db9c6ff4d79fd4aa3f20517e07b57df39d6d020540f1916b0fb35a506753e2cf3583ee37eef930eaadeca4c6bff4b13cbeeaa0e2a18ea142ee65bd78dc91a768
   languageName: node
   linkType: hard
 
